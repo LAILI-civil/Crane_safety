@@ -1,1 +1,77 @@
-1
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>监控系统 - 视频区域</title>
+    <style>
+        /* 彻底重置边距，撑满全屏，无滚动条 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;   /* 禁止页面滚动 */
+        }
+
+        /* 左右对称的 Flex 容器，占满整个视口 */
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: row;
+        }
+
+        /* 左侧视频区域 */
+        .left-video {
+            flex: 1;            /* 占据一半宽度 */
+            background-color: #000;   /* 黑底，适合视频 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 视频元素：填满左侧区域，保持比例不溢出 */
+        .left-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;  /* 视频完整显示，可能会有黑边，但不裁剪内容 */
+            background-color: #000;
+            outline: none;
+        }
+
+        /* 右侧预留区域：简单占位，没有任何复杂逻辑 */
+        .right-placeholder {
+            flex: 1;            /* 另一半宽度 */
+            background-color: #f8fafc;  /* 浅灰干净背景 */
+            /* 纯占位，不添加任何交互或复杂样式，只留出一片区域 */
+        }
+    </style>
+</head>
+<body>
+<div class="split-layout">
+    <!-- 左侧：视频播放区域 -->
+    <div class="left-video">
+        <video 
+            id="mainVideo"
+            controls
+            preload="auto"
+            playsinline
+        >
+            <!-- 视频源：与当前网页在同一目录下的 Crane_working_1.mp4 -->
+            <source src="./Crane_working_1.mp4" type="video/mp4">
+            您的浏览器不支持 HTML5 视频播放。
+        </video>
+    </div>
+
+    <!-- 右侧：空白预留区域（未来可扩展） -->
+    <div class="right-placeholder"></div>
+</div>
+
+<!-- 无需任何额外脚本，保持最简，右侧完全留白 -->
+</body>
+</html>
