@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>监控系统 - 视频区域</title>
+    <title>塔吊智能监控标定系统 | 视频+相机矩阵标定</title>
+    <!-- 引入 numeric 库用于 SVD 分解和矩阵运算 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
-        /* 彻底重置边距，撑满全屏，无滚动条 */
         * {
             margin: 0;
             padding: 0;
@@ -15,10 +16,11 @@
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden;   /* 禁止页面滚动 */
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Roboto', 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        /* 左右对称的 Flex 容器，占满整个视口 */
+        /* 主布局：左右两栏 */
         .split-layout {
             display: flex;
             width: 100%;
@@ -26,52 +28,641 @@
             flex-direction: row;
         }
 
-        /* 左侧视频区域 */
+        /* ========= 左侧视频区域 ========= */
         .left-video {
-            flex: 1;            /* 占据一半宽度 */
-            background-color: #000;   /* 黑底，适合视频 */
+            flex: 1;
+            background-color: #000;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
-        /* 视频元素：填满左侧区域，保持比例不溢出 */
         .left-video video {
             width: 100%;
             height: 100%;
-            object-fit: contain;  /* 视频完整显示，可能会有黑边，但不裁剪内容 */
+            object-fit: contain;
             background-color: #000;
             outline: none;
+            cursor: crosshair;
         }
 
-        /* 右侧预留区域：简单占位，没有任何复杂逻辑 */
-        .right-placeholder {
-            flex: 1;            /* 另一半宽度 */
-            background-color: #f8fafc;  /* 浅灰干净背景 */
-            /* 纯占位，不添加任何交互或复杂样式，只留出一片区域 */
+        /* 简易提示浮层 (选取坐标时) */
+        .pick-tip {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(8px);
+            color: #ffdd99;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 24px;
+            pointer-events: none;
+            font-family: monospace;
+            z-index: 10;
+            border-left: 3px solid #ffaa33;
+        }
+
+        /* ========= 右侧区域 (上下结构) ========= */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f1f5f9;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* 右上：标定参数输入区 (滚动) */
+        .calib-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .calib-area h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+
+        .param-group {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border: 1px solid #e2edff;
+            transition: all 0.2s;
+        }
+
+        .param-group h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: flex-end;
+        }
+
+        .field {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .coord-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .coord-group input {
+            width: 80px;
+        }
+
+        input, .radius-input {
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            width: 100%;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+
+        button.pick-btn {
+            background: #eef2ff;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        button.pick-btn:hover {
+            background: #d9e6ff;
+            transform: scale(0.97);
+        }
+
+        button.calc-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        button.calc-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .matrix-output {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 20px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        .matrix-output pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+        }
+
+        .error-msg {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 10px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            margin: 12px 0;
+        }
+
+        .success-info {
+            color: #16a34a;
+            background: #e0f2e9;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+        }
+
+        /* 右下预留区域 */
+        .draw-area {
+            flex: 1;
+            background: #fefcf5;
+            border-top: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .draw-area::before {
+            content: "📐 绘图区 (预留)";
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        /* 滚动条 */
+        .calib-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        .calib-area::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        .calib-area::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 900px) {
+            .coord-group input { width: 65px; }
+            .input-row { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 <div class="split-layout">
-    <!-- 左侧：视频播放区域 -->
+    <!-- 左侧视频区 -->
     <div class="left-video">
-        <video 
-            id="mainVideo"
-            controls
-            preload="auto"
-            playsinline
-        >
-            <!-- 视频源：与当前网页在同一目录下的 Crane_working_1.mp4 -->
+        <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
             <source src="./Crane_working_1.mp4" type="video/mp4">
-            您的浏览器不支持 HTML5 视频播放。
+            您的浏览器不支持HTML5视频播放。
         </video>
+        <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮后，再点击视频画面获取坐标</div>
     </div>
 
-    <!-- 右侧：空白预留区域（未来可扩展） -->
-    <div class="right-placeholder"></div>
+    <!-- 右侧区域：上参数下绘图 -->
+    <div class="right-panel">
+        <!-- 右上：标定输入面板 -->
+        <div class="calib-area">
+            <h3>📐 相机标定 & 4x3 投影矩阵</h3>
+
+            <!-- 底座参数 -->
+            <div class="param-group">
+                <h4>🏗️ 1. 塔吊底座 (世界坐标半径)</h4>
+                <div class="input-row">
+                    <div class="field">
+                        <label>底座角点半径 (米) base_radius</label>
+                        <input type="number" id="baseRadius" value="2.0" step="0.1">
+                    </div>
+                </div>
+                <h4 style="margin-top: 12px;">📍 底座图像角点 (B1~B4, 可选中心C)</h4>
+                <div class="input-row" id="b1Row">
+                    <div class="field"><label>B1 (u,v)</label><div class="coord-group"><input id="b1u" placeholder="u" value="705.720"><input id="b1v" placeholder="v" value="403.008"></div></div>
+                    <button class="pick-btn" data-target="b1">🎯 选取</button>
+                </div>
+                <div class="input-row" id="b2Row">
+                    <div class="field"><label>B2 (u,v)</label><div class="coord-group"><input id="b2u" placeholder="u" value="596.730"><input id="b2v" placeholder="v" value="391.163"></div></div>
+                    <button class="pick-btn" data-target="b2">🎯 选取</button>
+                </div>
+                <div class="input-row" id="b3Row">
+                    <div class="field"><label>B3 (u,v)</label><div class="coord-group"><input id="b3u" placeholder="u" value="573.343"><input id="b3v" placeholder="v" value="437.234"></div></div>
+                    <button class="pick-btn" data-target="b3">🎯 选取</button>
+                </div>
+                <div class="input-row" id="b4Row">
+                    <div class="field"><label>B4 (u,v)</label><div class="coord-group"><input id="b4u" placeholder="u" value="683.393"><input id="b4v" placeholder="v" value="448.919"></div></div>
+                    <button class="pick-btn" data-target="b4">🎯 选取</button>
+                </div>
+                <div class="input-row" id="cRow">
+                    <div class="field"><label>C 中心 (可选)</label><div class="coord-group"><input id="cu" placeholder="u" value=""><input id="cv" placeholder="v" value=""></div></div>
+                    <button class="pick-btn" data-target="c">🎯 选取</button>
+                </div>
+            </div>
+
+            <!-- 塔身垂直参考点 (至少2个) -->
+            <div class="param-group">
+                <h4>📏 2. 塔身垂直参考点 (Z, u, v)</h4>
+                <div id="verticalPointsContainer">
+                    <div class="input-row vpoint-row" data-idx="0">
+                        <div class="field"><label>高度 Z1 (米)</label><input class="vz" type="number" value="10.0" step="0.5"></div>
+                        <div class="field"><label>像素 u</label><input class="vu" type="number" value="727.273"></div>
+                        <div class="field"><label>像素 v</label><input class="vv" type="number" value="222.222"></div>
+                        <button class="pick-btn pick-vertical" data-idx="0">🎯 选取</button>
+                    </div>
+                    <div class="input-row vpoint-row" data-idx="1">
+                        <div class="field"><label>高度 Z2 (米)</label><input class="vz" type="number" value="20.0" step="0.5"></div>
+                        <div class="field"><label>像素 u</label><input class="vu" type="number" value="816.327"></div>
+                        <div class="field"><label>像素 v</label><input class="vv" type="number" value="20.408"></div>
+                        <button class="pick-btn pick-vertical" data-idx="1">🎯 选取</button>
+                    </div>
+                </div>
+                <button id="addVerticalPoint" style="margin-top: 8px; background:#eef2ff; border:1px solid #cbd5e1; border-radius: 20px; padding: 6px 12px; font-size:0.7rem; cursor:pointer;">+ 添加参考点</button>
+            </div>
+
+            <!-- 小车 & 吊钩 -->
+            <div class="param-group">
+                <h4>🚛 3. 小车与吊钩 (关键点)</h4>
+                <div class="input-row">
+                    <div class="field"><label>小车高度 (米) trolley_height</label><input id="trolleyHeight" type="number" value="10.0" step="0.5"></div>
+                </div>
+                <div class="input-row">
+                    <div class="field"><label>小车像素点 (u,v)</label><div class="coord-group"><input id="trolleyU" value="1074.219"><input id="trolleyV" value="166.016"></div></div>
+                    <button class="pick-btn" data-target="trolley">🎯 选取</button>
+                </div>
+                <div class="input-row">
+                    <div class="field"><label>吊钩像素点 (u,v)</label><div class="coord-group"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div>
+                    <button class="pick-btn" data-target="hook">🎯 选取</button>
+                </div>
+                <div class="input-row">
+                    <div class="field"><label>小车半径 (米) 可选校验</label><input id="trolleyRadius" type="number" value="10.0" step="0.5"></div>
+                </div>
+            </div>
+
+            <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (4x3 投影矩阵)</button>
+
+            <!-- 结果显示区域 -->
+            <div id="resultPanel">
+                <div class="matrix-output">
+                    <strong>📷 4×3 相机投影矩阵 P (3x4)</strong>
+                    <pre id="cameraMatrixDisplay">尚未计算</pre>
+                </div>
+                <div id="calibStatus"></div>
+            </div>
+        </div>
+
+        <!-- 右下预留区：画图区域 -->
+        <div class="draw-area">
+            <!-- 未来用于绘制危险区域、三维轨迹等 -->
+        </div>
+    </div>
 </div>
 
-<!-- 无需任何额外脚本，保持最简，右侧完全留白 -->
+<script>
+    // ---------- 全局变量 ----------
+    let activePickMode = null;       // 当前等待选取的目标id
+    let pickCallback = null;
+    const video = document.getElementById('mainVideo');
+
+    // ---------- 辅助函数：获取视频原始坐标（根据点击映射到实际视频分辨率）----------
+    function getVideoOriginalCoordinates(event) {
+        const rect = video.getBoundingClientRect();
+        const scaleX = video.videoWidth / rect.width;
+        const scaleY = video.videoHeight / rect.height;
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        let u = clickX * scaleX;
+        let v = clickY * scaleY;
+        u = Math.min(Math.max(0, u), video.videoWidth);
+        v = Math.min(Math.max(0, v), video.videoHeight);
+        return { u, v };
+    }
+
+    // 进入选取模式
+    function enterPickMode(targetId, callbackAfterPick) {
+        if (activePickMode) {
+            video.style.cursor = "default";
+            activePickMode = null;
+        }
+        activePickMode = targetId;
+        video.style.cursor = "crosshair";
+        const tip = document.getElementById('pickTip');
+        tip.innerHTML = `✏️ 正在选取: ${targetId} ，请点击视频画面`;
+        pickCallback = callbackAfterPick;
+    }
+
+    // 视频点击事件
+    function onVideoClick(event) {
+        if (!activePickMode) return;
+        event.stopPropagation();
+        const { u, v } = getVideoOriginalCoordinates(event);
+        if (pickCallback) {
+            pickCallback(activePickMode, u, v);
+        }
+        // 退出选取模式
+        video.style.cursor = "default";
+        activePickMode = null;
+        document.getElementById('pickTip').innerHTML = '✅ 坐标已选取，可继续标定其他点';
+        setTimeout(() => {
+            if(!activePickMode) document.getElementById('pickTip').innerHTML = '✏️ 点击「选取」按钮后，再点击视频画面获取坐标';
+        }, 2000);
+    }
+    video.addEventListener('click', onVideoClick);
+
+    // 通用绑定选取按钮 (坐标输入框填充)
+    function bindPickButtons() {
+        // 底座点
+        const mappings = [
+            { id:'b1', uId:'b1u', vId:'b1v' }, { id:'b2', uId:'b2u', vId:'b2v' },
+            { id:'b3', uId:'b3u', vId:'b3v' }, { id:'b4', uId:'b4u', vId:'b4v' },
+            { id:'c', uId:'cu', vId:'cv' },
+            { id:'trolley', uId:'trolleyU', vId:'trolleyV' },
+            { id:'hook', uId:'hookU', vId:'hookV' }
+        ];
+        mappings.forEach(m => {
+            const btn = document.querySelector(`button.pick-btn[data-target="${m.id}"]`);
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    enterPickMode(m.id, (mode, u, v) => {
+                        document.getElementById(m.uId).value = u.toFixed(3);
+                        document.getElementById(m.vId).value = v.toFixed(3);
+                    });
+                });
+            }
+        });
+        // 动态垂直参考点绑定 (通过事件代理)
+        document.querySelectorAll('.pick-vertical').forEach(btn => {
+            btn.removeEventListener('click', handleVerticalPick);
+            btn.addEventListener('click', handleVerticalPick);
+        });
+    }
+
+    function handleVerticalPick(e) {
+        const btn = e.currentTarget;
+        const row = btn.closest('.vpoint-row');
+        const idx = row.getAttribute('data-idx');
+        enterPickMode(`vertical_${idx}`, (mode, u, v) => {
+            const vu = row.querySelector('.vu');
+            const vv = row.querySelector('.vv');
+            if(vu) vu.value = u.toFixed(3);
+            if(vv) vv.value = v.toFixed(3);
+        });
+    }
+
+    // 添加垂直参考点
+    function addVerticalPoint() {
+        const container = document.getElementById('verticalPointsContainer');
+        const idx = container.children.length;
+        const newRow = document.createElement('div');
+        newRow.className = 'input-row vpoint-row';
+        newRow.setAttribute('data-idx', idx);
+        newRow.innerHTML = `
+            <div class="field"><label>高度 Z${idx+1} (米)</label><input class="vz" type="number" value="15.0" step="0.5"></div>
+            <div class="field"><label>像素 u</label><input class="vu" type="number" value="770"></div>
+            <div class="field"><label>像素 v</label><input class="vv" type="number" value="120"></div>
+            <button class="pick-btn pick-vertical" data-idx="${idx}">🎯 选取</button>
+        `;
+        container.appendChild(newRow);
+        const newBtn = newRow.querySelector('.pick-vertical');
+        newBtn.addEventListener('click', handleVerticalPick);
+    }
+
+    // ---------- 核心算法 (移植Python逻辑，使用numeric) ----------
+    function toHomogeneous2d(pt) { return [pt[0], pt[1], 1.0]; }
+    function normalizePoints2D(points) {
+        let n = points.length;
+        let meanX = 0, meanY = 0;
+        for(let p of points) { meanX += p[0]; meanY += p[1]; }
+        meanX /= n; meanY /= n;
+        let centered = points.map(p => [p[0]-meanX, p[1]-meanY]);
+        let sumDist = 0;
+        for(let c of centered) sumDist += Math.hypot(c[0], c[1]);
+        let meanDist = sumDist / n;
+        let scale = Math.sqrt(2) / meanDist;
+        let T = [[scale, 0, -scale*meanX], [0, scale, -scale*meanY], [0,0,1]];
+        let normPoints = [];
+        for(let p of points) {
+            let ph = [p[0], p[1], 1];
+            let res = numeric.dot(T, ph);
+            normPoints.push([res[0]/res[2], res[1]/res[2]]);
+        }
+        return { normPoints, T };
+    }
+
+    function computeHomography(worldPts, imagePts) {
+        if(worldPts.length < 4) throw new Error("至少需要4对点");
+        let { normPoints: worldNorm, T: Tw } = normalizePoints2D(worldPts);
+        let { normPoints: imgNorm, T: Ti } = normalizePoints2D(imagePts);
+        let A = [];
+        for(let i=0; i<worldNorm.length; i++) {
+            let [X,Y] = worldNorm[i];
+            let [u,v] = imgNorm[i];
+            A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
+            A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
+        }
+        let svd = numeric.svd(A);
+        let V = svd.V;
+        let h = V[V.length-1];
+        let Hn = [[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],h[8]]];
+        let TiInv = numeric.inv(Ti);
+        let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
+        let scale = H[2][2];
+        if(Math.abs(scale)>1e-9) for(let i=0;i<3;i++) for(let j=0;j<3;j++) H[i][j]/=scale;
+        return H;
+    }
+
+    function estimateP3FromVerticalPoints(H0, verticalPoints) {
+        // verticalPoints: [[Z, u, v], ...] 至少2个非零高度
+        let p4 = [H0[0][2], H0[1][2], H0[2][2]];
+        let usable = [];
+        for(let vp of verticalPoints) {
+            let Z = vp[0];
+            if(Math.abs(Z) < 1e-6) continue;
+            let u = vp[1], vv = vp[2];
+            usable.push({Z, x: [u, vv, 1.0]});
+        }
+        if(usable.length < 2) throw new Error("需要至少2个有效垂直参考点");
+        let n = usable.length;
+        let A = [], b = [];
+        for(let i=0; i<n; i++) {
+            let Z = usable[i].Z;
+            let x = usable[i].x;
+            let row1 = [Z, 0, 0, -x[0], 0, 0];
+            let row2 = [0, Z, 0, -x[1], 0, 0];
+            let row3 = [0, 0, Z, -x[2], 0, 0];
+            let colShift = 3;
+            for(let r=0;r<3;r++) {
+                let row = [0,0,0,0,0,0];
+                if(r===0) row = [Z,0,0, -x[0],0,0];
+                else if(r===1) row = [0,Z,0, -x[1],0,0];
+                else row = [0,0,Z, -x[2],0,0];
+                A.push(row.slice(0,6));
+                b.push(-p4[r]);
+            }
+        }
+        let svdA = numeric.svd(A);
+        let rank = svdA.S.filter(s=>s>1e-8).length;
+        let sol = numeric.solve(A, b, true);
+        let p3 = [sol[0], sol[1], sol[2]];
+        return {p3, rank, residualNorm: numeric.norm2(numeric.sub(numeric.dot(A,sol),b)) };
+    }
+
+    function buildCameraMatrix(H0, p3) {
+        // H0 = [p1 p2 p4] , p3是第三列
+        let p1 = [H0[0][0], H0[1][0], H0[2][0]];
+        let p2 = [H0[0][1], H0[1][1], H0[2][1]];
+        let p4 = [H0[0][2], H0[1][2], H0[2][2]];
+        let P = [
+            [p1[0], p2[0], p3[0], p4[0]],
+            [p1[1], p2[1], p3[1], p4[1]],
+            [p1[2], p2[2], p3[2], p4[2]]
+        ];
+        return P;
+    }
+
+    // 标定主流程
+    function calibrateCamera() {
+        try {
+            // 读取底座半径
+            const baseRadius = parseFloat(document.getElementById('baseRadius').value);
+            // 底座世界坐标 (塔吊坐标系)
+            const a = baseRadius / Math.sqrt(2);
+            const worldMap = {
+                B1: [ a,  a], B2: [-a,  a], B3: [-a, -a], B4: [ a, -a], C: [0,0]
+            };
+            // 读取图像点
+            const imgPoints = {
+                B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
+                B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
+                B3: [parseFloat(document.getElementById('b3u').value), parseFloat(document.getElementById('b3v').value)],
+                B4: [parseFloat(document.getElementById('b4u').value), parseFloat(document.getElementById('b4v').value)],
+            };
+            const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
+            if(cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
+            
+            let worldPoints = [], imagePoints = [];
+            for(let key of ['B1','B2','B3','B4','C']) {
+                if(imgPoints[key]) {
+                    worldPoints.push(worldMap[key]);
+                    imagePoints.push(imgPoints[key]);
+                }
+            }
+            if(worldPoints.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
+            // 计算 H0
+            const H0 = computeHomography(worldPoints, imagePoints);
+            
+            // 垂直参考点
+            const vrows = document.querySelectorAll('.vpoint-row');
+            let verticalPts = [];
+            vrows.forEach(row => {
+                let Z = parseFloat(row.querySelector('.vz').value);
+                let u = parseFloat(row.querySelector('.vu').value);
+                let v = parseFloat(row.querySelector('.vv').value);
+                if(!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
+            });
+            if(verticalPts.length < 2) throw new Error("至少需要2个塔身垂直参考点");
+            const {p3, rank} = estimateP3FromVerticalPoints(H0, verticalPts);
+            if(rank < 3) console.warn("p3估计秩不足");
+            // 构建 4x3 相机矩阵
+            const Pmat = buildCameraMatrix(H0, p3);
+            // 显示矩阵
+            let matrixStr = "";
+            for(let i=0;i<3;i++) {
+                matrixStr += `[ ${Pmat[i].map(v=>v.toFixed(6)).join(", ")} ]\n`;
+            }
+            document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
+            document.getElementById('calibStatus').innerHTML = `<div class="success-info">✅ 标定成功！重投影误差待后续完善。4×3相机矩阵已生成。</div>`;
+            // 可选额外存储到全局
+            window.lastCameraMatrix = Pmat;
+            return Pmat;
+        } catch(err) {
+            console.error(err);
+            document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
+            document.getElementById('cameraMatrixDisplay').innerHTML = "计算失败";
+            return null;
+        }
+    }
+
+    // 页面初始化绑定
+    window.addEventListener('DOMContentLoaded', () => {
+        bindPickButtons();
+        document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
+        document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
+        // 设置视频自动尝试静音播放
+        video.muted = true;
+        video.play().catch(e=>console.log("自动播放被阻止"));
+    });
+    // 重新绑定新增的垂直点按钮动态
+    function rebindVerticalPicks() {
+        document.querySelectorAll('.pick-vertical').forEach(btn => {
+            btn.removeEventListener('click', handleVerticalPick);
+            btn.addEventListener('click', handleVerticalPick);
+        });
+    }
+    const observer = new MutationObserver(() => rebindVerticalPicks());
+    observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
+    rebindVerticalPicks();
+</script>
 </body>
 </html>
