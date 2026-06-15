@@ -83,7 +83,7 @@
         .calib-area h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             color: #0f172a;
             display: flex;
             align-items: center;
@@ -92,35 +92,36 @@
             padding-left: 10px;
         }
 
-        /* 横向三列布局 */
+        /* 横向三列布局：强制在同一行 */
         .horizontal-cards {
             display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
+            flex-wrap: nowrap;      /* 强制不换行，三个模块始终在一行 */
+            gap: 12px;
             margin-bottom: 20px;
         }
 
-        /* 每个卡片独立，等宽 */
+        /* 每个卡片独立，等宽，紧凑无溢出 */
         .param-card {
             flex: 1;
-            min-width: 240px;
+            min-width: 0;           /* 防止溢出，配合flex:1平均分配 */
             background: #f8fafc;
             border-radius: 16px;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border: 1px solid #e2edff;
             transition: all 0.2s;
         }
 
         .param-card h4 {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #1e293b;
-            margin-bottom: 12px;
+            margin-bottom: 8px;      /* 紧凑 */
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             border-left: 2px solid #3b82f6;
-            padding-left: 8px;
+            padding-left: 6px;
+            white-space: nowrap;     /* 标题不换行 */
         }
 
         /* 紧凑的行布局 */
@@ -128,37 +129,38 @@
             display: flex;
             flex-wrap: wrap;
             align-items: flex-end;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 6px;      /* 比之前更紧凑 */
         }
 
         .compact-field {
             flex: 1;
-            min-width: 80px;
+            min-width: 70px;
         }
 
         .compact-field label {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.6rem;      /* 更小更紧凑 */
             font-weight: 500;
             color: #475569;
             margin-bottom: 2px;
+            white-space: nowrap;
         }
 
         .coord-small {
             display: flex;
-            gap: 6px;
+            gap: 4px;
         }
         .coord-small input {
-            width: 70px;
+            width: 65px;
         }
 
         input, .radius-input {
-            padding: 6px 8px;
-            border-radius: 10px;
+            padding: 4px 6px;        /* 紧凑内边距 */
+            border-radius: 8px;
             border: 1px solid #cbd5e1;
             background: white;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: 0.15s;
             width: 100%;
         }
@@ -172,14 +174,16 @@
         button.pick-btn {
             background: #eef2ff;
             border: none;
-            border-radius: 10px;
-            padding: 6px 12px;
-            font-size: 0.7rem;
+            border-radius: 8px;
+            padding: 4px 10px;      /* 紧凑 */
+            font-size: 0.65rem;
             font-weight: 500;
             color: #2563eb;
             cursor: pointer;
             transition: 0.1s;
             white-space: nowrap;
+            height: 28px;            /* 固定高度与输入框对齐 */
+            line-height: 1;
         }
         button.pick-btn:hover {
             background: #d9e6ff;
@@ -190,28 +194,28 @@
             display: flex;
             flex-wrap: wrap;
             align-items: flex-end;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 4px;
+            margin-bottom: 6px;
             background: #ffffffcc;
-            padding: 6px;
-            border-radius: 12px;
+            padding: 4px;
+            border-radius: 10px;
         }
         .vpoint-row .field {
             flex: 1;
-            min-width: 60px;
+            min-width: 55px;
         }
         .vpoint-row input {
-            padding: 5px 6px;
-            font-size: 0.75rem;
+            padding: 4px 4px;
+            font-size: 0.7rem;
         }
         .add-point-btn {
             background: #eef2ff;
             border: 1px solid #cbd5e1;
-            border-radius: 20px;
-            padding: 5px 10px;
-            font-size: 0.7rem;
+            border-radius: 16px;
+            padding: 4px 8px;
+            font-size: 0.65rem;
             cursor: pointer;
-            margin-top: 8px;
+            margin-top: 4px;
             width: 100%;
             text-align: center;
         }
@@ -221,9 +225,9 @@
             color: white;
             border: none;
             border-radius: 28px;
-            padding: 10px 16px;
+            padding: 8px 16px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             width: 100%;
             margin: 8px 0 12px 0;
@@ -237,11 +241,11 @@
             background: #0f172a;
             color: #e2e8f0;
             border-radius: 16px;
-            padding: 12px;
+            padding: 10px;
             font-family: 'Courier New', monospace;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             overflow-x: auto;
-            margin-top: 12px;
+            margin-top: 10px;
         }
         .matrix-output pre {
             white-space: pre-wrap;
@@ -251,16 +255,16 @@
         .error-msg {
             color: #dc2626;
             background: #fee2e2;
-            padding: 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            margin: 8px 0;
+            padding: 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin: 6px 0;
         }
         .success-info {
             color: #16a34a;
             background: #e0f2e9;
-            padding: 6px 10px;
-            border-radius: 12px;
+            padding: 5px 8px;
+            border-radius: 10px;
             font-size: 0.7rem;
         }
 
@@ -295,12 +299,17 @@
             border-radius: 4px;
         }
 
+        /* 极端窄屏时保证三个模块不换行，允许水平滚动 */
         @media (max-width: 900px) {
             .horizontal-cards {
-                flex-direction: column;
+                overflow-x: auto;
             }
-            .coord-small input { width: 60px; }
-            .compact-row { flex-wrap: wrap; }
+            .param-card {
+                min-width: 260px;
+            }
+            .coord-small input {
+                width: 55px;
+            }
         }
     </style>
 </head>
@@ -320,7 +329,7 @@
         <div class="calib-area">
             <h3>📐 相机标定 & 4x3 投影矩阵</h3>
 
-            <!-- 三个主要区域横向排列 -->
+            <!-- 三个主要区域横向强制同一行 -->
             <div class="horizontal-cards">
                 <!-- 卡片1: 塔吊底座参数 -->
                 <div class="param-card">
@@ -331,7 +340,7 @@
                             <input type="number" id="baseRadius" value="2.0" step="0.1">
                         </div>
                     </div>
-                    <div style="margin: 8px 0 4px 0;"><label style="font-size:0.7rem;">📍 底座图像角点</label></div>
+                    <div style="margin: 4px 0 2px 0;"><label style="font-size:0.6rem;">📍 底座图像角点</label></div>
                     <!-- B1 -->
                     <div class="compact-row">
                         <div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" placeholder="u" value="705.720"><input id="b1v" placeholder="v" value="403.008"></div></div>
