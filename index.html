@@ -16,7 +16,8 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            /* 全局字体：数字和英文优先 Times New Roman，中文使用系统回退 */
+            font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
         }
 
         /* 主布局 */
@@ -46,20 +47,23 @@
             cursor: crosshair;
         }
 
+        /* 提示浮层：放在视频区域最上方 */
         .pick-tip {
             position: absolute;
-            bottom: 16px;
-            left: 16px;
-            background: rgba(0,0,0,0.7);
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(6px);
             color: #ffdd99;
-            font-size: 12px;
-            padding: 5px 12px;
-            border-radius: 20px;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 24px;
             pointer-events: none;
-            font-family: monospace;
+            font-family: 'Times New Roman', monospace;
             z-index: 10;
             border-left: 3px solid #ffaa33;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
 
         /* ========= 右侧区域 ========= */
@@ -69,6 +73,7 @@
             flex-direction: column;
             background: #f1f5f9;
             overflow: hidden;
+            font-family: 'Times New Roman', 'Segoe UI', system-ui, sans-serif;
         }
 
         /* 右上输入区域（紧凑设计） */
@@ -90,38 +95,41 @@
             gap: 6px;
             border-left: 3px solid #3b82f6;
             padding-left: 10px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         /* 横向三列布局：强制在同一行 */
         .horizontal-cards {
             display: flex;
-            flex-wrap: nowrap;      /* 强制不换行，三个模块始终在一行 */
+            flex-wrap: nowrap;
             gap: 12px;
             margin-bottom: 20px;
         }
 
-        /* 每个卡片独立，等宽，紧凑无溢出 */
+        /* 每个卡片独立，等宽 */
         .param-card {
             flex: 1;
-            min-width: 0;           /* 防止溢出，配合flex:1平均分配 */
+            min-width: 0;
             background: #f8fafc;
             border-radius: 16px;
             padding: 10px 12px;
             border: 1px solid #e2edff;
             transition: all 0.2s;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         .param-card h4 {
             font-size: 0.8rem;
             font-weight: 600;
             color: #1e293b;
-            margin-bottom: 8px;      /* 紧凑 */
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 4px;
             border-left: 2px solid #3b82f6;
             padding-left: 6px;
-            white-space: nowrap;     /* 标题不换行 */
+            white-space: nowrap;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         /* 紧凑的行布局 */
@@ -130,7 +138,7 @@
             flex-wrap: wrap;
             align-items: flex-end;
             gap: 6px;
-            margin-bottom: 6px;      /* 比之前更紧凑 */
+            margin-bottom: 6px;
         }
 
         .compact-field {
@@ -140,11 +148,12 @@
 
         .compact-field label {
             display: block;
-            font-size: 0.6rem;      /* 更小更紧凑 */
+            font-size: 0.6rem;
             font-weight: 500;
             color: #475569;
             margin-bottom: 2px;
             white-space: nowrap;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         .coord-small {
@@ -156,13 +165,14 @@
         }
 
         input, .radius-input {
-            padding: 4px 6px;        /* 紧凑内边距 */
+            padding: 4px 6px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
             background: white;
             font-size: 0.75rem;
             transition: 0.15s;
             width: 100%;
+            font-family: 'Times New Roman', monospace;
         }
 
         input:focus {
@@ -175,21 +185,22 @@
             background: #eef2ff;
             border: none;
             border-radius: 8px;
-            padding: 4px 10px;      /* 紧凑 */
+            padding: 4px 10px;
             font-size: 0.65rem;
             font-weight: 500;
             color: #2563eb;
             cursor: pointer;
             transition: 0.1s;
             white-space: nowrap;
-            height: 28px;            /* 固定高度与输入框对齐 */
+            height: 28px;
             line-height: 1;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
         button.pick-btn:hover {
             background: #d9e6ff;
         }
 
-        /* 垂直参考点组内部样式 (每个点一行，紧凑) */
+        /* ===== 塔身垂直参考点区域 专属紧凑样式 (字体变小，输入框宽度减少) ===== */
         .vpoint-row {
             display: flex;
             flex-wrap: wrap;
@@ -202,11 +213,18 @@
         }
         .vpoint-row .field {
             flex: 1;
-            min-width: 55px;
+            min-width: 45px;   /* 减小最小宽度，使输入框更窄 */
+        }
+        .vpoint-row label {
+            font-size: 0.6rem;    /* 标签字体缩小 */
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
         .vpoint-row input {
-            padding: 4px 4px;
-            font-size: 0.7rem;
+            padding: 3px 4px;     /* 更紧凑内边距 */
+            font-size: 0.65rem;   /* 数字字体缩小 */
+            width: 90%;           /* 相对宽度减少，实际更窄 */
+            min-width: 55px;
+            font-family: 'Times New Roman', monospace;
         }
         .add-point-btn {
             background: #eef2ff;
@@ -218,6 +236,7 @@
             margin-top: 4px;
             width: 100%;
             text-align: center;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         button.calc-btn {
@@ -232,6 +251,7 @@
             width: 100%;
             margin: 8px 0 12px 0;
             transition: 0.2s;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
         button.calc-btn:hover {
             background: #2563eb;
@@ -242,7 +262,7 @@
             color: #e2e8f0;
             border-radius: 16px;
             padding: 10px;
-            font-family: 'Courier New', monospace;
+            font-family: 'Times New Roman', 'Courier New', monospace;
             font-size: 0.65rem;
             overflow-x: auto;
             margin-top: 10px;
@@ -251,6 +271,7 @@
             white-space: pre-wrap;
             word-break: break-all;
             margin: 0;
+            font-family: 'Times New Roman', 'Courier New', monospace;
         }
         .error-msg {
             color: #dc2626;
@@ -259,6 +280,7 @@
             border-radius: 10px;
             font-size: 0.7rem;
             margin: 6px 0;
+            font-family: 'Times New Roman', sans-serif;
         }
         .success-info {
             color: #16a34a;
@@ -266,6 +288,7 @@
             padding: 5px 8px;
             border-radius: 10px;
             font-size: 0.7rem;
+            font-family: 'Times New Roman', sans-serif;
         }
 
         /* 右下绘图预留区 */
@@ -280,6 +303,7 @@
             gap: 8px;
             color: #94a3b8;
             font-size: 0.85rem;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
         .draw-area::before {
             content: "📐 绘图区 (预留)";
@@ -321,6 +345,7 @@
             <source src="./Crane_working_1.mp4" type="video/mp4">
             浏览器不支持视频播放。
         </video>
+        <!-- 提示浮层：已移至视频区域最上方（左上角） -->
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
     </div>
 
@@ -368,7 +393,7 @@
                     </div>
                 </div>
 
-                <!-- 卡片2: 塔身垂直参考点 -->
+                <!-- 卡片2: 塔身垂直参考点 (优化后字体更小、输入框更窄) -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
@@ -514,7 +539,7 @@
         newBtn.addEventListener('click', handleVerticalPick);
     }
 
-    // ---------- 核心计算函数 ----------
+    // ---------- 核心计算函数 (沿用之前的算法) ----------
     function normalizePoints2D(points) {
         let n = points.length;
         let meanX = 0, meanY = 0;
@@ -572,9 +597,6 @@
         for(let i=0; i<n; i++) {
             let Z = usable[i].Z;
             let x = usable[i].x;
-            let row1 = [Z, 0, 0, -x[0], 0, 0];
-            let row2 = [0, Z, 0, -x[1], 0, 0];
-            let row3 = [0, 0, Z, -x[2], 0, 0];
             for(let r=0;r<3;r++) {
                 let row = [0,0,0,0,0,0];
                 if(r===0) row = [Z,0,0, -x[0],0,0];
@@ -662,7 +684,6 @@
         document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
         video.muted = true;
         video.play().catch(e=>console.log("自动播放被阻止"));
-        // 动态绑定垂直参考点按钮
         const observer = new MutationObserver(() => {
             document.querySelectorAll('.pick-vertical').forEach(btn => {
                 btn.removeEventListener('click', handleVerticalPick);
