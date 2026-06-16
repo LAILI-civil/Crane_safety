@@ -1494,6 +1494,9 @@
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
+            // ---- 更新右下角 Risk Demo 绘图区 ----
+            updateRiskDrawArea(Pmat);
+
             // 显示矩阵 (保留6位小数，便于与 Python 对比)
             let matrixStr = "";
             for (let i=0; i<3; i++) {
@@ -1612,13 +1615,36 @@
         video.muted = true;
         video.play().catch(e => console.log("自动播放被阻止"));
         document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
+
         const observer = new MutationObserver(() => {
             document.querySelectorAll('.pick-vertical').forEach(btn => {
                 btn.removeEventListener('click', handleVerticalPick);
                 btn.addEventListener('click', handleVerticalPick);
             });
         });
+
         observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
+
+        window.addEventListener("resize", () => {
+            const text = document.getElementById("cameraMatrixDisplay").innerText;
+            if (!text || text.includes("尚未计算") || text.includes("计算失败")) return;
+
+            try {
+                const rows = text.trim().split("\n").map(line => {
+                    return line
+                        .replace("[", "")
+                        .replace("]", "")
+                        .split(",")
+                        .map(v => parseFloat(v.trim()));
+                });
+
+                if (rows.length === 3 && rows[0].length === 4) {
+                    updateRiskDrawArea(rows);
+                }
+            } catch (e) {
+                console.warn("resize redraw failed", e);
+            }
+        });
     });
 </script>
 </body>
