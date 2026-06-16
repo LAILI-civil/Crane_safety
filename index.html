@@ -3,43 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>塔吊智能监控标定 | 4x3 相机矩阵</title>
+    <title>塔吊智能监控标定 | 4×3 相机矩阵</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Times New Roman', 'Segoe UI', sans-serif; }
-        .split-layout { display: flex; width: 100%; height: 100%; flex-direction: row; }
-        .left-video { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-        .left-video video { width: 100%; height: 100%; object-fit: contain; cursor: crosshair; }
-        .pick-tip { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); color: #ffdd99; font-size: 13px; padding: 6px 14px; border-radius: 24px; pointer-events: none; font-family: monospace; border-left: 3px solid #ffaa33; }
-        .right-panel { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; overflow: hidden; }
-        .calib-area { flex: 1; overflow-y: auto; padding: 12px 16px; background: #fff; border-bottom: 1px solid #e2e8f0; }
-        .calib-area h3 { font-size: 1.1rem; margin-bottom: 14px; border-left: 3px solid #3b82f6; padding-left: 10px; }
-        .horizontal-cards { display: flex; flex-wrap: nowrap; gap: 12px; margin-bottom: 20px; }
-        .param-card { flex: 1; min-width: 0; background: #f8fafc; border-radius: 16px; padding: 10px 12px; border: 1px solid #e2edff; }
-        .param-card h4 { font-size: 0.8rem; margin-bottom: 8px; border-left: 2px solid #3b82f6; padding-left: 6px; white-space: nowrap; }
-        .compact-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; margin-bottom: 6px; }
-        .compact-field { flex: 1; min-width: 70px; }
-        .compact-field label { font-size: 0.6rem; margin-bottom: 2px; white-space: nowrap; }
-        .coord-small { display: flex; gap: 4px; }
-        .coord-small input { width: 65px; }
-        input { padding: 4px 6px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.75rem; width: 100%; font-family: monospace; }
-        button.pick-btn { background: #eef2ff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 0.65rem; color: #2563eb; cursor: pointer; height: 28px; }
-        .vpoint-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; background: #ffffffcc; padding: 4px; border-radius: 10px; }
-        .vpoint-row .field { flex: 1; min-width: 45px; }
-        .vpoint-row input { padding: 3px 4px; font-size: 0.65rem; }
-        .add-point-btn { background: #eef2ff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 4px 8px; font-size: 0.65rem; cursor: pointer; margin-top: 4px; width: 100%; text-align: center; }
-        button.calc-btn { background: #3b82f6; color: white; border: none; border-radius: 28px; padding: 8px 16px; font-weight: 600; width: 100%; margin: 8px 0 12px 0; cursor: pointer; }
-        .matrix-output { background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 10px; font-family: monospace; font-size: 0.65rem; overflow-x: auto; margin-top: 10px; }
-        .error-msg { color: #dc2626; background: #fee2e2; padding: 6px; border-radius: 10px; font-size: 0.7rem; margin: 6px 0; }
-        .success-info { color: #16a34a; background: #e0f2e9; padding: 5px 8px; border-radius: 10px; font-size: 0.7rem; }
-        .draw-area { flex: 1; background: #fefcf5; border-top: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
-        .draw-area::before { content: "📐 绘图区 (预留)"; }
-        @media (max-width: 900px) { .horizontal-cards { overflow-x: auto; } .param-card { min-width: 260px; } }
+        /* 全局重置与字体 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+        }
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: row;
+        }
+
+        /* ===== 左侧视频区 ===== */
+        .left-video {
+            flex: 1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .left-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+        .pick-tip {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.75);
+            color: #ffdd99;
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 24px;
+            pointer-events: none;
+            font-family: 'Times New Roman', monospace;
+            border-left: 3px solid #ffaa33;
+        }
+
+        /* ===== 右侧面板 ===== */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+        .calib-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .calib-area h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        /* 三列卡片横向布局 */
+        .horizontal-cards {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .param-card {
+            flex: 1;
+            min-width: 0;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid #e2edff;
+        }
+
+        /* ---- 统一标题大小 ---- */
+        .param-card h4 {
+            font-size: 0.95rem;        /* 所有模块标题统一 */
+            font-weight: 600;
+            margin-bottom: 12px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 8px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        /* ---- 统一标签大小 ---- */
+        .param-card label {
+            font-size: 0.75rem;        /* 所有副标题/标签统一 */
+            font-weight: 500;
+            display: block;
+            margin-bottom: 2px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        /* 紧凑行布局 */
+        .compact-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .compact-field {
+            flex: 1;
+            min-width: 75px;
+        }
+        .coord-small {
+            display: flex;
+            gap: 4px;
+        }
+        .coord-small input {
+            width: 68px;
+        }
+
+        /* ---- 所有输入框数字使用 Times New Roman ---- */
+        input {
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.8rem;
+            width: 100%;
+            font-family: 'Times New Roman', monospace;
+            background: white;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+
+        /* 按钮样式 */
+        button.pick-btn {
+            background: #eef2ff;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            height: 30px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+        button.pick-btn:hover {
+            background: #d9e6ff;
+        }
+
+        /* 垂直参考点内部行 */
+        .vpoint-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 8px;
+            background: #ffffffcc;
+            padding: 6px;
+            border-radius: 10px;
+        }
+        .vpoint-row .field {
+            flex: 1;
+            min-width: 50px;
+        }
+        .vpoint-row input {
+            padding: 4px 6px;
+            font-size: 0.75rem;
+        }
+        .vpoint-row label {
+            font-size: 0.7rem;        /* 垂直参考点标签略小，但保持一致 */
+        }
+
+        .add-point-btn {
+            background: #eef2ff;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 6px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        /* 计算按钮 */
+        button.calc-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            width: 100%;
+            margin: 10px 0 14px 0;
+            cursor: pointer;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+        button.calc-btn:hover {
+            background: #2563eb;
+        }
+
+        /* 矩阵输出 */
+        .matrix-output {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        .matrix-output pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            font-family: 'Times New Roman', 'Courier New', monospace;
+        }
+
+        .error-msg {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin: 8px 0;
+            font-family: 'Times New Roman', sans-serif;
+        }
+        .success-info {
+            color: #16a34a;
+            background: #e0f2e9;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-family: 'Times New Roman', sans-serif;
+            line-height: 1.6;
+        }
+
+        /* 绘图区预留 */
+        .draw-area {
+            flex: 1;
+            background: #fefcf5;
+            border-top: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+        .draw-area::before {
+            content: "📐 绘图区 (预留)";
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .horizontal-cards {
+                overflow-x: auto;
+            }
+            .param-card {
+                min-width: 260px;
+            }
+            .coord-small input {
+                width: 58px;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="split-layout">
+    <!-- 左侧视频 -->
     <div class="left-video">
         <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
             <source src="./Crane_working_1.mp4" type="video/mp4">
@@ -47,11 +299,14 @@
         </video>
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
     </div>
+
+    <!-- 右侧面板 -->
     <div class="right-panel">
         <div class="calib-area">
-            <h3>📐 相机标定 & 4x3 投影矩阵</h3>
+            <h3>📐 相机标定 &amp; 4×3 投影矩阵</h3>
             <div class="horizontal-cards">
-                <!-- 底座参数卡片 -->
+
+                <!-- 卡片1: 塔吊底座参数 -->
                 <div class="param-card">
                     <h4>🏗️ 塔吊底座参数</h4>
                     <div class="compact-row">
@@ -60,7 +315,7 @@
                             <input type="number" id="baseRadius" value="2.0" step="0.1">
                         </div>
                     </div>
-                    <div style="margin: 4px 0 2px 0;"><label style="font-size:0.6rem;">📍 底座图像角点</label></div>
+                    <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
                     <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
@@ -68,18 +323,18 @@
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 垂直参考点卡片 -->
+                <!-- 卡片2: 塔身垂直参考点 -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
                         <div class="vpoint-row" data-idx="0">
-                            <div class="field"><label>Z1(m)</label><input class="vz" type="number" value="10.0"></div>
+                            <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="10.0"></div>
                             <div class="field"><label>u</label><input class="vu" type="number" value="727.273"></div>
                             <div class="field"><label>v</label><input class="vv" type="number" value="222.222"></div>
                             <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                         </div>
                         <div class="vpoint-row" data-idx="1">
-                            <div class="field"><label>Z2(m)</label><input class="vz" type="number" value="20.0"></div>
+                            <div class="field"><label>Z2 (m)</label><input class="vz" type="number" value="20.0"></div>
                             <div class="field"><label>u</label><input class="vu" type="number" value="816.327"></div>
                             <div class="field"><label>v</label><input class="vv" type="number" value="20.408"></div>
                             <button class="pick-btn pick-vertical" data-idx="1">选取</button>
@@ -88,7 +343,7 @@
                     <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                 </div>
 
-                <!-- 小车吊钩卡片 -->
+                <!-- 卡片3: 小车与吊钩关键点 -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
                     <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.0"></div></div>
@@ -96,9 +351,14 @@
                     <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
                 </div>
             </div>
-            <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (4x3 投影矩阵)</button>
+
+            <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (4×3 投影矩阵)</button>
+
             <div id="resultPanel">
-                <div class="matrix-output"><strong>📷 4×3 相机投影矩阵 P</strong><pre id="cameraMatrixDisplay">尚未计算</pre></div>
+                <div class="matrix-output">
+                    <strong>📷 4×3 相机投影矩阵 P</strong>
+                    <pre id="cameraMatrixDisplay">尚未计算</pre>
+                </div>
                 <div id="calibStatus"></div>
             </div>
         </div>
@@ -108,10 +368,10 @@
 
 <script>
     // ============================================================
-    // 基础数学函数 (严格移植自 Python 简化版)
+    // 核心数学函数 (移植自 Python 简化版)
     // ============================================================
 
-    // 最小二乘求解 (使用 SVD，自动处理行<列)
+    // 最小二乘求解 (自动处理行列数)
     function leastSquares(A, b) {
         const rows = A.length, cols = A[0].length;
         let U, S, V;
@@ -119,13 +379,9 @@
             const svd = numeric.svd(A);
             U = svd.U; S = svd.S; V = svd.V;
         } else {
-            // 对 A^T 做 SVD，然后转换
             const AT = numeric.transpose(A);
             const svd = numeric.svd(AT);
-            // A = V' * S' * U'^T
-            U = svd.V;
-            S = svd.S;
-            V = svd.U;
+            U = svd.V; S = svd.S; V = svd.U;
         }
         const tol = 1e-12 * S[0];
         const x = new Array(cols).fill(0);
@@ -178,14 +434,14 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 解齐次方程：最小奇异值对应的右奇异向量
+        // 求最小奇异值对应的右奇异向量
         const rows = A.length, cols = A[0].length;
         let V;
         if (rows >= cols) {
             V = numeric.svd(A).V;
         } else {
             const AT = numeric.transpose(A);
-            V = numeric.svd(AT).U;   // 右奇异向量
+            V = numeric.svd(AT).U;   // 此时右奇异向量为 U'
         }
         const h = V.map(row => row[V[0].length-1]);
         const Hn = [
@@ -394,10 +650,11 @@
     }
 
     // ============================================================
-    // 视频交互选取 (保留，简洁)
+    // 视频交互选取 (简洁)
     // ============================================================
     let activePickMode = null, pickCallback = null;
     const video = document.getElementById('mainVideo');
+
     function getVideoOriginalCoordinates(event) {
         const rect = video.getBoundingClientRect();
         const scaleX = video.videoWidth / rect.width;
@@ -408,6 +665,7 @@
         v = Math.min(Math.max(0, v), video.videoHeight);
         return { u, v };
     }
+
     function enterPickMode(targetId, callback) {
         if (activePickMode) video.style.cursor = "default";
         activePickMode = targetId;
@@ -415,6 +673,7 @@
         document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}`;
         pickCallback = callback;
     }
+
     function onVideoClick(event) {
         if (!activePickMode) return;
         const { u, v } = getVideoOriginalCoordinates(event);
@@ -423,7 +682,7 @@
         activePickMode = null;
         document.getElementById('pickTip').innerHTML = '✅ 坐标已选取';
         setTimeout(() => {
-            if(!activePickMode) document.getElementById('pickTip').innerHTML = '✏️ 点击「选取」按钮，再点击视频获取坐标';
+            if (!activePickMode) document.getElementById('pickTip').innerHTML = '✏️ 点击「选取」按钮，再点击视频获取坐标';
         }, 1500);
     }
     video.addEventListener('click', onVideoClick);
@@ -437,30 +696,56 @@
         ];
         mappings.forEach(m => {
             const btn = document.querySelector(`button.pick-btn[data-target="${m.id}"]`);
-            if(btn) btn.addEventListener('click', () => enterPickMode(m.id, (mode,u,v) => { document.getElementById(m.uId).value = u.toFixed(3); document.getElementById(m.vId).value = v.toFixed(3); }));
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    enterPickMode(m.id, (mode, u, v) => {
+                        document.getElementById(m.uId).value = u.toFixed(3);
+                        document.getElementById(m.vId).value = v.toFixed(3);
+                    });
+                });
+            }
         });
     }
+
     function handleVerticalPick(e) {
-        const btn = e.currentTarget, row = btn.closest('.vpoint-row'), idx = row.getAttribute('data-idx');
-        enterPickMode(`vertical_${idx}`, (mode,u,v) => { row.querySelector('.vu').value = u.toFixed(3); row.querySelector('.vv').value = v.toFixed(3); });
+        const btn = e.currentTarget;
+        const row = btn.closest('.vpoint-row');
+        const idx = row.getAttribute('data-idx');
+        enterPickMode(`vertical_${idx}`, (mode, u, v) => {
+            row.querySelector('.vu').value = u.toFixed(3);
+            row.querySelector('.vv').value = v.toFixed(3);
+        });
     }
+
     function addVerticalPoint() {
-        const container = document.getElementById('verticalPointsContainer'), idx = container.children.length;
+        const container = document.getElementById('verticalPointsContainer');
+        const idx = container.children.length;
         const newRow = document.createElement('div');
         newRow.className = 'vpoint-row';
         newRow.setAttribute('data-idx', idx);
-        newRow.innerHTML = `<div class="field"><label>Z${idx+1}(m)</label><input class="vz" type="number" value="15.0"></div><div class="field"><label>u</label><input class="vu" type="number" value="770"></div><div class="field"><label>v</label><input class="vv" type="number" value="120"></div><button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>`;
+        newRow.innerHTML = `
+            <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="number" value="15.0"></div>
+            <div class="field"><label>u</label><input class="vu" type="number" value="770"></div>
+            <div class="field"><label>v</label><input class="vv" type="number" value="120"></div>
+            <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
+        `;
         container.appendChild(newRow);
         newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
     }
+
     window.addEventListener('DOMContentLoaded', () => {
         bindPickButtons();
         document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
         document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
         video.muted = true;
-        video.play().catch(e=>console.log("自动播放被阻止"));
+        video.play().catch(e => console.log("自动播放被阻止"));
         document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
-        const observer = new MutationObserver(() => { document.querySelectorAll('.pick-vertical').forEach(btn => btn.removeEventListener('click', handleVerticalPick) || btn.addEventListener('click', handleVerticalPick)); });
+        const observer = new MutationObserver(() => {
+            document.querySelectorAll('.pick-vertical').forEach(btn => {
+                btn.removeEventListener('click', handleVerticalPick);
+                btn.addEventListener('click', handleVerticalPick);
+            });
+        });
         observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
     });
 </script>
