@@ -6,45 +6,283 @@
     <title>塔吊智能监控标定 | 4×3 相机矩阵 (Demo3 对标)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Times New Roman', 'Segoe UI', sans-serif; }
-        .split-layout { display: flex; width: 100%; height: 100%; flex-direction: row; }
-        .left-video { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-        .left-video video { width: 100%; height: 100%; object-fit: contain; cursor: crosshair; }
-        .pick-tip { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); color: #ffdd99; font-size: 14px; padding: 6px 16px; border-radius: 24px; pointer-events: none; font-family: monospace; border-left: 3px solid #ffaa33; }
-        .right-panel { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; overflow: hidden; }
-        .calib-area { flex: 1; overflow-y: auto; padding: 16px 20px; background: #fff; border-bottom: 1px solid #e2e8f0; }
-        .calib-area h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; border-left: 4px solid #3b82f6; padding-left: 12px; }
-        .horizontal-cards { display: flex; flex-wrap: nowrap; gap: 16px; margin-bottom: 20px; }
-        .param-card { flex: 1; min-width: 0; background: #f8fafc; border-radius: 16px; padding: 14px 16px; border: 1px solid #e2edff; }
-        .param-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; border-left: 3px solid #3b82f6; padding-left: 8px; }
-        .param-card label { font-size: 0.75rem; font-weight: 500; display: block; margin-bottom: 2px; }
-        .compact-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-bottom: 8px; }
-        .compact-field { flex: 1; min-width: 70px; }
-        .coord-small { display: flex; gap: 4px; }
-        .coord-small input { width: 56px; }
-        input { padding: 5px 6px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.8rem; width: 100%; font-family: monospace; background: white; }
-        input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
-        button.pick-btn { background: #eef2ff; border: none; border-radius: 8px; padding: 5px 10px; font-size: 0.7rem; font-weight: 500; color: #2563eb; cursor: pointer; height: 30px; white-space: nowrap; }
-        button.pick-btn:hover { background: #d9e6ff; }
-        .vpoint-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; margin-bottom: 8px; background: #ffffffcc; padding: 6px; border-radius: 10px; }
-        .vpoint-row .field { flex: 1; min-width: 48px; }
-        .vpoint-row input { padding: 4px 6px; font-size: 0.75rem; }
-        .vpoint-row label { font-size: 0.7rem; }
-        .add-point-btn { background: #eef2ff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 5px 10px; font-size: 0.7rem; cursor: pointer; margin-top: 6px; width: 100%; text-align: center; }
-        button.calc-btn { background: #3b82f6; color: white; border: none; border-radius: 30px; padding: 10px 20px; font-weight: 600; font-size: 0.95rem; width: 100%; margin: 10px 0 14px 0; cursor: pointer; }
-        button.calc-btn:hover { background: #2563eb; }
-        .matrix-output { background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 12px; font-family: 'Courier New', monospace; font-size: 0.7rem; overflow-x: auto; margin-top: 12px; }
-        .matrix-output pre { white-space: pre-wrap; word-break: break-all; margin: 0; font-family: 'Courier New', monospace; }
-        .error-msg { color: #dc2626; background: #fee2e2; padding: 8px; border-radius: 10px; font-size: 0.8rem; margin: 8px 0; }
-        .success-info { color: #16a34a; background: #e0f2e9; padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; line-height: 1.6; }
-        .draw-area { flex: 1; background: #fefcf5; border-top: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.9rem; }
-        .draw-area::before { content: "📐 绘图区 (预留)"; font-weight: 500; opacity: 0.7; }
-        @media (max-width: 900px) { .horizontal-cards { overflow-x: auto; } .param-card { min-width: 260px; } .coord-small input { width: 50px; } }
+        /* 全局重置与字体 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+        }
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: row;
+        }
+
+        /* ===== 左侧视频区 ===== */
+        .left-video {
+            flex: 1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .left-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+        .pick-tip {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.75);
+            color: #ffdd99;
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 24px;
+            pointer-events: none;
+            font-family: 'Times New Roman', monospace;
+            border-left: 3px solid #ffaa33;
+        }
+
+        /* ===== 右侧面板 ===== */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+        .calib-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .calib-area h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        /* 三列卡片横向布局 */
+        .horizontal-cards {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .param-card {
+            flex: 1;
+            min-width: 0;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid #e2edff;
+        }
+
+        .param-card h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 8px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        .param-card label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 2px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        .compact-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .compact-field {
+            flex: 1;
+            min-width: 70px;
+        }
+        .coord-small {
+            display: flex;
+            gap: 4px;
+        }
+        .coord-small input {
+            width: 56px;
+        }
+
+        input {
+            padding: 5px 6px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.8rem;
+            width: 100%;
+            font-family: 'Times New Roman', monospace;
+            background: white;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+
+        button.pick-btn {
+            background: #eef2ff;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            height: 30px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            white-space: nowrap;
+        }
+        button.pick-btn:hover {
+            background: #d9e6ff;
+        }
+
+        .vpoint-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 8px;
+            background: #ffffffcc;
+            padding: 6px;
+            border-radius: 10px;
+        }
+        .vpoint-row .field {
+            flex: 1;
+            min-width: 48px;
+        }
+        .vpoint-row input {
+            padding: 4px 6px;
+            font-size: 0.75rem;
+        }
+        .vpoint-row label {
+            font-size: 0.7rem;
+        }
+
+        .add-point-btn {
+            background: #eef2ff;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 6px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+
+        button.calc-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            width: 100%;
+            margin: 10px 0 14px 0;
+            cursor: pointer;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+        button.calc-btn:hover {
+            background: #2563eb;
+        }
+
+        .matrix-output {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 16px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        .matrix-output pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            font-family: 'Times New Roman', 'Courier New', monospace;
+        }
+
+        .error-msg {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin: 8px 0;
+            font-family: 'Times New Roman', sans-serif;
+        }
+        .success-info {
+            color: #16a34a;
+            background: #e0f2e9;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-family: 'Times New Roman', sans-serif;
+            line-height: 1.6;
+        }
+
+        .draw-area {
+            flex: 1;
+            background: #fefcf5;
+            border-top: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+        }
+        .draw-area::before {
+            content: "📐 绘图区 (预留)";
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 900px) {
+            .horizontal-cards {
+                overflow-x: auto;
+            }
+            .param-card {
+                min-width: 260px;
+            }
+            .coord-small input {
+                width: 50px;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="split-layout">
+    <!-- 左侧视频 -->
     <div class="left-video">
         <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
             <source src="./Crane_working_1.mp4" type="video/mp4">
@@ -52,11 +290,14 @@
         </video>
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
     </div>
+
+    <!-- 右侧面板 -->
     <div class="right-panel">
         <div class="calib-area">
             <h3>📐 相机标定 &amp; 4×3 投影矩阵 (Demo3 对标)</h3>
             <div class="horizontal-cards">
-                <!-- 底座参数 -->
+
+                <!-- 卡片1: 塔吊底座参数 -->
                 <div class="param-card">
                     <h4>🏗️ 塔吊底座参数</h4>
                     <div class="compact-row">
@@ -66,14 +307,16 @@
                         </div>
                     </div>
                     <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
+                    <!-- 与 Python demo3 完全一致，保留3位小数 -->
                     <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.393"><input id="b4v" value="448.919"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                    <!-- C 中心留空 (与 demo3 一致) -->
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 垂直参考点 -->
+                <!-- 卡片2: 塔身垂直参考点 (与 demo3 一致) -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
@@ -93,7 +336,7 @@
                     <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                 </div>
 
-                <!-- 小车吊钩 -->
+                <!-- 卡片3: 小车与吊钩关键点 (与 demo3 一致) -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
                     <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.00"></div></div>
@@ -118,10 +361,10 @@
 
 <script>
     // ================================================================
-    // 核心数学工具 (与 Python 完全一致)
+    // 1. 基础数学工具 (与 Python 一致)
     // ================================================================
 
-    // 最小二乘求解 (SVD, 自动处理行<列)
+    // 最小二乘求解 (自动处理行列数)
     function leastSquares(A, b) {
         const rows = A.length, cols = A[0].length;
         let U, S, V;
@@ -172,7 +415,7 @@
         return { normPoints, T };
     }
 
-    // 计算单应矩阵 H (DLT) —— 完全对齐 Python 的 compute_homography
+    // 计算单应矩阵 H (DLT)
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -184,11 +427,15 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 直接使用 SVD，取最小奇异值对应的右奇异向量（最后一列）
-        const svd = numeric.svd(A);
-        const V = svd.V;              // 右奇异向量矩阵，每列是右奇异向量
-        const lastCol = V[0].length - 1;
-        const h = V.map(row => row[lastCol]);
+        const rows = A.length, cols = A[0].length;
+        let V;
+        if (rows >= cols) {
+            V = numeric.svd(A).V;
+        } else {
+            const AT = numeric.transpose(A);
+            V = numeric.svd(AT).U;
+        }
+        const h = V.map(row => row[V[0].length-1]);
         const Hn = [
             [h[0], h[1], h[2]],
             [h[3], h[4], h[5]],
@@ -196,26 +443,12 @@
         ];
         const TiInv = numeric.inv(Ti);
         let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
-
-        // 归一化：强制除以 H[2][2]（若不为零），否则除以范数
         const scale = H[2][2];
         if (Math.abs(scale) > 1e-12) {
-            for (let i = 0; i < 3; i++) {
-                for (let j = 0; j < 3; j++) {
-                    H[i][j] /= scale;
-                }
-            }
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= scale;
         } else {
-            const norm = Math.hypot(H[0][0], H[0][1], H[0][2],
-                                    H[1][0], H[1][1], H[1][2],
-                                    H[2][0], H[2][1], H[2][2]);
-            if (norm > 1e-12) {
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        H[i][j] /= norm;
-                    }
-                }
-            }
+            const norm = Math.hypot(H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]);
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= norm;
         }
         return H;
     }
@@ -228,7 +461,7 @@
         return [res[0]*inv, res[1]*inv];
     }
 
-    // 图像点到平面
+    // 图像点到平面 (通过单应)
     function imageToPlane(H, u, v) {
         const Hinv = numeric.inv(H);
         const p = [u, v, 1];
@@ -247,7 +480,7 @@
     }
 
     // ================================================================
-    // 塔吊底座鲁棒补全逻辑 (与 Python 一致)
+    // 2. 塔吊底座鲁棒补全逻辑 (与 Python 一致)
     // ================================================================
 
     const BASE_LABELS = ["B1", "B2", "B3", "B4"];
@@ -412,7 +645,7 @@
     }
 
     // ================================================================
-    // 其他模块 (p3估计、小车吊钩等)
+    // 3. 其他模块 (p3估计、小车吊钩等) 保持不变
     // ================================================================
 
     function estimateP3(H0, verticalPoints) {
@@ -485,16 +718,18 @@
     }
 
     // ================================================================
-    // 主计算流程
+    // 4. 主计算流程 (与 Demo3 对标)
     // ================================================================
     function calibrateCamera() {
         try {
             document.getElementById('calibStatus').innerHTML = '';
             document.getElementById('cameraMatrixDisplay').innerHTML = '计算中...';
 
+            // ---- 读取底座数据 ----
             const baseRadius = parseFloat(document.getElementById('baseRadius').value);
             if (isNaN(baseRadius) || baseRadius <= 0) throw new Error("底座距离必须为正数");
 
+            // 构造 imageMarks 对象 (null 表示缺失)
             const imageMarks = {
                 B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
                 B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
@@ -503,27 +738,32 @@
                 C: null
             };
             const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
-            if (cu && cv) imageMarks.C = [parseFloat(cu), parseFloat(cv)];
+            if (cu && cv) {
+                imageMarks.C = [parseFloat(cu), parseFloat(cv)];
+            }
+
+            // 检查每个点是否有效 (如果是 NaN 则置为 null)
             for (let key of ['B1','B2','B3','B4','C']) {
                 if (imageMarks[key] !== null && (isNaN(imageMarks[key][0]) || isNaN(imageMarks[key][1]))) {
                     imageMarks[key] = null;
                 }
             }
 
-            // 鲁棒底座标定 (此处使用默认参数，与 demo3 一致：有中心则使用，但 demo3 无中心)
-            const useCenter = true;
+            // ---- 鲁棒底座标定 ----
+            const useCenter = true;  // 若有中心则使用，但 demo3 无中心所以不会用
             const blendWeight = 0.7;
             const { H0, completed, estimatedInfo } = calibrateGroundHomography(
                 imageMarks, baseRadius, useCenter, blendWeight
             );
 
+            // 收集补全信息
             let infoMsg = "";
             if (estimatedInfo.estimatedLabels.length > 0) {
                 infoMsg = `⚠️ 底座点补全: ${estimatedInfo.estimatedLabels.join(', ')} (方法: ${estimatedInfo.method})`;
                 if (estimatedInfo.warning) infoMsg += ` ${estimatedInfo.warning}`;
             }
 
-            // 垂直参考点
+            // ---- 垂直参考点 ----
             const vrows = document.querySelectorAll('.vpoint-row');
             let verticalPts = [];
             vrows.forEach(row => {
@@ -534,20 +774,22 @@
             });
             if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
 
+            // ---- 估计 p3 ----
             const p3 = estimateP3(H0, verticalPts);
 
-            // 小车与吊钩
+            // ---- 小车与吊钩 ----
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
             const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
             const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
 
+            // ---- 计算吊物位置 ----
             const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
             const Z_hook = estimateHeight(H0, p3, X, Y, hookPixel);
             const groundPixel = groundToImage(H0, X, Y);
             const trolleyRadius = Math.hypot(X, Y);
             const theta_deg = Math.atan2(Y, X) * 180 / Math.PI;
 
-            // 构建 4x3 投影矩阵
+            // ---- 构建 4x3 矩阵 (保留更多小数以便对比) ----
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
@@ -555,12 +797,14 @@
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
+            // 显示矩阵 (保留6位小数，便于与 Python 对比)
             let matrixStr = "";
             for (let i=0; i<3; i++) {
                 matrixStr += `[ ${Pmat[i].map(v => v.toFixed(6)).join(", ")} ]\n`;
             }
             document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
 
+            // 显示结果 (保留6位小数)
             let statusHtml = `
                 <div class="success-info">
                     ✅ 标定成功 (Demo3 对标)<br>
@@ -581,7 +825,7 @@
     }
 
     // ================================================================
-    // 视频交互选取 (不变)
+    // 5. 视频交互选取 (不变)
     // ================================================================
     let activePickMode = null, pickCallback = null;
     const video = document.getElementById('mainVideo');
@@ -630,7 +874,7 @@
             if (btn) {
                 btn.addEventListener('click', () => {
                     enterPickMode(m.id, (mode, u, v) => {
-                        document.getElementById(m.uId).value = u.toFixed(3);
+                        document.getElementById(m.uId).value = u.toFixed(3);  // 保留3位小数，与Python一致
                         document.getElementById(m.vId).value = v.toFixed(3);
                     });
                 });
