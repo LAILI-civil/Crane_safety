@@ -111,17 +111,34 @@
 
 <script>
     // =================================================================
-    // 核心数学函数 (全部重写，确保稳定)
+    // 通用最小二乘求解 (使用 SVD，兼容任意形状矩阵)
     // =================================================================
-
-    // 最小二乘解 Ax = b (使用 SVD，数值稳定)
     function leastSquares(A, b) {
-        const svd = numeric.svd(A);
-        const U = svd.U, S = svd.S, V = svd.V;
+        // 检查矩阵形状，如果行数小于列数，对 A^T 做 SVD
+        const rows = A.length, cols = A[0].length;
+        let U, S, V;
+        if (rows >= cols) {
+            const svd = numeric.svd(A);
+            U = svd.U; S = svd.S; V = svd.V;
+        } else {
+            // 对 A^T 做 SVD: A^T = U' * S' * V'^T
+            // 则 A = V' * S' * U'^T，右奇异向量是 V' 的列
+            const AT = numeric.transpose(A);
+            const svd = numeric.svd(AT);
+            // 注意：AT 的右奇异向量对应原矩阵的左奇异向量，但我们需要的是 A 的最小二乘解。
+            // 对于最小二乘 min ||Ax - b||，当行<列时，解不唯一，通常取最小范数解。
+            // 使用伪逆：x = A^+ b，其中 A^+ = V * S^+ * U^T。
+            // 这里 U,S,V 是 A 的 SVD，但我们的计算方式应当保持一致。
+            // 为了简单，我们可以直接使用原矩阵的 SVD，但需要转置关系。
+            // 更稳妥：构造 A 的 SVD 通过转置关系。
+            // 已知 A = (U' * S' * V'^T)^T = V' * S' * U'^T
+            // 因此 A 的左奇异向量是 V'，右奇异向量是 U'，奇异值相同。
+            U = svd.V;    // 原矩阵的左奇异向量
+            S = svd.S;    // 奇异值
+            V = svd.U;    // 原矩阵的右奇异向量
+        }
         const tol = 1e-12 * S[0];
-        const m = U.length, n = V.length;
-        const x = new Array(n).fill(0);
-        // 对每个奇异值，计算贡献
+        const x = new Array(V.length).fill(0);
         for (let i = 0; i < S.length; i++) {
             if (S[i] > tol) {
                 const invS = 1.0 / S[i];
@@ -130,7 +147,7 @@
                 const ui_dot_b = numeric.dot(ui, b);
                 const coeff = invS * ui_dot_b;
                 // V 的第 i 列
-                for (let j = 0; j < n; j++) {
+                for (let j = 0; j < V.length; j++) {
                     x[j] += V[j][i] * coeff;
                 }
             }
@@ -138,7 +155,7 @@
         return x;
     }
 
-    // 二维点归一化: 返回归一化后的点集和变换矩阵 T
+    // 二维点归一化
     function normalizePoints(points) {
         const n = points.length;
         let meanX = 0, meanY = 0;
@@ -162,7 +179,7 @@
         return { normPoints, T };
     }
 
-    // 计算单应矩阵 H (世界平面 -> 图像平面)
+    // 单应矩阵计算 (DLT)
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -174,9 +191,9 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 求最小奇异值对应的右奇异向量
+        // 求解最小奇异值对应的右奇异向量
         const svd = numeric.svd(A);
-        const V = svd.V;          // V 是 9x9 矩阵
+        const V = svd.V;  // V 是 9x9 矩阵
         const h = V.map(row => row[V[0].length - 1]); // 最后一列
         const Hn = [
             [h[0], h[1], h[2]],
@@ -195,7 +212,6 @@
         return H;
     }
 
-    // 地面点 (X,Y,0) 投影到图像
     function groundToImage(H, X, Y) {
         const p = [X, Y, 1];
         const res = numeric.dot(H, p);
@@ -203,7 +219,6 @@
         return [res[0] * inv, res[1] * inv];
     }
 
-    // 通过单应矩阵将图像点投影到平面
     function imageToPlane(H, u, v) {
         const Hinv = numeric.inv(H);
         const p = [u, v, 1];
@@ -212,7 +227,6 @@
         return [res[0] * inv, res[1] * inv];
     }
 
-    // 分离 H0 的三列
     function splitH0(H0) {
         return [
             [H0[0][0], H0[1][0], H0[2][0]],
@@ -221,7 +235,6 @@
         ];
     }
 
-    // 估计 p3 (垂直方向投影列)
     function estimateP3(H0, verticalPoints) {
         const [p1, p2, p4] = splitH0(H0);
         const usable = [];
@@ -246,11 +259,9 @@
             }
         }
         const sol = leastSquares(A, b);
-        const p3 = sol.slice(0, 3);
-        return p3;
+        return sol.slice(0, 3);
     }
 
-    // 构造高度 Z 处的单应矩阵 H_Z
     function homographyAtHeight(H0, p3, Z) {
         const [p1, p2, p4] = splitH0(H0);
         const col3 = [
@@ -270,13 +281,11 @@
         return HZ;
     }
 
-    // 已知高度 Z 和图像点，求水平坐标 (X,Y)
     function imageToXYAtHeight(H0, p3, pt, Z) {
         const HZ = homographyAtHeight(H0, p3, Z);
         return imageToPlane(HZ, pt[0], pt[1]);
     }
 
-    // 已知 (X,Y) 和图像点，估计高度 Z
     function estimateHeight(H0, p3, X, Y, pt) {
         const [p1, p2, p4] = splitH0(H0);
         const x = [pt[0], pt[1], 1];
@@ -295,7 +304,6 @@
         return sol[0];
     }
 
-    // 三维点 (X,Y,Z) 投影到图像
     function world3dToImage(H0, p3, X, Y, Z) {
         const [p1, p2, p4] = splitH0(H0);
         const xh = [
@@ -308,14 +316,13 @@
     }
 
     // =================================================================
-    // 主标定函数
+    // 主标定
     // =================================================================
     function calibrateCamera() {
         try {
             document.getElementById('calibStatus').innerHTML = '';
             document.getElementById('cameraMatrixDisplay').innerHTML = '计算中...';
 
-            // 1. 读取底座参数
             const baseRadius = parseFloat(document.getElementById('baseRadius').value);
             if (isNaN(baseRadius) || baseRadius <= 0) throw new Error("底座距离必须为正数");
             const a = baseRadius / Math.sqrt(2);
@@ -332,7 +339,7 @@
             if (cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
 
             let worldPts = [], imagePts = [];
-            for (let key of ['B1', 'B2', 'B3', 'B4', 'C']) {
+            for (let key of ['B1','B2','B3','B4','C']) {
                 if (imgPoints[key]) {
                     worldPts.push(worldMap[key]);
                     imagePts.push(imgPoints[key]);
@@ -340,11 +347,9 @@
             }
             if (worldPts.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
 
-            // 2. 计算 H0
             const H0 = computeHomography(worldPts, imagePts);
             console.log("H0 =", H0);
 
-            // 3. 垂直参考点
             const vrows = document.querySelectorAll('.vpoint-row');
             let verticalPts = [];
             vrows.forEach(row => {
@@ -355,11 +360,9 @@
             });
             if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
 
-            // 4. 估计 p3
             const p3 = estimateP3(H0, verticalPts);
             console.log("p3 =", p3);
 
-            // 5. 小车与吊钩
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
             const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
             const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
@@ -370,16 +373,12 @@
                 throw new Error("小车或吊钩坐标无效");
             }
 
-            // 6. 计算小车水平位置
             const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
-            // 7. 估计吊钩高度
             const Z_hook = estimateHeight(H0, p3, X, Y, hookPixel);
-            // 8. 重投影验证
             const hookReproj = world3dToImage(H0, p3, X, Y, Z_hook);
             const reprojError = Math.hypot(hookReproj[0] - hookPixel[0], hookReproj[1] - hookPixel[1]);
             const groundPixel = groundToImage(H0, X, Y);
 
-            // 9. 构建 4x3 相机矩阵
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
@@ -387,7 +386,6 @@
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
-            // 显示矩阵
             let matrixStr = "";
             for (let i = 0; i < 3; i++) {
                 matrixStr += `[ ${Pmat[i].map(v => v.toFixed(6)).join(", ")} ]\n`;
@@ -415,7 +413,7 @@
     }
 
     // =================================================================
-    // 视频交互选取功能 (保持不变)
+    // 视频选取交互
     // =================================================================
     let activePickMode = null;
     let pickCallback = null;
