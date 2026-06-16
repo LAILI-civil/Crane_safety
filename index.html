@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>塔吊智能监控标定 | 4×3 相机矩阵 (Demo3 对标)</title>
+    <title>塔吊智能监控标定 | 4×3 相机矩阵</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
         /* 全局重置与字体 */
@@ -294,7 +294,7 @@
     <!-- 右侧面板 -->
     <div class="right-panel">
         <div class="calib-area">
-            <h3>📐 相机标定 &amp; 4×3 投影矩阵 (Demo3 对标)</h3>
+            <h3>📐 相机标定 &amp; 3×4 投影矩阵 (Demo3 对标)</h3>
             <div class="horizontal-cards">
 
                 <!-- 卡片1: 塔吊底座参数 -->
@@ -345,11 +345,11 @@
                 </div>
             </div>
 
-            <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (4×3 投影矩阵)</button>
+            <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (3×4 投影矩阵)</button>
 
             <div id="resultPanel">
                 <div class="matrix-output">
-                    <strong>📷 4×3 相机投影矩阵 P</strong>
+                    <strong>📷 3×4 相机投影矩阵 P</strong>
                     <pre id="cameraMatrixDisplay">尚未计算</pre>
                 </div>
                 <div id="calibStatus"></div>
@@ -428,19 +428,27 @@
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
         // 稳健 SVD：处理行<列的情况
-        const rows = A.length, cols = A[0].length;
-        let V; // 右奇异向量矩阵
-        if (rows >= cols) {
-            V = numeric.svd(A).V;
-        } else {
-            // 对 A^T 做 SVD，取左奇异矩阵 U 作为原矩阵的右奇异向量
-            const AT = numeric.transpose(A);
-            const svdAT = numeric.svd(AT);
-            V = svdAT.U;  // U' 的每一列是 A 的右奇异向量
+        const AT = numeric.transpose(A);
+        const ATA = numeric.dot(AT, A);
+
+        const eig = numeric.eig(ATA);
+        const eigenValues = eig.lambda.x;
+        const eigenVectors = eig.E.x;
+
+        // 找最小特征值对应的特征向量
+        let minIdx = 0;
+        let minVal = Math.abs(eigenValues[0]);
+
+        for (let i = 1; i < eigenValues.length; i++) {
+            const val = Math.abs(eigenValues[i]);
+            if (val < minVal) {
+                minVal = val;
+                minIdx = i;
+            }
         }
-        // 取最小奇异值对应的右奇异向量（最后一列）
-        const lastCol = V[0].length - 1;
-        const h = V.map(row => row[lastCol]);
+
+        // numeric.eig 返回的 eigenVectors 是按列存储特征向量
+        const h = eigenVectors.map(row => row[minIdx]);
         const Hn = [
             [h[0], h[1], h[2]],
             [h[3], h[4], h[5]],
