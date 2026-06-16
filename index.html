@@ -96,7 +96,7 @@
 
         /* ---- 统一标题大小 ---- */
         .param-card h4 {
-            font-size: 0.95rem;        /* 所有模块标题统一 */
+            font-size: 0.95rem;
             font-weight: 600;
             margin-bottom: 12px;
             border-left: 3px solid #3b82f6;
@@ -106,7 +106,7 @@
 
         /* ---- 统一标签大小 ---- */
         .param-card label {
-            font-size: 0.75rem;        /* 所有副标题/标签统一 */
+            font-size: 0.75rem;
             font-weight: 500;
             display: block;
             margin-bottom: 2px;
@@ -123,19 +123,20 @@
         }
         .compact-field {
             flex: 1;
-            min-width: 75px;
+            min-width: 70px;   /* 稍微缩小最小宽度 */
         }
         .coord-small {
             display: flex;
             gap: 4px;
         }
+        /* 输入框宽度统一缩小 */
         .coord-small input {
-            width: 68px;
+            width: 56px;       /* 比之前更窄 */
         }
 
-        /* ---- 所有输入框数字使用 Times New Roman ---- */
+        /* ---- 所有输入框统一 ---- */
         input {
-            padding: 5px 8px;
+            padding: 5px 6px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
             font-size: 0.8rem;
@@ -154,13 +155,14 @@
             background: #eef2ff;
             border: none;
             border-radius: 8px;
-            padding: 5px 12px;
+            padding: 5px 10px;
             font-size: 0.7rem;
             font-weight: 500;
             color: #2563eb;
             cursor: pointer;
             height: 30px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            white-space: nowrap;
         }
         button.pick-btn:hover {
             background: #d9e6ff;
@@ -179,14 +181,14 @@
         }
         .vpoint-row .field {
             flex: 1;
-            min-width: 50px;
+            min-width: 48px;
         }
         .vpoint-row input {
             padding: 4px 6px;
             font-size: 0.75rem;
         }
         .vpoint-row label {
-            font-size: 0.7rem;        /* 垂直参考点标签略小，但保持一致 */
+            font-size: 0.7rem;
         }
 
         .add-point-btn {
@@ -284,7 +286,7 @@
                 min-width: 260px;
             }
             .coord-small input {
-                width: 58px;
+                width: 50px;
             }
         }
     </style>
@@ -312,14 +314,14 @@
                     <div class="compact-row">
                         <div class="compact-field">
                             <label>中心到底座角点距离 (米)</label>
-                            <input type="number" id="baseRadius" value="2.0" step="0.1">
+                            <input type="number" id="baseRadius" value="2.00" step="0.1">
                         </div>
                     </div>
                     <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
-                    <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.393"><input id="b4v" value="448.919"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.72"><input id="b1v" value="403.01"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.73"><input id="b2v" value="391.16"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.34"><input id="b3v" value="437.23"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.39"><input id="b4v" value="448.92"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
@@ -328,15 +330,15 @@
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
                         <div class="vpoint-row" data-idx="0">
-                            <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="10.0"></div>
-                            <div class="field"><label>u</label><input class="vu" type="number" value="727.273"></div>
-                            <div class="field"><label>v</label><input class="vv" type="number" value="222.222"></div>
+                            <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="10.00"></div>
+                            <div class="field"><label>u</label><input class="vu" type="number" value="727.27"></div>
+                            <div class="field"><label>v</label><input class="vv" type="number" value="222.22"></div>
                             <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                         </div>
                         <div class="vpoint-row" data-idx="1">
-                            <div class="field"><label>Z2 (m)</label><input class="vz" type="number" value="20.0"></div>
-                            <div class="field"><label>u</label><input class="vu" type="number" value="816.327"></div>
-                            <div class="field"><label>v</label><input class="vv" type="number" value="20.408"></div>
+                            <div class="field"><label>Z2 (m)</label><input class="vz" type="number" value="20.00"></div>
+                            <div class="field"><label>u</label><input class="vu" type="number" value="816.33"></div>
+                            <div class="field"><label>v</label><input class="vv" type="number" value="20.41"></div>
                             <button class="pick-btn pick-vertical" data-idx="1">选取</button>
                         </div>
                     </div>
@@ -346,9 +348,9 @@
                 <!-- 卡片3: 小车与吊钩关键点 -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
-                    <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.0"></div></div>
-                    <div class="compact-row"><div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.219"><input id="trolleyV" value="166.016"></div></div><button class="pick-btn" data-target="trolley">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.00"></div></div>
+                    <div class="compact-row"><div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.22"><input id="trolleyV" value="166.02"></div></div><button class="pick-btn" data-target="trolley">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.91"><input id="hookV" value="243.19"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
                 </div>
             </div>
 
@@ -561,7 +563,7 @@
     }
 
     // ============================================================
-    // 主计算流程
+    // 主计算流程 (结果保留2位小数)
     // ============================================================
     function calibrateCamera() {
         try {
@@ -621,7 +623,7 @@
             const trolleyRadius = Math.hypot(X, Y);
             const theta_deg = Math.atan2(Y, X) * 180 / Math.PI;
 
-            // 7. 构建 4x3 相机矩阵
+            // 7. 构建 4x3 相机矩阵 (数值保留2位小数)
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
@@ -631,16 +633,17 @@
 
             let matrixStr = "";
             for (let i=0; i<3; i++) {
-                matrixStr += `[ ${Pmat[i].map(v => v.toFixed(6)).join(", ")} ]\n`;
+                matrixStr += `[ ${Pmat[i].map(v => v.toFixed(2)).join(", ")} ]\n`;
             }
             document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
 
+            // 结果信息也保留2位小数
             document.getElementById('calibStatus').innerHTML = `
                 <div class="success-info">
                     ✅ 标定成功<br>
-                    📍 地面投影点: (${groundPixel[0].toFixed(3)}, ${groundPixel[1].toFixed(3)})<br>
-                    🏗️ 吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
-                    📏 小车半径: ${trolleyRadius.toFixed(6)} m, 角度: ${theta_deg.toFixed(4)}°
+                    📍 地面投影点: (${groundPixel[0].toFixed(2)}, ${groundPixel[1].toFixed(2)})<br>
+                    🏗️ 吊物空间点: (${X.toFixed(2)}, ${Y.toFixed(2)}, ${Z_hook.toFixed(2)})<br>
+                    📏 小车半径: ${trolleyRadius.toFixed(2)} m, 角度: ${theta_deg.toFixed(2)}°
                 </div>
             `;
         } catch (err) {
@@ -699,8 +702,8 @@
             if (btn) {
                 btn.addEventListener('click', () => {
                     enterPickMode(m.id, (mode, u, v) => {
-                        document.getElementById(m.uId).value = u.toFixed(3);
-                        document.getElementById(m.vId).value = v.toFixed(3);
+                        document.getElementById(m.uId).value = u.toFixed(2);
+                        document.getElementById(m.vId).value = v.toFixed(2);
                     });
                 });
             }
@@ -712,8 +715,8 @@
         const row = btn.closest('.vpoint-row');
         const idx = row.getAttribute('data-idx');
         enterPickMode(`vertical_${idx}`, (mode, u, v) => {
-            row.querySelector('.vu').value = u.toFixed(3);
-            row.querySelector('.vv').value = v.toFixed(3);
+            row.querySelector('.vu').value = u.toFixed(2);
+            row.querySelector('.vv').value = v.toFixed(2);
         });
     }
 
@@ -724,9 +727,9 @@
         newRow.className = 'vpoint-row';
         newRow.setAttribute('data-idx', idx);
         newRow.innerHTML = `
-            <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="number" value="15.0"></div>
-            <div class="field"><label>u</label><input class="vu" type="number" value="770"></div>
-            <div class="field"><label>v</label><input class="vv" type="number" value="120"></div>
+            <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="number" value="15.00"></div>
+            <div class="field"><label>u</label><input class="vu" type="number" value="770.00"></div>
+            <div class="field"><label>v</label><input class="vv" type="number" value="120.00"></div>
             <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
         `;
         container.appendChild(newRow);
