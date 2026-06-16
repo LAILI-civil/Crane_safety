@@ -341,12 +341,13 @@
 </div>
 
 <script>
-    // ----------------------------------------------------------------------
-    // 辅助工具函数 (与 Python 逻辑严格一致)
-    // ----------------------------------------------------------------------
-    function numericLstsq(A, b) {
-        // 求解最小二乘问题 Ax = b，返回 x (数组)
-        // 使用 numeric.svd 实现，与 np.linalg.lstsq 行为一致
+    // =================================================================
+    // 1. 基础数学工具 (与Python算法严格一致)
+    // =================================================================
+
+    // 最小二乘求解 (使用SVD，保证稳定性)
+    function lstsq(A, b) {
+        // A: 矩阵 (m x n), b: 向量 (m)
         const svd = numeric.svd(A);
         const U = svd.U, S = svd.S, V = svd.V;
         const tol = 1e-12 * S[0];
@@ -356,6 +357,7 @@
         return x.slice(0, A[0].length);
     }
 
+    // 二维点归一化
     function normalizePoints2D(points) {
         const n = points.length;
         let meanX = 0, meanY = 0;
@@ -366,9 +368,11 @@
         for (let i=0; i<n; i++) sumDist += Math.hypot(centered[i][0], centered[i][1]);
         const meanDist = sumDist / n;
         const scale = Math.sqrt(2) / meanDist;
-        const T = [[scale, 0, -scale*meanX],
-                   [0, scale, -scale*meanY],
-                   [0, 0, 1]];
+        const T = [
+            [scale, 0, -scale*meanX],
+            [0, scale, -scale*meanY],
+            [0, 0, 1]
+        ];
         const normPoints = [];
         for (let i=0; i<n; i++) {
             const p = points[i];
@@ -379,6 +383,7 @@
         return { normPoints, T };
     }
 
+    // 计算单应矩阵 (DLT + 归一化)
     function computeHomography(worldPts, imagePts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints2D(worldPts);
@@ -393,25 +398,24 @@
         const svd = numeric.svd(A);
         const V = svd.V;
         const h = V[V.length-1];
-        const Hn = [[h[0], h[1], h[2]],
-                    [h[3], h[4], h[5]],
-                    [h[6], h[7], h[8]]];
+        const Hn = [
+            [h[0], h[1], h[2]],
+            [h[3], h[4], h[5]],
+            [h[6], h[7], h[8]]
+        ];
         const TiInv = numeric.inv(Ti);
         let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
         const scale = H[2][2];
         if (Math.abs(scale) > 1e-12) {
-            for (let i=0; i<3; i++)
-                for (let j=0; j<3; j++)
-                    H[i][j] /= scale;
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= scale;
         } else {
             const normH = Math.hypot(H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]);
-            for (let i=0; i<3; i++)
-                for (let j=0; j<3; j++)
-                    H[i][j] /= normH;
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= normH;
         }
         return H;
     }
 
+    // 地面点到图像
     function groundToImage(H0, X, Y) {
         const p = [X, Y, 1];
         const res = numeric.dot(H0, p);
@@ -419,6 +423,7 @@
         return [res[0]*invZ, res[1]*invZ];
     }
 
+    // 图像点到平面 (通过单应矩阵)
     function imageToPlane(H, u, v) {
         const Hinv = numeric.inv(H);
         const p = [u, v, 1];
@@ -427,18 +432,23 @@
         return [res[0]*invZ, res[1]*invZ];
     }
 
-    function splitH0Columns(H0) {
-        return [ [H0[0][0], H0[1][0], H0[2][0]],
-                 [H0[0][1], H0[1][1], H0[2][1]],
-                 [H0[0][2], H0[1][2], H0[2][2]] ];
+    // 提取 H0 的三列
+    function splitH0(H0) {
+        return [
+            [H0[0][0], H0[1][0], H0[2][0]],  // p1
+            [H0[0][1], H0[1][1], H0[2][1]],  // p2
+            [H0[0][2], H0[1][2], H0[2][2]]   // p4
+        ];
     }
 
-    function estimateP3FromVerticalPoints(H0, verticalPoints) {
-        const [p1, p2, p4] = splitH0Columns(H0);
+    // 估计 p3 向量 (高度方向投影)
+    function estimateP3(H0, verticalPoints) {
+        const [p1, p2, p4] = splitH0(H0);
+        // 筛选有效点 (Z != 0)
         const usable = [];
         for (let vp of verticalPoints) {
             const Z = vp[0];
-            if (Math.abs(Z) < 1e-12) continue;
+            if (Math.abs(Z) < 1e-9) continue;
             const u = vp[1], v = vp[2];
             usable.push({Z, x: [u, v, 1.0]});
         }
@@ -448,93 +458,115 @@
         for (let i=0; i<n; i++) {
             const Z = usable[i].Z;
             const x = usable[i].x;
-            // 每个点贡献3个方程，未知数为 p3(3个) + alpha_i(n个)
-            // 方程: Z * p3 - alpha_i * x = -p4
+            // 三个方程: Z * p3 - alpha_i * x = -p4
             for (let r=0; r<3; r++) {
                 const row = new Array(3 + n).fill(0);
-                row[r] = Z;                       // 对应 p3 分量
-                row[3 + i] = -x[r];               // 对应 alpha_i
+                row[r] = Z;               // 对应 p3 的第 r 个分量
+                row[3 + i] = -x[r];       // 对应 alpha_i
                 A.push(row);
                 b.push(-p4[r]);
             }
         }
-        const x = numericLstsq(A, b);
-        const p3 = x.slice(0, 3);
-        const residual = numeric.norm2(numeric.sub(numeric.dot(A, x), b));
-        return { p3, residualNorm: residual };
+        const sol = lstsq(A, b);
+        const p3 = sol.slice(0, 3);
+        // 计算残差 (可选)
+        let residual = 0;
+        for (let i=0; i<A.length; i++) {
+            let sum = 0;
+            for (let j=0; j<A[i].length; j++) sum += A[i][j] * sol[j];
+            residual += (sum - b[i])**2;
+        }
+        residual = Math.sqrt(residual);
+        return { p3, residual };
     }
 
+    // 构造高度 Z 处的单应矩阵 H_Z
     function homographyAtHeight(H0, p3, Z) {
-        const [p1, p2, p4] = splitH0Columns(H0);
-        const p3col = [p3[0], p3[1], p3[2]];
-        const col3 = [p4[0] + Z * p3col[0],
-                      p4[1] + Z * p3col[1],
-                      p4[2] + Z * p3col[2]];
-        let HZ = [ [p1[0], p2[0], col3[0]],
-                   [p1[1], p2[1], col3[1]],
-                   [p1[2], p2[2], col3[2]] ];
+        const [p1, p2, p4] = splitH0(H0);
+        const col3 = [
+            p4[0] + Z * p3[0],
+            p4[1] + Z * p3[1],
+            p4[2] + Z * p3[2]
+        ];
+        let HZ = [
+            [p1[0], p2[0], col3[0]],
+            [p1[1], p2[1], col3[1]],
+            [p1[2], p2[2], col3[2]]
+        ];
         const scale = HZ[2][2];
         if (Math.abs(scale) > 1e-12) {
             for (let i=0;i<3;i++) for (let j=0;j<3;j++) HZ[i][j] /= scale;
-        } else {
-            const norm = Math.hypot(HZ[0][0], HZ[0][1], HZ[0][2], HZ[1][0], HZ[1][1], HZ[1][2], HZ[2][0], HZ[2][1], HZ[2][2]);
-            for (let i=0;i<3;i++) for (let j=0;j<3;j++) HZ[i][j] /= norm;
         }
         return HZ;
     }
 
+    // 已知高度 Z 和图像点，求地面坐标 (X,Y)
     function imageToXYAtHeight(H0, p3, imagePoint, Z) {
         const HZ = homographyAtHeight(H0, p3, Z);
         return imageToPlane(HZ, imagePoint[0], imagePoint[1]);
     }
 
-    function estimateHeightFromXYAndImage(H0, p3, X, Y, imagePoint) {
-        const [p1, p2, p4] = splitH0Columns(H0);
-        const p3col = [p3[0], p3[1], p3[2]];
+    // 已知 (X,Y) 和图像点，估计高度 Z
+    function estimateHeight(H0, p3, X, Y, imagePoint) {
+        const [p1, p2, p4] = splitH0(H0);
         const x = [imagePoint[0], imagePoint[1], 1.0];
-        const q0 = [X*p1[0] + Y*p2[0] + p4[0],
-                    X*p1[1] + Y*p2[1] + p4[1],
-                    X*p1[2] + Y*p2[2] + p4[2]];
-        // 构造 A = [p3, -x] 形状 3x2,  b = -q0
-        const A = [[p3col[0], -x[0]],
-                   [p3col[1], -x[1]],
-                   [p3col[2], -x[2]]];
+        const q0 = [
+            X*p1[0] + Y*p2[0] + p4[0],
+            X*p1[1] + Y*p2[1] + p4[1],
+            X*p1[2] + Y*p2[2] + p4[2]
+        ];
+        const A = [
+            [p3[0], -x[0]],
+            [p3[1], -x[1]],
+            [p3[2], -x[2]]
+        ];
         const b = [-q0[0], -q0[1], -q0[2]];
-        const sol = numericLstsq(A, b);
-        const Z = sol[0];
-        return Z;
+        const sol = lstsq(A, b);
+        return sol[0];
     }
 
+    // 三维点投影到图像
     function world3dToImage(H0, p3, X, Y, Z) {
-        const [p1, p2, p4] = splitH0Columns(H0);
-        const p3col = [p3[0], p3[1], p3[2]];
-        const xh = [X*p1[0] + Y*p2[0] + Z*p3col[0] + p4[0],
-                    X*p1[1] + Y*p2[1] + Z*p3col[1] + p4[1],
-                    X*p1[2] + Y*p2[2] + Z*p3col[2] + p4[2]];
+        const [p1, p2, p4] = splitH0(H0);
+        const xh = [
+            X*p1[0] + Y*p2[0] + Z*p3[0] + p4[0],
+            X*p1[1] + Y*p2[1] + Z*p3[1] + p4[1],
+            X*p1[2] + Y*p2[2] + Z*p3[2] + p4[2]
+        ];
         const invZ = 1.0 / xh[2];
         return [xh[0]*invZ, xh[1]*invZ];
     }
 
-    // ----------------------------------------------------------------------
-    // 主标定流程
-    // ----------------------------------------------------------------------
-    function calibrate() {
+    // =================================================================
+    // 2. 主标定流程 (与Python demo完全一致的数据测试)
+    // =================================================================
+    function calibrateCamera() {
         try {
-            // 1. 底座参数
+            // 清空之前的状态显示
+            document.getElementById('calibStatus').innerHTML = '';
+            document.getElementById('cameraMatrixDisplay').innerHTML = '计算中...';
+
+            // ---------- 读取数据 ----------
             const baseRadius = parseFloat(document.getElementById('baseRadius').value);
+            if (isNaN(baseRadius) || baseRadius <= 0) throw new Error("底座距离必须为正数");
             const a = baseRadius / Math.sqrt(2);
+
+            // 世界坐标
             const worldMap = {
                 B1: [ a,  a], B2: [-a,  a], B3: [-a, -a], B4: [ a, -a], C: [0,0]
             };
+            // 图像坐标
             const imgPoints = {
                 B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
                 B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
                 B3: [parseFloat(document.getElementById('b3u').value), parseFloat(document.getElementById('b3v').value)],
                 B4: [parseFloat(document.getElementById('b4u').value), parseFloat(document.getElementById('b4v').value)],
             };
-            const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
+            const cu = document.getElementById('cu').value;
+            const cv = document.getElementById('cv').value;
             if (cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
 
+            // 构建对应点集 (至少B1~B4)
             let worldPts = [], imagePts = [];
             for (let key of ['B1','B2','B3','B4','C']) {
                 if (imgPoints[key]) {
@@ -543,70 +575,97 @@
                 }
             }
             if (worldPts.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
+
+            // ---------- 步骤1：计算地面单应矩阵 H0 ----------
             const H0 = computeHomography(worldPts, imagePts);
             console.log("H0 computed:", H0);
 
-            // 2. 垂直参考点
+            // ---------- 步骤2：读取垂直参考点 ----------
             const vrows = document.querySelectorAll('.vpoint-row');
             let verticalPts = [];
             vrows.forEach(row => {
                 let Z = parseFloat(row.querySelector('.vz').value);
                 let u = parseFloat(row.querySelector('.vu').value);
                 let v = parseFloat(row.querySelector('.vv').value);
-                if (!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
+                if (!isNaN(Z) && !isNaN(u) && !isNaN(v)) {
+                    verticalPts.push([Z, u, v]);
+                }
             });
             if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
-            const { p3, residualNorm } = estimateP3FromVerticalPoints(H0, verticalPts);
-            console.log("p3 estimated:", p3);
 
-            // 3. 小车与吊钩
+            // ---------- 步骤3：估计 p3 ----------
+            const { p3, residual } = estimateP3(H0, verticalPts);
+            console.log("p3 estimated:", p3, "residual:", residual);
+
+            // ---------- 步骤4：小车与吊钩数据 ----------
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
-            const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
-            const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
-            const trolleyRadius = parseFloat(document.getElementById('trolleyRadius').value);
+            const trolleyPixel = [
+                parseFloat(document.getElementById('trolleyU').value),
+                parseFloat(document.getElementById('trolleyV').value)
+            ];
+            const hookPixel = [
+                parseFloat(document.getElementById('hookU').value),
+                parseFloat(document.getElementById('hookV').value)
+            ];
+            const trolleyRadiusInput = parseFloat(document.getElementById('trolleyRadius').value);
 
-            // 小车点反算水平坐标
+            if (isNaN(trolleyHeight) || isNaN(trolleyPixel[0]) || isNaN(trolleyPixel[1]) ||
+                isNaN(hookPixel[0]) || isNaN(hookPixel[1])) {
+                throw new Error("小车或吊钩坐标无效");
+            }
+
+            // ---------- 计算水平坐标 (X,Y) ----------
             const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
-            // 吊钩高度估计
-            const Z_hook = estimateHeightFromXYAndImage(H0, p3, X, Y, hookPixel);
-            // 重投影吊钩点
-            const hookReproj = world3dToImage(H0, p3, X, Y, Z_hook);
-            const hookReprojError = Math.hypot(hookReproj[0] - hookPixel[0], hookReproj[1] - hookPixel[1]);
+            console.log(`小车水平坐标: X=${X}, Y=${Y}, 半径=${Math.hypot(X,Y)}`);
 
-            // 地面投影点
+            // ---------- 估计吊钩高度 Z ----------
+            const Z_hook = estimateHeight(H0, p3, X, Y, hookPixel);
+            console.log(`吊钩高度: Z=${Z_hook}`);
+
+            // ---------- 重投影验证 ----------
+            const hookReproj = world3dToImage(H0, p3, X, Y, Z_hook);
+            const reprojError = Math.hypot(hookReproj[0] - hookPixel[0], hookReproj[1] - hookPixel[1]);
             const groundPixel = groundToImage(H0, X, Y);
 
-            // 构建 4x3 相机矩阵 (3x4)
-            const [p1, p2, p4] = splitH0Columns(H0);
+            // ---------- 构建 4x3 相机矩阵 ----------
+            const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
                 [p1[1], p2[1], p3[1], p4[1]],
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
-            // 显示矩阵
+            // 格式化显示矩阵
             let matrixStr = "";
             for (let i=0; i<3; i++) {
-                matrixStr += `[ ${Pmat[i].map(v=>v.toFixed(6)).join(", ")} ]\n`;
+                matrixStr += `[ ${Pmat[i].map(v => v.toFixed(6)).join(", ")} ]\n`;
             }
             document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
-            document.getElementById('calibStatus').innerHTML = `<div class="success-info">✅ 标定成功！<br>
-                地面投影点: (${groundPixel[0].toFixed(3)}, ${groundPixel[1].toFixed(3)})<br>
-                吊钩重投影误差: ${hookReprojError.toFixed(6)} px<br>
-                吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
-                小车半径估计: ${Math.hypot(X,Y).toFixed(6)} m
+
+            // 显示详细信息
+            const trolleyRadiusEst = Math.hypot(X, Y);
+            let infoHtml = `<div class="success-info">
+                ✅ 标定成功！<br>
+                📍 地面投影点: (${groundPixel[0].toFixed(3)}, ${groundPixel[1].toFixed(3)})<br>
+                🪝 吊钩重投影误差: ${reprojError.toFixed(6)} px<br>
+                🏗️ 吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
+                📏 小车半径估计: ${trolleyRadiusEst.toFixed(6)} m (输入: ${trolleyRadiusInput.toFixed(3)} m)<br>
+                📐 半径偏差: ${Math.abs(trolleyRadiusEst - trolleyRadiusInput).toFixed(6)} m
             </div>`;
-            console.log("Final result:", {X, Y, Z_hook, groundPixel, hookReprojError});
-        } catch(err) {
-            console.error(err);
-            document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
+            document.getElementById('calibStatus').innerHTML = infoHtml;
+
+        } catch (err) {
+            console.error("标定错误:", err);
+            let errMsg = err.message || String(err);
+            if (!errMsg) errMsg = "未知错误，请检查控制台日志";
+            document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${errMsg}</div>`;
             document.getElementById('cameraMatrixDisplay').innerHTML = "计算失败";
         }
     }
 
-    // ----------------------------------------------------------------------
-    // 选取坐标交互 (保持不变)
-    // ----------------------------------------------------------------------
+    // =================================================================
+    // 3. 视频选取坐标交互 (保持不变)
+    // =================================================================
     let activePickMode = null;
     let pickCallback = null;
     const video = document.getElementById('mainVideo');
@@ -690,10 +749,11 @@
         newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
     }
 
+    // 初始化
     window.addEventListener('DOMContentLoaded', () => {
         bindPickButtons();
         document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
-        document.getElementById('calibrateBtn').addEventListener('click', calibrate);
+        document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
         video.muted = true;
         video.play().catch(e=>console.log("自动播放被阻止"));
         document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
