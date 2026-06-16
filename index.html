@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>塔吊智能监控标定 | 相机矩阵计算</title>
+    <title>塔吊智能监控标定 | 相机矩阵计算 (修正版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
         * {
@@ -16,11 +16,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            /* 全局字体：数字和英文优先 Times New Roman，中文使用系统回退 */
             font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
         }
 
-        /* 主布局 */
         .split-layout {
             display: flex;
             width: 100%;
@@ -47,7 +45,6 @@
             cursor: crosshair;
         }
 
-        /* 提示浮层：放在视频区域最上方 */
         .pick-tip {
             position: absolute;
             top: 12px;
@@ -66,17 +63,15 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
 
-        /* ========= 右侧区域 ========= */
+        /* 右侧区域 */
         .right-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #f1f5f9;
             overflow: hidden;
-            font-family: 'Times New Roman', 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* 右上输入区域（紧凑设计） */
         .calib-area {
             flex: 1;
             overflow-y: auto;
@@ -90,15 +85,10 @@
             font-weight: 600;
             margin-bottom: 14px;
             color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 6px;
             border-left: 3px solid #3b82f6;
             padding-left: 10px;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
-        /* 横向三列布局：强制在同一行 */
         .horizontal-cards {
             display: flex;
             flex-wrap: nowrap;
@@ -106,7 +96,6 @@
             margin-bottom: 20px;
         }
 
-        /* 每个卡片独立，等宽 */
         .param-card {
             flex: 1;
             min-width: 0;
@@ -114,8 +103,6 @@
             border-radius: 16px;
             padding: 10px 12px;
             border: 1px solid #e2edff;
-            transition: all 0.2s;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         .param-card h4 {
@@ -123,16 +110,11 @@
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
             border-left: 2px solid #3b82f6;
             padding-left: 6px;
             white-space: nowrap;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
-        /* 紧凑的行布局 */
         .compact-row {
             display: flex;
             flex-wrap: wrap;
@@ -153,7 +135,6 @@
             color: #475569;
             margin-bottom: 2px;
             white-space: nowrap;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         .coord-small {
@@ -164,21 +145,14 @@
             width: 65px;
         }
 
-        input, .radius-input {
+        input {
             padding: 4px 6px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
             background: white;
             font-size: 0.75rem;
-            transition: 0.15s;
             width: 100%;
             font-family: 'Times New Roman', monospace;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
         }
 
         button.pick-btn {
@@ -190,17 +164,10 @@
             font-weight: 500;
             color: #2563eb;
             cursor: pointer;
-            transition: 0.1s;
             white-space: nowrap;
             height: 28px;
-            line-height: 1;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
-        }
-        button.pick-btn:hover {
-            background: #d9e6ff;
         }
 
-        /* ===== 塔身垂直参考点区域 专属紧凑样式 (字体变小，输入框宽度减少) ===== */
         .vpoint-row {
             display: flex;
             flex-wrap: wrap;
@@ -213,18 +180,11 @@
         }
         .vpoint-row .field {
             flex: 1;
-            min-width: 45px;   /* 减小最小宽度，使输入框更窄 */
-        }
-        .vpoint-row label {
-            font-size: 0.6rem;    /* 标签字体缩小 */
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            min-width: 45px;
         }
         .vpoint-row input {
-            padding: 3px 4px;     /* 更紧凑内边距 */
-            font-size: 0.65rem;   /* 数字字体缩小 */
-            width: 90%;           /* 相对宽度减少，实际更窄 */
-            min-width: 55px;
-            font-family: 'Times New Roman', monospace;
+            padding: 3px 4px;
+            font-size: 0.65rem;
         }
         .add-point-btn {
             background: #eef2ff;
@@ -236,7 +196,6 @@
             margin-top: 4px;
             width: 100%;
             text-align: center;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         button.calc-btn {
@@ -250,11 +209,6 @@
             cursor: pointer;
             width: 100%;
             margin: 8px 0 12px 0;
-            transition: 0.2s;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
-        }
-        button.calc-btn:hover {
-            background: #2563eb;
         }
 
         .matrix-output {
@@ -262,7 +216,7 @@
             color: #e2e8f0;
             border-radius: 16px;
             padding: 10px;
-            font-family: 'Times New Roman', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 0.65rem;
             overflow-x: auto;
             margin-top: 10px;
@@ -271,7 +225,6 @@
             white-space: pre-wrap;
             word-break: break-all;
             margin: 0;
-            font-family: 'Times New Roman', 'Courier New', monospace;
         }
         .error-msg {
             color: #dc2626;
@@ -280,7 +233,6 @@
             border-radius: 10px;
             font-size: 0.7rem;
             margin: 6px 0;
-            font-family: 'Times New Roman', sans-serif;
         }
         .success-info {
             color: #16a34a;
@@ -288,10 +240,8 @@
             padding: 5px 8px;
             border-radius: 10px;
             font-size: 0.7rem;
-            font-family: 'Times New Roman', sans-serif;
         }
 
-        /* 右下绘图预留区 */
         .draw-area {
             flex: 1;
             background: #fefcf5;
@@ -303,7 +253,6 @@
             gap: 8px;
             color: #94a3b8;
             font-size: 0.85rem;
-            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
         .draw-area::before {
             content: "📐 绘图区 (预留)";
@@ -311,19 +260,6 @@
             opacity: 0.7;
         }
 
-        /* 滚动条 */
-        .calib-area::-webkit-scrollbar {
-            width: 4px;
-        }
-        .calib-area::-webkit-scrollbar-track {
-            background: #e2e8f0;
-        }
-        .calib-area::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 4px;
-        }
-
-        /* 极端窄屏时保证三个模块不换行，允许水平滚动 */
         @media (max-width: 900px) {
             .horizontal-cards {
                 overflow-x: auto;
@@ -331,30 +267,22 @@
             .param-card {
                 min-width: 260px;
             }
-            .coord-small input {
-                width: 55px;
-            }
         }
     </style>
 </head>
 <body>
 <div class="split-layout">
-    <!-- 左侧视频区 -->
     <div class="left-video">
         <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
             <source src="./Crane_working_1.mp4" type="video/mp4">
             浏览器不支持视频播放。
         </video>
-        <!-- 提示浮层：已移至视频区域最上方（左上角） -->
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
     </div>
 
-    <!-- 右侧区域 -->
     <div class="right-panel">
         <div class="calib-area">
             <h3>📐 相机标定 & 4x3 投影矩阵</h3>
-
-            <!-- 三个主要区域横向强制同一行 -->
             <div class="horizontal-cards">
                 <!-- 卡片1: 塔吊底座参数 -->
                 <div class="param-card">
@@ -366,45 +294,25 @@
                         </div>
                     </div>
                     <div style="margin: 4px 0 2px 0;"><label style="font-size:0.6rem;">📍 底座图像角点</label></div>
-                    <!-- B1 -->
-                    <div class="compact-row">
-                        <div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" placeholder="u" value="705.720"><input id="b1v" placeholder="v" value="403.008"></div></div>
-                        <button class="pick-btn" data-target="b1">选取</button>
-                    </div>
-                    <!-- B2 -->
-                    <div class="compact-row">
-                        <div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" placeholder="u" value="596.730"><input id="b2v" placeholder="v" value="391.163"></div></div>
-                        <button class="pick-btn" data-target="b2">选取</button>
-                    </div>
-                    <!-- B3 -->
-                    <div class="compact-row">
-                        <div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" placeholder="u" value="573.343"><input id="b3v" placeholder="v" value="437.234"></div></div>
-                        <button class="pick-btn" data-target="b3">选取</button>
-                    </div>
-                    <!-- B4 -->
-                    <div class="compact-row">
-                        <div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" placeholder="u" value="683.393"><input id="b4v" placeholder="v" value="448.919"></div></div>
-                        <button class="pick-btn" data-target="b4">选取</button>
-                    </div>
-                    <!-- 中心点C -->
-                    <div class="compact-row">
-                        <div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" placeholder="u" value=""><input id="cv" placeholder="v" value=""></div></div>
-                        <button class="pick-btn" data-target="c">选取</button>
-                    </div>
+                    <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.393"><input id="b4v" value="448.919"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 卡片2: 塔身垂直参考点 (优化后字体更小、输入框更窄) -->
+                <!-- 卡片2: 塔身垂直参考点 -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
                         <div class="vpoint-row" data-idx="0">
-                            <div class="field"><label>Z1(m)</label><input class="vz" type="number" value="10.0" step="0.5"></div>
+                            <div class="field"><label>Z1(m)</label><input class="vz" type="number" value="10.0"></div>
                             <div class="field"><label>u</label><input class="vu" type="number" value="727.273"></div>
                             <div class="field"><label>v</label><input class="vv" type="number" value="222.222"></div>
                             <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                         </div>
                         <div class="vpoint-row" data-idx="1">
-                            <div class="field"><label>Z2(m)</label><input class="vz" type="number" value="20.0" step="0.5"></div>
+                            <div class="field"><label>Z2(m)</label><input class="vz" type="number" value="20.0"></div>
                             <div class="field"><label>u</label><input class="vu" type="number" value="816.327"></div>
                             <div class="field"><label>v</label><input class="vv" type="number" value="20.408"></div>
                             <button class="pick-btn pick-vertical" data-idx="1">选取</button>
@@ -416,42 +324,289 @@
                 <!-- 卡片3: 小车与吊钩关键点 -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
-                    <div class="compact-row">
-                        <div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.0" step="0.5"></div>
-                    </div>
-                    <div class="compact-row">
-                        <div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.219"><input id="trolleyV" value="166.016"></div></div>
-                        <button class="pick-btn" data-target="trolley">选取</button>
-                    </div>
-                    <div class="compact-row">
-                        <div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div>
-                        <button class="pick-btn" data-target="hook">选取</button>
-                    </div>
-                    <div class="compact-row">
-                        <div class="compact-field"><label>小车半径 (米) 可选校验</label><input id="trolleyRadius" type="number" value="10.0" step="0.5"></div>
-                    </div>
+                    <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.0"></div></div>
+                    <div class="compact-row"><div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.219"><input id="trolleyV" value="166.016"></div></div><button class="pick-btn" data-target="trolley">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>小车半径 (米) 可选校验</label><input id="trolleyRadius" type="number" value="10.0"></div></div>
                 </div>
             </div>
-
             <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (4x3 投影矩阵)</button>
-
-            <!-- 结果显示 -->
             <div id="resultPanel">
-                <div class="matrix-output">
-                    <strong>📷 4×3 相机投影矩阵 P</strong>
-                    <pre id="cameraMatrixDisplay">尚未计算</pre>
-                </div>
+                <div class="matrix-output"><strong>📷 4×3 相机投影矩阵 P</strong><pre id="cameraMatrixDisplay">尚未计算</pre></div>
                 <div id="calibStatus"></div>
             </div>
         </div>
-
-        <!-- 右下预留绘图区 -->
         <div class="draw-area"></div>
     </div>
 </div>
 
 <script>
-    // ---------- 全局变量 ----------
+    // ----------------------------------------------------------------------
+    // 辅助工具函数 (与 Python 逻辑严格一致)
+    // ----------------------------------------------------------------------
+    function numericLstsq(A, b) {
+        // 求解最小二乘问题 Ax = b，返回 x (数组)
+        // 使用 numeric.svd 实现，与 np.linalg.lstsq 行为一致
+        const svd = numeric.svd(A);
+        const U = svd.U, S = svd.S, V = svd.V;
+        const tol = 1e-12 * S[0];
+        const rank = S.filter(v => v > tol).length;
+        const Sinv = S.map(s => (s > tol ? 1/s : 0));
+        const x = numeric.dot(V, numeric.dot(numeric.diag(Sinv), numeric.dot(numeric.transpose(U), b)));
+        return x.slice(0, A[0].length);
+    }
+
+    function normalizePoints2D(points) {
+        const n = points.length;
+        let meanX = 0, meanY = 0;
+        for (let i=0; i<n; i++) { meanX += points[i][0]; meanY += points[i][1]; }
+        meanX /= n; meanY /= n;
+        const centered = points.map(p => [p[0]-meanX, p[1]-meanY]);
+        let sumDist = 0;
+        for (let i=0; i<n; i++) sumDist += Math.hypot(centered[i][0], centered[i][1]);
+        const meanDist = sumDist / n;
+        const scale = Math.sqrt(2) / meanDist;
+        const T = [[scale, 0, -scale*meanX],
+                   [0, scale, -scale*meanY],
+                   [0, 0, 1]];
+        const normPoints = [];
+        for (let i=0; i<n; i++) {
+            const p = points[i];
+            const ph = [p[0], p[1], 1];
+            const res = numeric.dot(T, ph);
+            normPoints.push([res[0]/res[2], res[1]/res[2]]);
+        }
+        return { normPoints, T };
+    }
+
+    function computeHomography(worldPts, imagePts) {
+        if (worldPts.length < 4) throw new Error("至少需要4对点");
+        const { normPoints: worldNorm, T: Tw } = normalizePoints2D(worldPts);
+        const { normPoints: imgNorm, T: Ti } = normalizePoints2D(imagePts);
+        const A = [];
+        for (let i=0; i<worldNorm.length; i++) {
+            const X = worldNorm[i][0], Y = worldNorm[i][1];
+            const u = imgNorm[i][0], v = imgNorm[i][1];
+            A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
+            A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
+        }
+        const svd = numeric.svd(A);
+        const V = svd.V;
+        const h = V[V.length-1];
+        const Hn = [[h[0], h[1], h[2]],
+                    [h[3], h[4], h[5]],
+                    [h[6], h[7], h[8]]];
+        const TiInv = numeric.inv(Ti);
+        let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
+        const scale = H[2][2];
+        if (Math.abs(scale) > 1e-12) {
+            for (let i=0; i<3; i++)
+                for (let j=0; j<3; j++)
+                    H[i][j] /= scale;
+        } else {
+            const normH = Math.hypot(H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]);
+            for (let i=0; i<3; i++)
+                for (let j=0; j<3; j++)
+                    H[i][j] /= normH;
+        }
+        return H;
+    }
+
+    function groundToImage(H0, X, Y) {
+        const p = [X, Y, 1];
+        const res = numeric.dot(H0, p);
+        const invZ = 1.0 / res[2];
+        return [res[0]*invZ, res[1]*invZ];
+    }
+
+    function imageToPlane(H, u, v) {
+        const Hinv = numeric.inv(H);
+        const p = [u, v, 1];
+        const res = numeric.dot(Hinv, p);
+        const invZ = 1.0 / res[2];
+        return [res[0]*invZ, res[1]*invZ];
+    }
+
+    function splitH0Columns(H0) {
+        return [ [H0[0][0], H0[1][0], H0[2][0]],
+                 [H0[0][1], H0[1][1], H0[2][1]],
+                 [H0[0][2], H0[1][2], H0[2][2]] ];
+    }
+
+    function estimateP3FromVerticalPoints(H0, verticalPoints) {
+        const [p1, p2, p4] = splitH0Columns(H0);
+        const usable = [];
+        for (let vp of verticalPoints) {
+            const Z = vp[0];
+            if (Math.abs(Z) < 1e-12) continue;
+            const u = vp[1], v = vp[2];
+            usable.push({Z, x: [u, v, 1.0]});
+        }
+        if (usable.length < 2) throw new Error("至少需要2个有效垂直参考点");
+        const n = usable.length;
+        const A = [], b = [];
+        for (let i=0; i<n; i++) {
+            const Z = usable[i].Z;
+            const x = usable[i].x;
+            // 每个点贡献3个方程，未知数为 p3(3个) + alpha_i(n个)
+            // 方程: Z * p3 - alpha_i * x = -p4
+            for (let r=0; r<3; r++) {
+                const row = new Array(3 + n).fill(0);
+                row[r] = Z;                       // 对应 p3 分量
+                row[3 + i] = -x[r];               // 对应 alpha_i
+                A.push(row);
+                b.push(-p4[r]);
+            }
+        }
+        const x = numericLstsq(A, b);
+        const p3 = x.slice(0, 3);
+        const residual = numeric.norm2(numeric.sub(numeric.dot(A, x), b));
+        return { p3, residualNorm: residual };
+    }
+
+    function homographyAtHeight(H0, p3, Z) {
+        const [p1, p2, p4] = splitH0Columns(H0);
+        const p3col = [p3[0], p3[1], p3[2]];
+        const col3 = [p4[0] + Z * p3col[0],
+                      p4[1] + Z * p3col[1],
+                      p4[2] + Z * p3col[2]];
+        let HZ = [ [p1[0], p2[0], col3[0]],
+                   [p1[1], p2[1], col3[1]],
+                   [p1[2], p2[2], col3[2]] ];
+        const scale = HZ[2][2];
+        if (Math.abs(scale) > 1e-12) {
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) HZ[i][j] /= scale;
+        } else {
+            const norm = Math.hypot(HZ[0][0], HZ[0][1], HZ[0][2], HZ[1][0], HZ[1][1], HZ[1][2], HZ[2][0], HZ[2][1], HZ[2][2]);
+            for (let i=0;i<3;i++) for (let j=0;j<3;j++) HZ[i][j] /= norm;
+        }
+        return HZ;
+    }
+
+    function imageToXYAtHeight(H0, p3, imagePoint, Z) {
+        const HZ = homographyAtHeight(H0, p3, Z);
+        return imageToPlane(HZ, imagePoint[0], imagePoint[1]);
+    }
+
+    function estimateHeightFromXYAndImage(H0, p3, X, Y, imagePoint) {
+        const [p1, p2, p4] = splitH0Columns(H0);
+        const p3col = [p3[0], p3[1], p3[2]];
+        const x = [imagePoint[0], imagePoint[1], 1.0];
+        const q0 = [X*p1[0] + Y*p2[0] + p4[0],
+                    X*p1[1] + Y*p2[1] + p4[1],
+                    X*p1[2] + Y*p2[2] + p4[2]];
+        // 构造 A = [p3, -x] 形状 3x2,  b = -q0
+        const A = [[p3col[0], -x[0]],
+                   [p3col[1], -x[1]],
+                   [p3col[2], -x[2]]];
+        const b = [-q0[0], -q0[1], -q0[2]];
+        const sol = numericLstsq(A, b);
+        const Z = sol[0];
+        return Z;
+    }
+
+    function world3dToImage(H0, p3, X, Y, Z) {
+        const [p1, p2, p4] = splitH0Columns(H0);
+        const p3col = [p3[0], p3[1], p3[2]];
+        const xh = [X*p1[0] + Y*p2[0] + Z*p3col[0] + p4[0],
+                    X*p1[1] + Y*p2[1] + Z*p3col[1] + p4[1],
+                    X*p1[2] + Y*p2[2] + Z*p3col[2] + p4[2]];
+        const invZ = 1.0 / xh[2];
+        return [xh[0]*invZ, xh[1]*invZ];
+    }
+
+    // ----------------------------------------------------------------------
+    // 主标定流程
+    // ----------------------------------------------------------------------
+    function calibrate() {
+        try {
+            // 1. 底座参数
+            const baseRadius = parseFloat(document.getElementById('baseRadius').value);
+            const a = baseRadius / Math.sqrt(2);
+            const worldMap = {
+                B1: [ a,  a], B2: [-a,  a], B3: [-a, -a], B4: [ a, -a], C: [0,0]
+            };
+            const imgPoints = {
+                B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
+                B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
+                B3: [parseFloat(document.getElementById('b3u').value), parseFloat(document.getElementById('b3v').value)],
+                B4: [parseFloat(document.getElementById('b4u').value), parseFloat(document.getElementById('b4v').value)],
+            };
+            const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
+            if (cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
+
+            let worldPts = [], imagePts = [];
+            for (let key of ['B1','B2','B3','B4','C']) {
+                if (imgPoints[key]) {
+                    worldPts.push(worldMap[key]);
+                    imagePts.push(imgPoints[key]);
+                }
+            }
+            if (worldPts.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
+            const H0 = computeHomography(worldPts, imagePts);
+            console.log("H0 computed:", H0);
+
+            // 2. 垂直参考点
+            const vrows = document.querySelectorAll('.vpoint-row');
+            let verticalPts = [];
+            vrows.forEach(row => {
+                let Z = parseFloat(row.querySelector('.vz').value);
+                let u = parseFloat(row.querySelector('.vu').value);
+                let v = parseFloat(row.querySelector('.vv').value);
+                if (!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
+            });
+            if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
+            const { p3, residualNorm } = estimateP3FromVerticalPoints(H0, verticalPts);
+            console.log("p3 estimated:", p3);
+
+            // 3. 小车与吊钩
+            const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
+            const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
+            const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
+            const trolleyRadius = parseFloat(document.getElementById('trolleyRadius').value);
+
+            // 小车点反算水平坐标
+            const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
+            // 吊钩高度估计
+            const Z_hook = estimateHeightFromXYAndImage(H0, p3, X, Y, hookPixel);
+            // 重投影吊钩点
+            const hookReproj = world3dToImage(H0, p3, X, Y, Z_hook);
+            const hookReprojError = Math.hypot(hookReproj[0] - hookPixel[0], hookReproj[1] - hookPixel[1]);
+
+            // 地面投影点
+            const groundPixel = groundToImage(H0, X, Y);
+
+            // 构建 4x3 相机矩阵 (3x4)
+            const [p1, p2, p4] = splitH0Columns(H0);
+            const Pmat = [
+                [p1[0], p2[0], p3[0], p4[0]],
+                [p1[1], p2[1], p3[1], p4[1]],
+                [p1[2], p2[2], p3[2], p4[2]]
+            ];
+
+            // 显示矩阵
+            let matrixStr = "";
+            for (let i=0; i<3; i++) {
+                matrixStr += `[ ${Pmat[i].map(v=>v.toFixed(6)).join(", ")} ]\n`;
+            }
+            document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
+            document.getElementById('calibStatus').innerHTML = `<div class="success-info">✅ 标定成功！<br>
+                地面投影点: (${groundPixel[0].toFixed(3)}, ${groundPixel[1].toFixed(3)})<br>
+                吊钩重投影误差: ${hookReprojError.toFixed(6)} px<br>
+                吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
+                小车半径估计: ${Math.hypot(X,Y).toFixed(6)} m
+            </div>`;
+            console.log("Final result:", {X, Y, Z_hook, groundPixel, hookReprojError});
+        } catch(err) {
+            console.error(err);
+            document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
+            document.getElementById('cameraMatrixDisplay').innerHTML = "计算失败";
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // 选取坐标交互 (保持不变)
+    // ----------------------------------------------------------------------
     let activePickMode = null;
     let pickCallback = null;
     const video = document.getElementById('mainVideo');
@@ -488,7 +643,6 @@
     }
     video.addEventListener('click', onVideoClick);
 
-    // 绑定选取按钮（底座、小车、吊钩）
     function bindPickButtons() {
         const mappings = [
             { id:'b1', uId:'b1u', vId:'b1v' }, { id:'b2', uId:'b2u', vId:'b2v' },
@@ -515,10 +669,8 @@
         const row = btn.closest('.vpoint-row');
         const idx = row.getAttribute('data-idx');
         enterPickMode(`vertical_${idx}`, (mode, u, v) => {
-            const vu = row.querySelector('.vu');
-            const vv = row.querySelector('.vv');
-            if(vu) vu.value = u.toFixed(3);
-            if(vv) vv.value = v.toFixed(3);
+            row.querySelector('.vu').value = u.toFixed(3);
+            row.querySelector('.vv').value = v.toFixed(3);
         });
     }
 
@@ -529,161 +681,22 @@
         newRow.className = 'vpoint-row';
         newRow.setAttribute('data-idx', idx);
         newRow.innerHTML = `
-            <div class="field"><label>Z${idx+1}(m)</label><input class="vz" type="number" value="15.0" step="0.5"></div>
+            <div class="field"><label>Z${idx+1}(m)</label><input class="vz" type="number" value="15.0"></div>
             <div class="field"><label>u</label><input class="vu" type="number" value="770"></div>
             <div class="field"><label>v</label><input class="vv" type="number" value="120"></div>
             <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
         `;
         container.appendChild(newRow);
-        const newBtn = newRow.querySelector('.pick-vertical');
-        newBtn.addEventListener('click', handleVerticalPick);
+        newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
     }
 
-    // ---------- 核心计算函数 (沿用之前的算法) ----------
-    function normalizePoints2D(points) {
-        let n = points.length;
-        let meanX = 0, meanY = 0;
-        for(let p of points) { meanX += p[0]; meanY += p[1]; }
-        meanX /= n; meanY /= n;
-        let centered = points.map(p => [p[0]-meanX, p[1]-meanY]);
-        let sumDist = 0;
-        for(let c of centered) sumDist += Math.hypot(c[0], c[1]);
-        let meanDist = sumDist / n;
-        let scale = Math.sqrt(2) / meanDist;
-        let T = [[scale, 0, -scale*meanX], [0, scale, -scale*meanY], [0,0,1]];
-        let normPoints = [];
-        for(let p of points) {
-            let ph = [p[0], p[1], 1];
-            let res = numeric.dot(T, ph);
-            normPoints.push([res[0]/res[2], res[1]/res[2]]);
-        }
-        return { normPoints, T };
-    }
-
-    function computeHomography(worldPts, imagePts) {
-        if(worldPts.length < 4) throw new Error("至少需要4对点");
-        let { normPoints: worldNorm, T: Tw } = normalizePoints2D(worldPts);
-        let { normPoints: imgNorm, T: Ti } = normalizePoints2D(imagePts);
-        let A = [];
-        for(let i=0; i<worldNorm.length; i++) {
-            let [X,Y] = worldNorm[i];
-            let [u,v] = imgNorm[i];
-            A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
-            A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
-        }
-        let svd = numeric.svd(A);
-        let V = svd.V;
-        let h = V[V.length-1];
-        let Hn = [[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],h[8]]];
-        let TiInv = numeric.inv(Ti);
-        let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
-        let scale = H[2][2];
-        if(Math.abs(scale)>1e-9) for(let i=0;i<3;i++) for(let j=0;j<3;j++) H[i][j]/=scale;
-        return H;
-    }
-
-    function estimateP3FromVerticalPoints(H0, verticalPoints) {
-        let p4 = [H0[0][2], H0[1][2], H0[2][2]];
-        let usable = [];
-        for(let vp of verticalPoints) {
-            let Z = vp[0];
-            if(Math.abs(Z) < 1e-6) continue;
-            let u = vp[1], vv = vp[2];
-            usable.push({Z, x: [u, vv, 1.0]});
-        }
-        if(usable.length < 2) throw new Error("至少需要2个有效垂直参考点");
-        let n = usable.length;
-        let A = [], b = [];
-        for(let i=0; i<n; i++) {
-            let Z = usable[i].Z;
-            let x = usable[i].x;
-            for(let r=0;r<3;r++) {
-                let row = [0,0,0,0,0,0];
-                if(r===0) row = [Z,0,0, -x[0],0,0];
-                else if(r===1) row = [0,Z,0, -x[1],0,0];
-                else row = [0,0,Z, -x[2],0,0];
-                A.push(row.slice(0,6));
-                b.push(-p4[r]);
-            }
-        }
-        let svdA = numeric.svd(A);
-        let sol = numeric.solve(A, b, true);
-        let p3 = [sol[0], sol[1], sol[2]];
-        return {p3, rank: svdA.S.filter(s=>s>1e-8).length, residualNorm: numeric.norm2(numeric.sub(numeric.dot(A,sol),b)) };
-    }
-
-    function buildCameraMatrix(H0, p3) {
-        let p1 = [H0[0][0], H0[1][0], H0[2][0]];
-        let p2 = [H0[0][1], H0[1][1], H0[2][1]];
-        let p4 = [H0[0][2], H0[1][2], H0[2][2]];
-        let P = [
-            [p1[0], p2[0], p3[0], p4[0]],
-            [p1[1], p2[1], p3[1], p4[1]],
-            [p1[2], p2[2], p3[2], p4[2]]
-        ];
-        return P;
-    }
-
-    function calibrateCamera() {
-        try {
-            const baseRadius = parseFloat(document.getElementById('baseRadius').value);
-            const a = baseRadius / Math.sqrt(2);
-            const worldMap = {
-                B1: [ a,  a], B2: [-a,  a], B3: [-a, -a], B4: [ a, -a], C: [0,0]
-            };
-            const imgPoints = {
-                B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
-                B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
-                B3: [parseFloat(document.getElementById('b3u').value), parseFloat(document.getElementById('b3v').value)],
-                B4: [parseFloat(document.getElementById('b4u').value), parseFloat(document.getElementById('b4v').value)],
-            };
-            const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
-            if(cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
-
-            let worldPoints = [], imagePoints = [];
-            for(let key of ['B1','B2','B3','B4','C']) {
-                if(imgPoints[key]) {
-                    worldPoints.push(worldMap[key]);
-                    imagePoints.push(imgPoints[key]);
-                }
-            }
-            if(worldPoints.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
-            const H0 = computeHomography(worldPoints, imagePoints);
-
-            const vrows = document.querySelectorAll('.vpoint-row');
-            let verticalPts = [];
-            vrows.forEach(row => {
-                let Z = parseFloat(row.querySelector('.vz').value);
-                let u = parseFloat(row.querySelector('.vu').value);
-                let v = parseFloat(row.querySelector('.vv').value);
-                if(!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
-            });
-            if(verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
-            const {p3} = estimateP3FromVerticalPoints(H0, verticalPts);
-            const Pmat = buildCameraMatrix(H0, p3);
-            let matrixStr = "";
-            for(let i=0;i<3;i++) {
-                matrixStr += `[ ${Pmat[i].map(v=>v.toFixed(6)).join(", ")} ]\n`;
-            }
-            document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
-            document.getElementById('calibStatus').innerHTML = `<div class="success-info">✅ 标定成功！4×3相机矩阵已生成。</div>`;
-            window.lastCameraMatrix = Pmat;
-            return Pmat;
-        } catch(err) {
-            console.error(err);
-            document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
-            document.getElementById('cameraMatrixDisplay').innerHTML = "计算失败";
-            return null;
-        }
-    }
-
-    // 初始化
     window.addEventListener('DOMContentLoaded', () => {
         bindPickButtons();
         document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
-        document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
+        document.getElementById('calibrateBtn').addEventListener('click', calibrate);
         video.muted = true;
         video.play().catch(e=>console.log("自动播放被阻止"));
+        document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
         const observer = new MutationObserver(() => {
             document.querySelectorAll('.pick-vertical').forEach(btn => {
                 btn.removeEventListener('click', handleVerticalPick);
@@ -691,7 +704,6 @@
             });
         });
         observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
-        document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
     });
 </script>
 </body>
