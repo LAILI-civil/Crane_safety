@@ -415,7 +415,7 @@
         return { normPoints, T };
     }
 
-    // 计算单应矩阵 H (DLT)
+    // 计算单应矩阵 H (DLT) —— 修正：直接使用 SVD 的右奇异向量最后一列
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -427,15 +427,11 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        const rows = A.length, cols = A[0].length;
-        let V;
-        if (rows >= cols) {
-            V = numeric.svd(A).V;
-        } else {
-            const AT = numeric.transpose(A);
-            V = numeric.svd(AT).U;
-        }
-        const h = V.map(row => row[V[0].length-1]);
+        // 直接使用 SVD，取右奇异向量矩阵 V 的最后一列（最小奇异值对应）
+        const svd = numeric.svd(A);
+        const V = svd.V;              // 右奇异向量矩阵
+        const lastCol = V[0].length - 1;
+        const h = V.map(row => row[lastCol]);
         const Hn = [
             [h[0], h[1], h[2]],
             [h[3], h[4], h[5]],
@@ -443,12 +439,26 @@
         ];
         const TiInv = numeric.inv(Ti);
         let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
+
+        // 归一化：强制除以 H[2][2]（若不为零），否则除以范数
         const scale = H[2][2];
         if (Math.abs(scale) > 1e-12) {
-            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= scale;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    H[i][j] /= scale;
+                }
+            }
         } else {
-            const norm = Math.hypot(H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]);
-            for (let i=0;i<3;i++) for (let j=0;j<3;j++) H[i][j] /= norm;
+            const norm = Math.hypot(H[0][0], H[0][1], H[0][2],
+                                    H[1][0], H[1][1], H[1][2],
+                                    H[2][0], H[2][1], H[2][2]);
+            if (norm > 1e-12) {
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        H[i][j] /= norm;
+                    }
+                }
+            }
         }
         return H;
     }
