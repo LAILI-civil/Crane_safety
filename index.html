@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>塔吊智能监控标定 | 相机矩阵计算 (最终稳定版)</title>
+    <title>塔吊智能监控标定 | 相机矩阵计算 (调试版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif; }
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Times New Roman', 'Segoe UI', sans-serif; }
         .split-layout { display: flex; width: 100%; height: 100%; flex-direction: row; }
-        .left-video { flex: 1; background-color: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-        .left-video video { width: 100%; height: 100%; object-fit: contain; background-color: #000; outline: none; cursor: crosshair; }
-        .pick-tip { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); color: #ffdd99; font-size: 13px; padding: 6px 14px; border-radius: 24px; pointer-events: none; font-family: monospace; z-index: 10; border-left: 3px solid #ffaa33; white-space: nowrap; }
+        .left-video { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .left-video video { width: 100%; height: 100%; object-fit: contain; cursor: crosshair; }
+        .pick-tip { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); color: #ffdd99; font-size: 13px; padding: 6px 14px; border-radius: 24px; pointer-events: none; font-family: monospace; border-left: 3px solid #ffaa33; }
         .right-panel { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; overflow: hidden; }
-        .calib-area { flex: 1; overflow-y: auto; padding: 12px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; }
-        .calib-area h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 14px; border-left: 3px solid #3b82f6; padding-left: 10px; }
+        .calib-area { flex: 1; overflow-y: auto; padding: 12px 16px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+        .calib-area h3 { font-size: 1.1rem; margin-bottom: 14px; border-left: 3px solid #3b82f6; padding-left: 10px; }
         .horizontal-cards { display: flex; flex-wrap: nowrap; gap: 12px; margin-bottom: 20px; }
         .param-card { flex: 1; min-width: 0; background: #f8fafc; border-radius: 16px; padding: 10px 12px; border: 1px solid #e2edff; }
-        .param-card h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; border-left: 2px solid #3b82f6; padding-left: 6px; white-space: nowrap; }
+        .param-card h4 { font-size: 0.8rem; margin-bottom: 8px; border-left: 2px solid #3b82f6; padding-left: 6px; white-space: nowrap; }
         .compact-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; margin-bottom: 6px; }
         .compact-field { flex: 1; min-width: 70px; }
-        .compact-field label { display: block; font-size: 0.6rem; font-weight: 500; margin-bottom: 2px; white-space: nowrap; }
+        .compact-field label { font-size: 0.6rem; margin-bottom: 2px; white-space: nowrap; }
         .coord-small { display: flex; gap: 4px; }
         .coord-small input { width: 65px; }
-        input { padding: 4px 6px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-size: 0.75rem; width: 100%; font-family: monospace; }
-        button.pick-btn { background: #eef2ff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 0.65rem; font-weight: 500; color: #2563eb; cursor: pointer; white-space: nowrap; height: 28px; }
-        .vpoint-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; margin-bottom: 6px; background: #ffffffcc; padding: 4px; border-radius: 10px; }
+        input { padding: 4px 6px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.75rem; width: 100%; font-family: monospace; }
+        button.pick-btn { background: #eef2ff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 0.65rem; color: #2563eb; cursor: pointer; height: 28px; }
+        .vpoint-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; background: #ffffffcc; padding: 4px; border-radius: 10px; }
         .vpoint-row .field { flex: 1; min-width: 45px; }
         .vpoint-row input { padding: 3px 4px; font-size: 0.65rem; }
         .add-point-btn { background: #eef2ff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 4px 8px; font-size: 0.65rem; cursor: pointer; margin-top: 4px; width: 100%; text-align: center; }
-        button.calc-btn { background: #3b82f6; color: white; border: none; border-radius: 28px; padding: 8px 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; margin: 8px 0 12px 0; }
-        .matrix-output { background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 10px; font-family: 'Courier New', monospace; font-size: 0.65rem; overflow-x: auto; margin-top: 10px; }
-        .matrix-output pre { white-space: pre-wrap; word-break: break-all; margin: 0; }
+        button.calc-btn { background: #3b82f6; color: white; border: none; border-radius: 28px; padding: 8px 16px; font-weight: 600; width: 100%; margin: 8px 0 12px 0; cursor: pointer; }
+        .matrix-output { background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 10px; font-family: monospace; font-size: 0.65rem; overflow-x: auto; margin-top: 10px; }
         .error-msg { color: #dc2626; background: #fee2e2; padding: 6px; border-radius: 10px; font-size: 0.7rem; margin: 6px 0; }
         .success-info { color: #16a34a; background: #e0f2e9; padding: 5px 8px; border-radius: 10px; font-size: 0.7rem; }
-        .draw-area { flex: 1; background: #fefcf5; border-top: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #94a3b8; font-size: 0.85rem; }
-        .draw-area::before { content: "📐 绘图区 (预留)"; font-weight: 500; opacity: 0.7; }
+        .draw-area { flex: 1; background: #fefcf5; border-top: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
+        .draw-area::before { content: "📐 绘图区 (预留)"; }
         @media (max-width: 900px) { .horizontal-cards { overflow-x: auto; } .param-card { min-width: 260px; } }
     </style>
 </head>
@@ -48,12 +47,11 @@
         </video>
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
     </div>
-
     <div class="right-panel">
         <div class="calib-area">
             <h3>📐 相机标定 & 4x3 投影矩阵</h3>
             <div class="horizontal-cards">
-                <!-- 塔吊底座参数 -->
+                <!-- 底座参数卡片 -->
                 <div class="param-card">
                     <h4>🏗️ 塔吊底座参数</h4>
                     <div class="compact-row">
@@ -70,7 +68,7 @@
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 塔身垂直参考点 -->
+                <!-- 垂直参考点卡片 -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
@@ -90,7 +88,7 @@
                     <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                 </div>
 
-                <!-- 小车与吊钩关键点 -->
+                <!-- 小车吊钩卡片 -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
                     <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.0"></div></div>
@@ -110,35 +108,31 @@
 </div>
 
 <script>
-    // =================================================================
-    // 通用最小二乘求解 (使用 SVD，兼容任意形状矩阵)
-    // =================================================================
-    function leastSquares(A, b) {
-        // 检查矩阵形状，如果行数小于列数，对 A^T 做 SVD
+    // ================================================================
+    // 稳健 SVD 求解最小二乘，兼容行数<列数的情况
+    // ================================================================
+    function safeSvdLeastSquares(A, b) {
+        // 如果行数 >= 列数，直接对 A 做 SVD
+        // 否则对 A^T 做 SVD，然后转换
         const rows = A.length, cols = A[0].length;
-        let U, S, V;
+        let U, S, Vt;  // Vt 是 V 的转置，即右奇异向量矩阵的转置
         if (rows >= cols) {
             const svd = numeric.svd(A);
-            U = svd.U; S = svd.S; V = svd.V;
+            U = svd.U;
+            S = svd.S;
+            Vt = numeric.transpose(svd.V);
         } else {
             // 对 A^T 做 SVD: A^T = U' * S' * V'^T
-            // 则 A = V' * S' * U'^T，右奇异向量是 V' 的列
             const AT = numeric.transpose(A);
             const svd = numeric.svd(AT);
-            // 注意：AT 的右奇异向量对应原矩阵的左奇异向量，但我们需要的是 A 的最小二乘解。
-            // 对于最小二乘 min ||Ax - b||，当行<列时，解不唯一，通常取最小范数解。
-            // 使用伪逆：x = A^+ b，其中 A^+ = V * S^+ * U^T。
-            // 这里 U,S,V 是 A 的 SVD，但我们的计算方式应当保持一致。
-            // 为了简单，我们可以直接使用原矩阵的 SVD，但需要转置关系。
-            // 更稳妥：构造 A 的 SVD 通过转置关系。
-            // 已知 A = (U' * S' * V'^T)^T = V' * S' * U'^T
-            // 因此 A 的左奇异向量是 V'，右奇异向量是 U'，奇异值相同。
-            U = svd.V;    // 原矩阵的左奇异向量
-            S = svd.S;    // 奇异值
-            V = svd.U;    // 原矩阵的右奇异向量
+            // 则 A = V' * S' * U'^T
+            // 左奇异向量 = V', 右奇异向量 = U', 奇异值相同
+            U = svd.V;
+            S = svd.S;
+            Vt = numeric.transpose(svd.U);
         }
         const tol = 1e-12 * S[0];
-        const x = new Array(V.length).fill(0);
+        const x = new Array(cols).fill(0);
         for (let i = 0; i < S.length; i++) {
             if (S[i] > tol) {
                 const invS = 1.0 / S[i];
@@ -146,9 +140,9 @@
                 const ui = U.map(row => row[i]);
                 const ui_dot_b = numeric.dot(ui, b);
                 const coeff = invS * ui_dot_b;
-                // V 的第 i 列
-                for (let j = 0; j < V.length; j++) {
-                    x[j] += V[j][i] * coeff;
+                // Vt 的第 i 行（即右奇异向量的第 i 列）
+                for (let j = 0; j < cols; j++) {
+                    x[j] += Vt[i][j] * coeff;
                 }
             }
         }
@@ -179,7 +173,7 @@
         return { normPoints, T };
     }
 
-    // 单应矩阵计算 (DLT)
+    // 计算单应矩阵 (DLT)
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -191,9 +185,24 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 求解最小奇异值对应的右奇异向量
-        const svd = numeric.svd(A);
-        const V = svd.V;  // V 是 9x9 矩阵
+        // 使用稳健 SVD 求最小奇异值对应的右奇异向量
+        // 对于齐次方程，我们求解 min ||A h||，解为最小奇异值对应的右奇异向量
+        // 可以通过求解 A^T A 的特征值，但这里我们用 SVD 直接取右奇异矩阵最后一列
+        // 由于 A 是 8x9，行<列，需要特殊处理
+        const rows = A.length, cols = A[0].length; // 8x9
+        let V;
+        if (rows >= cols) {
+            const svd = numeric.svd(A);
+            V = svd.V;
+        } else {
+            // 对 A^T 做 SVD，右奇异向量对应原矩阵的左奇异向量？我们需要的是原矩阵的右奇异向量
+            // 标准关系：A = U Σ V^T，那么 A^T = V Σ U^T。
+            // 对 A^T 做 SVD: A^T = U' Σ' V'^T，则 U' = V, Σ' = Σ, V' = U。
+            // 因此原矩阵的右奇异向量 V 就是 U' (左奇异向量矩阵)。
+            const AT = numeric.transpose(A);
+            const svd = numeric.svd(AT);
+            V = svd.U;   // 因为 AT = U' Σ' V'^T，U' 的每一列是右奇异向量
+        }
         const h = V.map(row => row[V[0].length - 1]); // 最后一列
         const Hn = [
             [h[0], h[1], h[2]],
@@ -212,6 +221,7 @@
         return H;
     }
 
+    // 地面点到图像
     function groundToImage(H, X, Y) {
         const p = [X, Y, 1];
         const res = numeric.dot(H, p);
@@ -219,6 +229,7 @@
         return [res[0] * inv, res[1] * inv];
     }
 
+    // 图像点到平面
     function imageToPlane(H, u, v) {
         const Hinv = numeric.inv(H);
         const p = [u, v, 1];
@@ -227,6 +238,7 @@
         return [res[0] * inv, res[1] * inv];
     }
 
+    // 分离 H0
     function splitH0(H0) {
         return [
             [H0[0][0], H0[1][0], H0[2][0]],
@@ -235,6 +247,7 @@
         ];
     }
 
+    // 估计 p3
     function estimateP3(H0, verticalPoints) {
         const [p1, p2, p4] = splitH0(H0);
         const usable = [];
@@ -252,13 +265,13 @@
             const x = usable[i].x;
             for (let r = 0; r < 3; r++) {
                 const row = new Array(3 + n).fill(0);
-                row[r] = Z;           // p3 分量
-                row[3 + i] = -x[r];   // alpha_i
+                row[r] = Z;
+                row[3 + i] = -x[r];
                 A.push(row);
                 b.push(-p4[r]);
             }
         }
-        const sol = leastSquares(A, b);
+        const sol = safeSvdLeastSquares(A, b);
         return sol.slice(0, 3);
     }
 
@@ -300,7 +313,7 @@
             [p3[2], -x[2]]
         ];
         const b = [-q0[0], -q0[1], -q0[2]];
-        const sol = leastSquares(A, b);
+        const sol = safeSvdLeastSquares(A, b);
         return sol[0];
     }
 
@@ -315,11 +328,10 @@
         return [xh[0] * inv, xh[1] * inv];
     }
 
-    // =================================================================
-    // 主标定
-    // =================================================================
-    function calibrateCamera() {
+    // 主标定函数，带详细控制台日志
+    async function calibrateCamera() {
         try {
+            console.log("=== 开始标定 ===");
             document.getElementById('calibStatus').innerHTML = '';
             document.getElementById('cameraMatrixDisplay').innerHTML = '计算中...';
 
@@ -337,6 +349,7 @@
             };
             const cu = document.getElementById('cu').value, cv = document.getElementById('cv').value;
             if (cu && cv) imgPoints.C = [parseFloat(cu), parseFloat(cv)];
+            console.log("底座图像点:", imgPoints);
 
             let worldPts = [], imagePts = [];
             for (let key of ['B1','B2','B3','B4','C']) {
@@ -346,7 +359,9 @@
                 }
             }
             if (worldPts.length < 4) throw new Error("底座至少需要4个点 (B1~B4)");
+            console.log("世界点数量:", worldPts.length);
 
+            console.log("计算 H0...");
             const H0 = computeHomography(worldPts, imagePts);
             console.log("H0 =", H0);
 
@@ -359,7 +374,9 @@
                 if (!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
             });
             if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
+            console.log("垂直参考点:", verticalPts);
 
+            console.log("估计 p3...");
             const p3 = estimateP3(H0, verticalPts);
             console.log("p3 =", p3);
 
@@ -367,17 +384,23 @@
             const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
             const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
             const trolleyRadiusInput = parseFloat(document.getElementById('trolleyRadius').value);
-
             if (isNaN(trolleyHeight) || isNaN(trolleyPixel[0]) || isNaN(trolleyPixel[1]) ||
                 isNaN(hookPixel[0]) || isNaN(hookPixel[1])) {
                 throw new Error("小车或吊钩坐标无效");
             }
+            console.log("小车高度:", trolleyHeight, "像素:", trolleyPixel);
+            console.log("吊钩像素:", hookPixel);
 
             const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
+            console.log(`小车水平坐标: (${X}, ${Y}), 半径: ${Math.hypot(X,Y)}`);
+
             const Z_hook = estimateHeight(H0, p3, X, Y, hookPixel);
+            console.log(`吊钩高度估计: ${Z_hook}`);
+
             const hookReproj = world3dToImage(H0, p3, X, Y, Z_hook);
             const reprojError = Math.hypot(hookReproj[0] - hookPixel[0], hookReproj[1] - hookPixel[1]);
             const groundPixel = groundToImage(H0, X, Y);
+            console.log(`重投影误差: ${reprojError} px`);
 
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
@@ -403,6 +426,7 @@
                     📐 半径偏差: ${Math.abs(trolleyRadiusEst - trolleyRadiusInput).toFixed(6)} m
                 </div>
             `;
+            console.log("=== 标定完成 ===");
         } catch (err) {
             console.error("标定错误:", err);
             let msg = err.message || String(err);
@@ -413,12 +437,10 @@
     }
 
     // =================================================================
-    // 视频选取交互
+    // 视频交互选取 (不变)
     // =================================================================
-    let activePickMode = null;
-    let pickCallback = null;
+    let activePickMode = null, pickCallback = null;
     const video = document.getElementById('mainVideo');
-
     function getVideoOriginalCoordinates(event) {
         const rect = video.getBoundingClientRect();
         const scaleX = video.videoWidth / rect.width;
@@ -429,7 +451,6 @@
         v = Math.min(Math.max(0, v), video.videoHeight);
         return { u, v };
     }
-
     function enterPickMode(targetId, callback) {
         if (activePickMode) video.style.cursor = "default";
         activePickMode = targetId;
@@ -437,7 +458,6 @@
         document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}`;
         pickCallback = callback;
     }
-
     function onVideoClick(event) {
         if (!activePickMode) return;
         const { u, v } = getVideoOriginalCoordinates(event);
@@ -446,71 +466,43 @@
         activePickMode = null;
         document.getElementById('pickTip').innerHTML = '✅ 坐标已选取，可继续标定';
         setTimeout(() => {
-            if (!activePickMode) document.getElementById('pickTip').innerHTML = '✏️ 点击「选取」按钮，再点击视频获取坐标';
+            if(!activePickMode) document.getElementById('pickTip').innerHTML = '✏️ 点击「选取」按钮，再点击视频获取坐标';
         }, 1800);
     }
     video.addEventListener('click', onVideoClick);
-
     function bindPickButtons() {
         const mappings = [
-            { id: 'b1', uId: 'b1u', vId: 'b1v' }, { id: 'b2', uId: 'b2u', vId: 'b2v' },
-            { id: 'b3', uId: 'b3u', vId: 'b3v' }, { id: 'b4', uId: 'b4u', vId: 'b4v' },
-            { id: 'c', uId: 'cu', vId: 'cv' },
-            { id: 'trolley', uId: 'trolleyU', vId: 'trolleyV' },
-            { id: 'hook', uId: 'hookU', vId: 'hookV' }
+            { id:'b1', uId:'b1u', vId:'b1v' }, { id:'b2', uId:'b2u', vId:'b2v' },
+            { id:'b3', uId:'b3u', vId:'b3v' }, { id:'b4', uId:'b4u', vId:'b4v' },
+            { id:'c', uId:'cu', vId:'cv' }, { id:'trolley', uId:'trolleyU', vId:'trolleyV' },
+            { id:'hook', uId:'hookU', vId:'hookV' }
         ];
         mappings.forEach(m => {
             const btn = document.querySelector(`button.pick-btn[data-target="${m.id}"]`);
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    enterPickMode(m.id, (mode, u, v) => {
-                        document.getElementById(m.uId).value = u.toFixed(3);
-                        document.getElementById(m.vId).value = v.toFixed(3);
-                    });
-                });
-            }
+            if(btn) btn.addEventListener('click', () => enterPickMode(m.id, (mode,u,v) => { document.getElementById(m.uId).value = u.toFixed(3); document.getElementById(m.vId).value = v.toFixed(3); }));
         });
     }
-
     function handleVerticalPick(e) {
-        const btn = e.currentTarget;
-        const row = btn.closest('.vpoint-row');
-        const idx = row.getAttribute('data-idx');
-        enterPickMode(`vertical_${idx}`, (mode, u, v) => {
-            row.querySelector('.vu').value = u.toFixed(3);
-            row.querySelector('.vv').value = v.toFixed(3);
-        });
+        const btn = e.currentTarget, row = btn.closest('.vpoint-row'), idx = row.getAttribute('data-idx');
+        enterPickMode(`vertical_${idx}`, (mode,u,v) => { row.querySelector('.vu').value = u.toFixed(3); row.querySelector('.vv').value = v.toFixed(3); });
     }
-
     function addVerticalPoint() {
-        const container = document.getElementById('verticalPointsContainer');
-        const idx = container.children.length;
+        const container = document.getElementById('verticalPointsContainer'), idx = container.children.length;
         const newRow = document.createElement('div');
         newRow.className = 'vpoint-row';
         newRow.setAttribute('data-idx', idx);
-        newRow.innerHTML = `
-            <div class="field"><label>Z${idx+1}(m)</label><input class="vz" type="number" value="15.0"></div>
-            <div class="field"><label>u</label><input class="vu" type="number" value="770"></div>
-            <div class="field"><label>v</label><input class="vv" type="number" value="120"></div>
-            <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
-        `;
+        newRow.innerHTML = `<div class="field"><label>Z${idx+1}(m)</label><input class="vz" type="number" value="15.0"></div><div class="field"><label>u</label><input class="vu" type="number" value="770"></div><div class="field"><label>v</label><input class="vv" type="number" value="120"></div><button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>`;
         container.appendChild(newRow);
         newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
     }
-
     window.addEventListener('DOMContentLoaded', () => {
         bindPickButtons();
         document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
         document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
         video.muted = true;
-        video.play().catch(e => console.log("自动播放被阻止"));
+        video.play().catch(e=>console.log("自动播放被阻止"));
         document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
-        const observer = new MutationObserver(() => {
-            document.querySelectorAll('.pick-vertical').forEach(btn => {
-                btn.removeEventListener('click', handleVerticalPick);
-                btn.addEventListener('click', handleVerticalPick);
-            });
-        });
+        const observer = new MutationObserver(() => { document.querySelectorAll('.pick-vertical').forEach(btn => btn.removeEventListener('click', handleVerticalPick) || btn.addEventListener('click', handleVerticalPick)); });
         observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
     });
 </script>
