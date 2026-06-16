@@ -255,16 +255,85 @@
             background: #fefcf5;
             border-top: 2px dashed #cbd5e1;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #94a3b8;
-            font-size: 0.9rem;
+            flex-direction: column;
+            padding: 14px 18px;
+            gap: 12px;
+            overflow: hidden;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
-        .draw-area::before {
-            content: "📐 绘图区 (预留)";
-            font-weight: 500;
-            opacity: 0.7;
+
+        .risk-cards {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .risk-card {
+            flex: 1;
+            min-width: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .risk-card h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border-left: 3px solid #f97316;
+            padding-left: 8px;
+            color: #334155;
+        }
+
+        .risk-info {
+            font-size: 0.75rem;
+            line-height: 1.55;
+            color: #334155;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .risk-canvas-wrap {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .risk-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .risk-legend {
+            font-size: 0.72rem;
+            color: #475569;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 8px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 4px;
+            display: inline-block;
         }
 
         @media (max-width: 900px) {
@@ -355,7 +424,44 @@
                 <div id="calibStatus"></div>
             </div>
         </div>
-        <div class="draw-area"></div>
+        <div class="draw-area">
+            <div class="risk-cards">
+
+                <!-- 模块1：参数 -->
+                <div class="risk-card">
+                    <h4>👷 工人与塔吊运动参数</h4>
+                    <div id="riskParamInfo" class="risk-info">
+                        请先点击上方“计算相机矩阵”。
+                    </div>
+                </div>
+
+                <!-- 模块2：简单3D示意 -->
+                <div class="risk-card">
+                    <h4>🏗️ 3D 坐标示意</h4>
+                    <div class="risk-canvas-wrap">
+                        <canvas id="risk3DCanvas" class="risk-canvas"></canvas>
+                    </div>
+                    <div class="risk-legend">
+                        <span class="legend-item"><span class="legend-color" style="background:#2563eb;"></span>起始臂</span>
+                        <span class="legend-item"><span class="legend-color" style="background:#dc2626;"></span>终止臂</span>
+                        <span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>工人轨迹</span>
+                    </div>
+                </div>
+
+                <!-- 模块3：俯视危险区域 -->
+                <div class="risk-card">
+                    <h4>📍 俯视风险区域</h4>
+                    <div class="risk-canvas-wrap">
+                        <canvas id="riskTopCanvas" class="risk-canvas"></canvas>
+                    </div>
+                    <div class="risk-legend">
+                        <span class="legend-item"><span class="legend-color" style="background:rgba(249,115,22,0.35);"></span>Risk1 大臂扫过区域</span>
+                        <span class="legend-item"><span class="legend-color" style="background:rgba(59,130,246,0.35);"></span>Risk2 吊物外扩区域</span>
+                        <span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>工人移动</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
