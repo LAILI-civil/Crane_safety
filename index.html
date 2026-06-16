@@ -850,6 +850,570 @@
         return sol[0];
     }
 
+
+    // ================================================================
+    // 4.1 右下角 Risk Demo 绘图逻辑
+    // ================================================================
+
+    function getH0FromP(P) {
+        return [
+            [P[0][0], P[0][1], P[0][3]],
+            [P[1][0], P[1][1], P[1][3]],
+            [P[2][0], P[2][1], P[2][3]]
+        ];
+    }
+
+    function groundToImageFromP(P, X, Y) {
+        const Xh = [X, Y, 0, 1];
+        const x = numeric.dot(P, Xh);
+        return [x[0] / x[2], x[1] / x[2]];
+    }
+
+    function imageToGroundFromP(P, pixel) {
+        const H0 = getH0FromP(P);
+        const Hinv = numeric.inv(H0);
+        const x = [pixel[0], pixel[1], 1];
+        const Xh = numeric.dot(Hinv, x);
+        return [Xh[0] / Xh[2], Xh[1] / Xh[2]];
+    }
+
+    function cross2JS(a, b) {
+        return a[0] * b[1] - a[1] * b[0];
+    }
+
+    function dot2JS(a, b) {
+        return a[0] * b[0] + a[1] * b[1];
+    }
+
+    function norm2JS(a) {
+        return Math.hypot(a[0], a[1]);
+    }
+
+    function signedAngleJS(a, b) {
+        return Math.atan2(cross2JS(a, b), dot2JS(a, b));
+    }
+
+    function wrap2PiJS(theta) {
+        const twoPi = 2 * Math.PI;
+        return ((theta % twoPi) + twoPi) % twoPi;
+    }
+
+    function computeSweepParamsJS(A, B, direction) {
+        const rA = norm2JS(A);
+        const rB = norm2JS(B);
+
+        const aHat = [A[0] / rA, A[1] / rA];
+        const bHat = [B[0] / rB, B[1] / rB];
+
+        const sigma = direction === "ccw" ? 1.0 : -1.0;
+
+        const alphaAB = signedAngleJS(aHat, bHat);
+        const Delta = wrap2PiJS(sigma * alphaAB);
+
+        return {
+            A,
+            B,
+            rA,
+            rB,
+            aHat,
+            bHat,
+            sigma,
+            Delta,
+            DeltaDeg: Delta * 180 / Math.PI
+        };
+    }
+
+    function pointProgressJS(P, sweep) {
+        const rho = norm2JS(P);
+
+        if (rho < 1e-12) {
+            return {
+                rho,
+                delta: 0,
+                deltaDeg: 0,
+                hasDirection: false
+            };
+        }
+
+        const pHat = [P[0] / rho, P[1] / rho];
+        const alphaAP = signedAngleJS(sweep.aHat, pHat);
+        const delta = wrap2PiJS(sweep.sigma * alphaAP);
+
+        return {
+            rho,
+            delta,
+            deltaDeg: delta * 180 / Math.PI,
+            hasDirection: true
+        };
+    }
+
+    function checkRisk1PointJS(P, sweep, boomLength) {
+        const progress = pointProgressJS(P, sweep);
+
+        const inRadius = progress.rho <= boomLength + 1e-9;
+        const inAngle = !progress.hasDirection || progress.delta <= sweep.Delta + 1e-9;
+
+        return {
+            inside: inRadius && inAngle,
+            rho: progress.rho,
+            deltaDeg: progress.deltaDeg,
+            inRadius,
+            inAngle
+        };
+    }
+
+    function pointToArcDistanceJS(P, sweep) {
+        const A = sweep.A;
+        const B = sweep.B;
+
+        const r = 0.5 * (sweep.rA + sweep.rB);
+        const rho = norm2JS(P);
+
+        if (rho < 1e-12) {
+            return {
+                distance: r,
+                closestPart: "center",
+                rho,
+                deltaDeg: null
+            };
+        }
+
+        const progress = pointProgressJS(P, sweep);
+        const inAngle = progress.delta <= sweep.Delta + 1e-12;
+
+        if (inAngle) {
+            return {
+                distance: Math.abs(rho - r),
+                closestPart: "arc_middle",
+                rho,
+                deltaDeg: progress.deltaDeg
+            };
+        }
+
+        const dA = norm2JS([P[0] - A[0], P[1] - A[1]]);
+        const dB = norm2JS([P[0] - B[0], P[1] - B[1]]);
+
+        if (dA <= dB) {
+            return {
+                distance: dA,
+                closestPart: "start_cap",
+                rho,
+                deltaDeg: progress.deltaDeg
+            };
+        }
+
+        return {
+            distance: dB,
+            closestPart: "end_cap",
+            rho,
+            deltaDeg: progress.deltaDeg
+        };
+    }
+
+    function checkRisk2PointJS(P, sweep, loadRadius) {
+        const d = pointToArcDistanceJS(P, sweep);
+
+        return {
+            inside: d.distance <= loadRadius + 1e-12,
+            distance: d.distance,
+            closestPart: d.closestPart,
+            rho: d.rho,
+            deltaDeg: d.deltaDeg
+        };
+    }
+
+    function buildRiskDemoFromP(P) {
+        // 与 Python demo 保持一致
+        const liftGround = [10.0, 0.0];
+        const dropGround = [8.000170741682815, 6.000241409902737];
+
+        const workerStartGround = [8.0, -1.0];
+        const workerEndGround = [8.0, 8.0];
+
+        const liftPixel = groundToImageFromP(P, liftGround[0], liftGround[1]);
+        const dropPixel = groundToImageFromP(P, dropGround[0], dropGround[1]);
+        const workerStartPixel = groundToImageFromP(P, workerStartGround[0], workerStartGround[1]);
+        const workerEndPixel = groundToImageFromP(P, workerEndGround[0], workerEndGround[1]);
+
+        const boomLength = 50.0;
+        const loadRadius = 2.0;
+        const direction = "ccw";
+        const numSamples = 200;
+
+        const A = imageToGroundFromP(P, liftPixel);
+        const B = imageToGroundFromP(P, dropPixel);
+        const P0 = imageToGroundFromP(P, workerStartPixel);
+        const P1 = imageToGroundFromP(P, workerEndPixel);
+
+        const sweep = computeSweepParamsJS(A, B, direction);
+
+        let risk1Danger = false;
+        let risk2Danger = false;
+        let risk1Count = 0;
+        let risk2Count = 0;
+        let risk2MinDistance = Infinity;
+
+        for (let k = 0; k <= numSamples; k++) {
+            const t = k / numSamples;
+            const Pw = [
+                P0[0] + t * (P1[0] - P0[0]),
+                P0[1] + t * (P1[1] - P0[1])
+            ];
+
+            const r1 = checkRisk1PointJS(Pw, sweep, boomLength);
+            const r2 = checkRisk2PointJS(Pw, sweep, loadRadius);
+
+            if (r1.inside) {
+                risk1Danger = true;
+                risk1Count++;
+            }
+
+            if (r2.inside) {
+                risk2Danger = true;
+                risk2Count++;
+            }
+
+            if (r2.distance < risk2MinDistance) {
+                risk2MinDistance = r2.distance;
+            }
+        }
+
+        return {
+            P,
+            liftGround,
+            dropGround,
+            workerStartGround,
+            workerEndGround,
+            liftPixel,
+            dropPixel,
+            workerStartPixel,
+            workerEndPixel,
+            boomLength,
+            loadRadius,
+            direction,
+            numSamples,
+            sweep,
+            risk1Danger,
+            risk2Danger,
+            risk1Count,
+            risk2Count,
+            risk2MinDistance
+        };
+    }
+
+    function updateRiskParamPanel(demo) {
+        const el = document.getElementById("riskParamInfo");
+
+        if (!el) return;
+
+        el.innerHTML =
+    `工人起点像素:
+      (${demo.workerStartPixel[0].toFixed(3)}, ${demo.workerStartPixel[1].toFixed(3)})
+
+    工人终点像素:
+      (${demo.workerEndPixel[0].toFixed(3)}, ${demo.workerEndPixel[1].toFixed(3)})
+
+    工人起点地面:
+      (${demo.workerStartGround[0].toFixed(3)}, ${demo.workerStartGround[1].toFixed(3)}) m
+
+    工人终点地面:
+      (${demo.workerEndGround[0].toFixed(3)}, ${demo.workerEndGround[1].toFixed(3)}) m
+
+    起吊点地面:
+      (${demo.liftGround[0].toFixed(3)}, ${demo.liftGround[1].toFixed(3)}) m
+
+    落吊点地面:
+      (${demo.dropGround[0].toFixed(3)}, ${demo.dropGround[1].toFixed(3)}) m
+
+    塔吊旋转方向:
+      ${demo.direction === "ccw" ? "逆时针 ccw" : "顺时针 cw"}
+
+    扫过角度:
+      ${demo.sweep.DeltaDeg.toFixed(3)}°
+
+    大臂长度:
+      ${demo.boomLength.toFixed(3)} m
+
+    吊物危险半径:
+      ${demo.loadRadius.toFixed(3)} m
+
+    Risk1 大臂扫过:
+      ${demo.risk1Danger ? "危险" : "安全"}，采样点 ${demo.risk1Count}
+
+    Risk2 吊物外扩:
+      ${demo.risk2Danger ? "危险" : "安全"}，采样点 ${demo.risk2Count}
+
+    Risk2 最小距离:
+      ${demo.risk2MinDistance.toFixed(3)} m`;
+    }
+
+    function fitCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        return {
+            ctx,
+            width: rect.width,
+            height: rect.height
+        };
+    }
+
+    function makeWorldMapper(points, width, height, padding = 28) {
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+
+        points.forEach(p => {
+            minX = Math.min(minX, p[0]);
+            maxX = Math.max(maxX, p[0]);
+            minY = Math.min(minY, p[1]);
+            maxY = Math.max(maxY, p[1]);
+        });
+
+        const spanX = Math.max(1e-6, maxX - minX);
+        const spanY = Math.max(1e-6, maxY - minY);
+
+        const scale = Math.min(
+            (width - 2 * padding) / spanX,
+            (height - 2 * padding) / spanY
+        );
+
+        const cx = 0.5 * (minX + maxX);
+        const cy = 0.5 * (minY + maxY);
+
+        return function map(p) {
+            return [
+                width / 2 + (p[0] - cx) * scale,
+                height / 2 - (p[1] - cy) * scale
+            ];
+        };
+    }
+
+    function drawRisk3D(demo) {
+        const canvas = document.getElementById("risk3DCanvas");
+        if (!canvas) return;
+
+        const { ctx, width, height } = fitCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        const O = [0, 0, 0];
+        const A = [demo.liftGround[0], demo.liftGround[1], 0];
+        const B = [demo.dropGround[0], demo.dropGround[1], 0];
+        const P0 = [demo.workerStartGround[0], demo.workerStartGround[1], 0];
+        const P1 = [demo.workerEndGround[0], demo.workerEndGround[1], 0];
+
+        function project3D(p) {
+            const scale = 15;
+            const ox = width * 0.45;
+            const oy = height * 0.68;
+
+            const x = p[0];
+            const y = p[1];
+            const z = p[2];
+
+            return [
+                ox + scale * (x - 0.55 * y),
+                oy - scale * (0.45 * y + z)
+            ];
+        }
+
+        function line(p, q, color, lw = 2) {
+            const a = project3D(p);
+            const b = project3D(q);
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lw;
+            ctx.stroke();
+        }
+
+        function point(p, color, r = 4) {
+            const a = project3D(p);
+            ctx.beginPath();
+            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        // 地面网格
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+        for (let i = -10; i <= 15; i += 5) {
+            line([i, -5, 0], [i, 15, 0], "#e2e8f0", 1);
+            line([-5, i, 0], [15, i, 0], "#e2e8f0", 1);
+        }
+
+        // 塔身
+        line(O, [0, 0, 12], "#64748b", 3);
+
+        // 起始臂、终止臂
+        line([0, 0, 10], [A[0], A[1], 10], "#2563eb", 3);
+        line([0, 0, 10], [B[0], B[1], 10], "#dc2626", 3);
+
+        // 地面投影
+        line(O, A, "rgba(37,99,235,0.35)", 2);
+        line(O, B, "rgba(220,38,38,0.35)", 2);
+
+        // 工人轨迹
+        line(P0, P1, "#16a34a", 5);
+
+        point(O, "#0f172a", 4);
+        point(A, "#2563eb", 4);
+        point(B, "#dc2626", 4);
+        point(P0, "#16a34a", 4);
+        point(P1, "#22c55e", 4);
+
+        ctx.fillStyle = "#334155";
+        ctx.font = "12px Times New Roman";
+        ctx.fillText("O", project3D(O)[0] + 5, project3D(O)[1] - 5);
+        ctx.fillText("Lift", project3D(A)[0] + 5, project3D(A)[1] - 5);
+        ctx.fillText("Drop", project3D(B)[0] + 5, project3D(B)[1] - 5);
+        ctx.fillText("Worker", project3D(P1)[0] + 5, project3D(P1)[1] - 5);
+    }
+
+    function drawRiskTopView(demo) {
+        const canvas = document.getElementById("riskTopCanvas");
+        if (!canvas) return;
+
+        const { ctx, width, height } = fitCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        const O = [0, 0];
+        const A = demo.liftGround;
+        const B = demo.dropGround;
+        const P0 = demo.workerStartGround;
+        const P1 = demo.workerEndGround;
+
+        const boomLength = demo.boomLength;
+        const loadRadius = demo.loadRadius;
+        const sweep = demo.sweep;
+
+        const points = [
+            [-2, -2],
+            [12, 12],
+            A,
+            B,
+            P0,
+            P1,
+            [boomLength * 0.25, boomLength * 0.25]
+        ];
+
+        const map = makeWorldMapper(points, width, height, 30);
+
+        function drawLine(p, q, color, lw = 2) {
+            const a = map(p);
+            const b = map(q);
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lw;
+            ctx.stroke();
+        }
+
+        function drawPoint(p, color, r = 4) {
+            const a = map(p);
+            ctx.beginPath();
+            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawText(text, p, color = "#334155") {
+            const a = map(p);
+            ctx.fillStyle = color;
+            ctx.font = "12px Times New Roman";
+            ctx.fillText(text, a[0] + 5, a[1] - 5);
+        }
+
+        // 坐标轴
+        drawLine([-2, 0], [14, 0], "#cbd5e1", 1);
+        drawLine([0, -2], [0, 14], "#cbd5e1", 1);
+
+        // Risk1 大臂扫过扇形
+        const startAng = Math.atan2(A[1], A[0]);
+        const sigma = sweep.sigma;
+        const Delta = sweep.Delta;
+        const steps = 80;
+
+        ctx.beginPath();
+        let center = map(O);
+        ctx.moveTo(center[0], center[1]);
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            const p = [
+                boomLength * Math.cos(ang),
+                boomLength * Math.sin(ang)
+            ];
+            const q = map(p);
+            ctx.lineTo(q[0], q[1]);
+        }
+
+        ctx.closePath();
+        ctx.fillStyle = "rgba(249,115,22,0.25)";
+        ctx.fill();
+
+        // Risk2 吊物轨迹外扩区域：用粗透明圆弧近似表示
+        ctx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            const r = 0.5 * (sweep.rA + sweep.rB);
+            const p = [
+                r * Math.cos(ang),
+                r * Math.sin(ang)
+            ];
+            const q = map(p);
+            if (i === 0) ctx.moveTo(q[0], q[1]);
+            else ctx.lineTo(q[0], q[1]);
+        }
+
+        const pRef1 = map([0, 0]);
+        const pRef2 = map([loadRadius, 0]);
+        const pixelLoadRadius = Math.abs(pRef2[0] - pRef1[0]);
+
+        ctx.strokeStyle = "rgba(59,130,246,0.40)";
+        ctx.lineWidth = Math.max(4, 2 * pixelLoadRadius);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // 起始臂、终止臂
+        drawLine(O, A, "#2563eb", 3);
+        drawLine(O, B, "#dc2626", 3);
+
+        // 工人移动轨迹
+        drawLine(P0, P1, "#16a34a", 6);
+
+        drawPoint(O, "#0f172a", 4);
+        drawPoint(A, "#2563eb", 4);
+        drawPoint(B, "#dc2626", 4);
+        drawPoint(P0, "#16a34a", 4);
+        drawPoint(P1, "#22c55e", 4);
+
+        drawText("O", O);
+        drawText("Lift", A, "#2563eb");
+        drawText("Drop", B, "#dc2626");
+        drawText("Worker Start", P0, "#16a34a");
+        drawText("Worker End", P1, "#16a34a");
+    }
+
+    function updateRiskDrawArea(Pmat) {
+        const demo = buildRiskDemoFromP(Pmat);
+
+        updateRiskParamPanel(demo);
+        drawRisk3D(demo);
+        drawRiskTopView(demo);
+    }
+
     // ================================================================
     // 4. 主计算流程 (与 Demo3 对标)
     // ================================================================
