@@ -415,7 +415,7 @@
         return { normPoints, T };
     }
 
-    // 计算单应矩阵 H (DLT) —— 修正：直接使用 SVD 的右奇异向量最后一列
+    // 计算单应矩阵 H (DLT) —— 修正：稳健处理行<列情况
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -427,9 +427,18 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 直接使用 SVD，取右奇异向量矩阵 V 的最后一列（最小奇异值对应）
-        const svd = numeric.svd(A);
-        const V = svd.V;              // 右奇异向量矩阵
+        // 稳健 SVD：处理行<列的情况
+        const rows = A.length, cols = A[0].length;
+        let V; // 右奇异向量矩阵
+        if (rows >= cols) {
+            V = numeric.svd(A).V;
+        } else {
+            // 对 A^T 做 SVD，取左奇异矩阵 U 作为原矩阵的右奇异向量
+            const AT = numeric.transpose(A);
+            const svdAT = numeric.svd(AT);
+            V = svdAT.U;  // U' 的每一列是 A 的右奇异向量
+        }
+        // 取最小奇异值对应的右奇异向量（最后一列）
         const lastCol = V[0].length - 1;
         const h = V.map(row => row[lastCol]);
         const Hn = [
