@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>塔吊智能监控标定 | 4×3 相机矩阵 (鲁棒底座)</title>
+    <title>塔吊智能监控标定 | 4×3 相机矩阵 (Demo3 对标)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <style>
         /* 全局重置与字体 */
@@ -294,10 +294,10 @@
     <!-- 右侧面板 -->
     <div class="right-panel">
         <div class="calib-area">
-            <h3>📐 相机标定 &amp; 4×3 投影矩阵</h3>
+            <h3>📐 相机标定 &amp; 4×3 投影矩阵 (Demo3 对标)</h3>
             <div class="horizontal-cards">
 
-                <!-- 卡片1: 塔吊底座参数 (鲁棒版) -->
+                <!-- 卡片1: 塔吊底座参数 -->
                 <div class="param-card">
                     <h4>🏗️ 塔吊底座参数</h4>
                     <div class="compact-row">
@@ -307,39 +307,41 @@
                         </div>
                     </div>
                     <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
-                    <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.72"><input id="b1v" value="403.01"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.73"><input id="b2v" value="391.16"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.34"><input id="b3v" value="437.23"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.39"><input id="b4v" value="448.92"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                    <!-- 与 Python demo3 完全一致，保留3位小数 -->
+                    <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.393"><input id="b4v" value="448.919"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                    <!-- C 中心留空 (与 demo3 一致) -->
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 卡片2: 塔身垂直参考点 (不变) -->
+                <!-- 卡片2: 塔身垂直参考点 (与 demo3 一致) -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
                         <div class="vpoint-row" data-idx="0">
                             <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="10.00"></div>
-                            <div class="field"><label>u</label><input class="vu" type="number" value="727.27"></div>
-                            <div class="field"><label>v</label><input class="vv" type="number" value="222.22"></div>
+                            <div class="field"><label>u</label><input class="vu" type="number" value="727.273"></div>
+                            <div class="field"><label>v</label><input class="vv" type="number" value="222.222"></div>
                             <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                         </div>
                         <div class="vpoint-row" data-idx="1">
                             <div class="field"><label>Z2 (m)</label><input class="vz" type="number" value="20.00"></div>
-                            <div class="field"><label>u</label><input class="vu" type="number" value="816.33"></div>
-                            <div class="field"><label>v</label><input class="vv" type="number" value="20.41"></div>
+                            <div class="field"><label>u</label><input class="vu" type="number" value="816.327"></div>
+                            <div class="field"><label>v</label><input class="vv" type="number" value="20.408"></div>
                             <button class="pick-btn pick-vertical" data-idx="1">选取</button>
                         </div>
                     </div>
                     <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                 </div>
 
-                <!-- 卡片3: 小车与吊钩关键点 (不变) -->
+                <!-- 卡片3: 小车与吊钩关键点 (与 demo3 一致) -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
                     <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.00"></div></div>
-                    <div class="compact-row"><div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.22"><input id="trolleyV" value="166.02"></div></div><button class="pick-btn" data-target="trolley">选取</button></div>
-                    <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.91"><input id="hookV" value="243.19"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>小车像素 (u,v)</label><div class="coord-small"><input id="trolleyU" value="1074.219"><input id="trolleyV" value="166.016"></div></div><button class="pick-btn" data-target="trolley">选取</button></div>
+                    <div class="compact-row"><div class="compact-field"><label>吊钩像素 (u,v)</label><div class="coord-small"><input id="hookU" value="1038.911"><input id="hookV" value="243.191"></div></div><button class="pick-btn" data-target="hook">选取</button></div>
                 </div>
             </div>
 
@@ -359,7 +361,7 @@
 
 <script>
     // ================================================================
-    // 1. 基础数学工具 (不变)
+    // 1. 基础数学工具 (与 Python 一致)
     // ================================================================
 
     // 最小二乘求解 (自动处理行列数)
@@ -478,7 +480,7 @@
     }
 
     // ================================================================
-    // 2. 新增：塔吊底座鲁棒补全逻辑 (移植自 Python)
+    // 2. 塔吊底座鲁棒补全逻辑 (与 Python 一致)
     // ================================================================
 
     const BASE_LABELS = ["B1", "B2", "B3", "B4"];
@@ -489,7 +491,6 @@
         "B4": "B2"
     };
 
-    // 构造世界坐标
     function buildTowerBaseWorldPoints(baseRadius) {
         const a = baseRadius / Math.sqrt(2);
         return {
@@ -501,7 +502,6 @@
         };
     }
 
-    // 统计可见角点
     function countVisibleCorners(imageMarks) {
         const visible = [], missing = [];
         for (let label of BASE_LABELS) {
@@ -514,7 +514,6 @@
         return { visible, missing };
     }
 
-    // 三点估计缺失角点 (平行四边形近似)
     function estimateMissingFromThreeCorners(imageMarks, missingLabel) {
         const pts = {};
         for (let label of BASE_LABELS) {
@@ -546,7 +545,6 @@
         return null;
     }
 
-    // 用中心点估计缺失角点 (中心对称)
     function estimateMissingFromCenter(imageMarks, missingLabel) {
         if (!imageMarks["C"]) return null;
         const opposite = OPPOSITE_CORNER[missingLabel];
@@ -556,30 +554,25 @@
         return [2*C[0] - bOpp[0], 2*C[1] - bOpp[1]];
     }
 
-    // 补全底座图像点
     function completeBaseImageMarks(imageMarks, useCenterWhenFourCorners=true, blendCenterWeight=0.7) {
-        // 深拷贝
         const completed = {};
         for (let label of [...BASE_LABELS, "C"]) {
             completed[label] = (imageMarks[label] !== null && imageMarks[label] !== undefined) ? imageMarks[label] : null;
         }
-
         const { visible, missing } = countVisibleCorners(completed);
         const hasCenter = (completed["C"] !== null);
-
         let estimatedInfo = {
             estimatedLabels: [],
             method: "none",
             warning: null
         };
 
-        // 情况1：4角点完整
         if (visible.length === 4) {
             if (hasCenter && useCenterWhenFourCorners) {
                 estimatedInfo.method = "four_corners_plus_center";
             } else {
                 if (hasCenter) {
-                    completed["C"] = null; // 忽略中心
+                    completed["C"] = null;
                     estimatedInfo.method = "four_corners_only_ignore_center";
                 } else {
                     estimatedInfo.method = "four_corners_only";
@@ -588,7 +581,6 @@
             return { completed, estimatedInfo };
         }
 
-        // 情况2：3角点，缺1角
         if (visible.length === 3 && missing.length === 1) {
             const missingLabel = missing[0];
             const estThree = estimateMissingFromThreeCorners(completed, missingLabel);
@@ -599,7 +591,6 @@
             let warning = "";
 
             if (estThree !== null && estCenter !== null) {
-                // 融合
                 const w = Math.max(0, Math.min(1, blendCenterWeight));
                 result = [w*estCenter[0] + (1-w)*estThree[0],
                           w*estCenter[1] + (1-w)*estThree[1]];
@@ -627,7 +618,6 @@
         throw new Error(`当前可见角点数量 ${visible.length}，中心点可见=${hasCenter}，不支持此标定情况`);
     }
 
-    // 准备 H0 对应关系
     function prepareGroundCorrespondences(imageMarks, baseRadius, useCenterWhenFourCorners, blendCenterWeight) {
         const { completed, estimatedInfo } = completeBaseImageMarks(
             imageMarks, useCenterWhenFourCorners, blendCenterWeight
@@ -645,7 +635,6 @@
         return { labelsUsed, worldPoints, imagePoints, completed, estimatedInfo };
     }
 
-    // 标定地面 H0 (鲁棒版)
     function calibrateGroundHomography(imageMarks, baseRadius, useCenterWhenFourCorners=true, blendCenterWeight=0.7) {
         const { labelsUsed, worldPoints, imagePoints, completed, estimatedInfo } = prepareGroundCorrespondences(
             imageMarks, baseRadius, useCenterWhenFourCorners, blendCenterWeight
@@ -729,7 +718,7 @@
     }
 
     // ================================================================
-    // 4. 主计算流程 (使用新的鲁棒底座标定)
+    // 4. 主计算流程 (与 Demo3 对标)
     // ================================================================
     function calibrateCamera() {
         try {
@@ -761,20 +750,20 @@
             }
 
             // ---- 鲁棒底座标定 ----
-            const useCenter = true;
+            const useCenter = true;  // 若有中心则使用，但 demo3 无中心所以不会用
             const blendWeight = 0.7;
             const { H0, completed, estimatedInfo } = calibrateGroundHomography(
                 imageMarks, baseRadius, useCenter, blendWeight
             );
 
-            // 收集补全信息用于显示
+            // 收集补全信息
             let infoMsg = "";
             if (estimatedInfo.estimatedLabels.length > 0) {
                 infoMsg = `⚠️ 底座点补全: ${estimatedInfo.estimatedLabels.join(', ')} (方法: ${estimatedInfo.method})`;
                 if (estimatedInfo.warning) infoMsg += ` ${estimatedInfo.warning}`;
             }
 
-            // ---- 垂直参考点 (不变) ----
+            // ---- 垂直参考点 ----
             const vrows = document.querySelectorAll('.vpoint-row');
             let verticalPts = [];
             vrows.forEach(row => {
@@ -788,7 +777,7 @@
             // ---- 估计 p3 ----
             const p3 = estimateP3(H0, verticalPts);
 
-            // ---- 小车与吊钩 (不变) ----
+            // ---- 小车与吊钩 ----
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
             const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
             const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
@@ -800,7 +789,7 @@
             const trolleyRadius = Math.hypot(X, Y);
             const theta_deg = Math.atan2(Y, X) * 180 / Math.PI;
 
-            // ---- 构建 4x3 矩阵 (保留两位小数) ----
+            // ---- 构建 4x3 矩阵 (保留更多小数以便对比) ----
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
@@ -808,19 +797,20 @@
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
+            // 显示矩阵 (保留6位小数，便于与 Python 对比)
             let matrixStr = "";
             for (let i=0; i<3; i++) {
-                matrixStr += `[ ${Pmat[i].map(v => v.toFixed(2)).join(", ")} ]\n`;
+                matrixStr += `[ ${Pmat[i].map(v => v.toFixed(6)).join(", ")} ]\n`;
             }
             document.getElementById('cameraMatrixDisplay').innerHTML = matrixStr;
 
-            // ---- 显示结果 ----
+            // 显示结果 (保留6位小数)
             let statusHtml = `
                 <div class="success-info">
-                    ✅ 标定成功<br>
-                    📍 地面投影点: (${groundPixel[0].toFixed(2)}, ${groundPixel[1].toFixed(2)})<br>
-                    🏗️ 吊物空间点: (${X.toFixed(2)}, ${Y.toFixed(2)}, ${Z_hook.toFixed(2)})<br>
-                    📏 小车半径: ${trolleyRadius.toFixed(2)} m, 角度: ${theta_deg.toFixed(2)}°
+                    ✅ 标定成功 (Demo3 对标)<br>
+                    📍 地面投影点: (${groundPixel[0].toFixed(6)}, ${groundPixel[1].toFixed(6)})<br>
+                    🏗️ 吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
+                    📏 小车半径: ${trolleyRadius.toFixed(6)} m, 角度: ${theta_deg.toFixed(6)}°
             `;
             if (infoMsg) {
                 statusHtml += `<br>📌 ${infoMsg}`;
@@ -884,8 +874,8 @@
             if (btn) {
                 btn.addEventListener('click', () => {
                     enterPickMode(m.id, (mode, u, v) => {
-                        document.getElementById(m.uId).value = u.toFixed(2);
-                        document.getElementById(m.vId).value = v.toFixed(2);
+                        document.getElementById(m.uId).value = u.toFixed(3);  // 保留3位小数，与Python一致
+                        document.getElementById(m.vId).value = v.toFixed(3);
                     });
                 });
             }
@@ -897,8 +887,8 @@
         const row = btn.closest('.vpoint-row');
         const idx = row.getAttribute('data-idx');
         enterPickMode(`vertical_${idx}`, (mode, u, v) => {
-            row.querySelector('.vu').value = u.toFixed(2);
-            row.querySelector('.vv').value = v.toFixed(2);
+            row.querySelector('.vu').value = u.toFixed(3);
+            row.querySelector('.vv').value = v.toFixed(3);
         });
     }
 
@@ -910,8 +900,8 @@
         newRow.setAttribute('data-idx', idx);
         newRow.innerHTML = `
             <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="number" value="15.00"></div>
-            <div class="field"><label>u</label><input class="vu" type="number" value="770.00"></div>
-            <div class="field"><label>v</label><input class="vv" type="number" value="120.00"></div>
+            <div class="field"><label>u</label><input class="vu" type="number" value="770.000"></div>
+            <div class="field"><label>v</label><input class="vv" type="number" value="120.000"></div>
             <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
         `;
         container.appendChild(newRow);
