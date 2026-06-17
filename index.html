@@ -1207,86 +1207,395 @@
         text(O, "O"); text(A, "Lift", "#2563eb"); text(B, "Drop", "#dc2626"); text(P1, "Worker", "#16a34a");
     }
 
-    function drawRiskTopView(demo) {
+    // ================================================================
+    // 俯视图动画辅助绘图函数
+    // ================================================================
+
+    function drawArrowLineOnTop(ctx, map, p, q, color = "#16a34a", lw = 4) {
+        const a = map(p);
+        const b = map(q);
+
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        const len = Math.hypot(dx, dy);
+        if (len < 1e-6) return;
+
+        const ux = dx / len;
+        const uy = dy / len;
+
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lw;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        const arrowLen = 13;
+        const arrowWidth = 7;
+
+        ctx.beginPath();
+        ctx.moveTo(b[0], b[1]);
+        ctx.lineTo(
+            b[0] - arrowLen * ux - arrowWidth * uy,
+            b[1] - arrowLen * uy + arrowWidth * ux
+        );
+        ctx.lineTo(
+            b[0] - arrowLen * ux + arrowWidth * uy,
+            b[1] - arrowLen * uy - arrowWidth * ux
+        );
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    function drawPolylineArrowOnTop(ctx, map, points, color = "#f97316", lw = 3) {
+        if (!points || points.length < 2) return;
+
+        ctx.beginPath();
+        const first = map(points[0]);
+        ctx.moveTo(first[0], first[1]);
+
+        for (let i = 1; i < points.length; i++) {
+            const p = map(points[i]);
+            ctx.lineTo(p[0], p[1]);
+        }
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lw;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        const p1 = map(points[points.length - 2]);
+        const p2 = map(points[points.length - 1]);
+
+        const dx = p2[0] - p1[0];
+        const dy = p2[1] - p1[1];
+        const len = Math.hypot(dx, dy);
+        if (len < 1e-6) return;
+
+        const ux = dx / len;
+        const uy = dy / len;
+
+        const arrowLen = 12;
+        const arrowWidth = 7;
+
+        ctx.beginPath();
+        ctx.moveTo(p2[0], p2[1]);
+        ctx.lineTo(
+            p2[0] - arrowLen * ux - arrowWidth * uy,
+            p2[1] - arrowLen * uy + arrowWidth * ux
+        );
+        ctx.lineTo(
+            p2[0] - arrowLen * ux + arrowWidth * uy,
+            p2[1] - arrowLen * uy - arrowWidth * ux
+        );
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+
+    function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, delta, text) {
+        const steps = 40;
+        const arcPts = [];
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const ang = startAng + sigma * delta * t;
+            arcPts.push([
+                center[0] + radius * Math.cos(ang),
+                center[1] + radius * Math.sin(ang)
+            ]);
+        }
+
+        drawPolylineArrowOnTop(ctx, map, arcPts, "#f97316", 2.5);
+
+        const midAng = startAng + sigma * delta * 0.5;
+        const labelPos = [
+            center[0] + radius * 1.25 * Math.cos(midAng),
+            center[1] + radius * 1.25 * Math.sin(midAng)
+        ];
+        const lp = map(labelPos);
+
+        ctx.save();
+        ctx.font = "bold 13px Times New Roman";
+        ctx.fillStyle = "#ea580c";
+        ctx.strokeStyle = "rgba(255,255,255,0.85)";
+        ctx.lineWidth = 4;
+        ctx.strokeText(text, lp[0] - 12, lp[1] - 4);
+        ctx.fillText(text, lp[0] - 12, lp[1] - 4);
+        ctx.restore();
+    }
+
+    function drawRiskTopView(demo, progress = 1) {
         const canvas = document.getElementById("riskTopCanvas");
         if (!canvas) return;
+
         const { ctx, width, height } = fitCanvas(canvas);
         ctx.clearRect(0, 0, width, height);
-        const O = [0, 0], A = demo.liftGround, B = demo.dropGround;
-        const P0 = demo.workerStartGround, P1 = demo.workerEndGround;
-        const boomLength = demo.boomLength, loadRadius = demo.loadRadius, sweep = demo.sweep;
-        const steps = 60;
+
+        progress = Math.max(0, Math.min(1, progress));
+
+        const O = [0, 0];
+        const A = demo.liftGround;
+        const B = demo.dropGround;
+        const P0 = demo.workerStartGround;
+        const P1 = demo.workerEndGround;
+
+        const boomLength = demo.boomLength;
+        const loadRadius = demo.loadRadius;
+        const sweep = demo.sweep;
+
+        const steps = 80;
         const startAng = Math.atan2(A[1], A[0]);
-        const sigma = sweep.sigma, Delta = sweep.Delta;
+        const sigma = sweep.sigma;
+        const Delta = sweep.Delta;
+
+        const currentAng = startAng + sigma * Delta * progress;
+
+        const midR = 0.5 * (sweep.rA + sweep.rB);
+
+        const currentBoomEnd = [
+            boomLength * Math.cos(currentAng),
+            boomLength * Math.sin(currentAng)
+        ];
+
+        const currentLoad = [
+            midR * Math.cos(currentAng),
+            midR * Math.sin(currentAng)
+        ];
+
+        const workerNow = [
+            P0[0] + progress * (P1[0] - P0[0]),
+            P0[1] + progress * (P1[1] - P0[1])
+        ];
+
+        // 完整大臂扫过扇形边界点
         const fanPoints = [];
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps, ang = startAng + sigma * Delta * t;
-            fanPoints.push([boomLength * Math.cos(ang), boomLength * Math.sin(ang)]);
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            fanPoints.push([
+                boomLength * Math.cos(ang),
+                boomLength * Math.sin(ang)
+            ]);
         }
-        const midR = 0.5 * (sweep.rA + sweep.rB);
-        const loadPoints = [];
+
+        // 当前已经扫过的扇形边界点
+        const currentFanPoints = [];
+        const currentSteps = Math.max(2, Math.floor(steps * progress));
+        for (let i = 0; i <= currentSteps; i++) {
+            const t = progress * i / currentSteps;
+            const ang = startAng + sigma * Delta * t;
+            currentFanPoints.push([
+                boomLength * Math.cos(ang),
+                boomLength * Math.sin(ang)
+            ]);
+        }
+
+        // 吊物完整轨迹
+        const loadTrackPoints = [];
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps, ang = startAng + sigma * Delta * t;
-            loadPoints.push([midR * Math.cos(ang), midR * Math.sin(ang)]);
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            loadTrackPoints.push([
+                midR * Math.cos(ang),
+                midR * Math.sin(ang)
+            ]);
         }
+
+        // 吊物当前已经走过轨迹
+        const currentLoadTrackPoints = [];
+        for (let i = 0; i <= currentSteps; i++) {
+            const t = progress * i / currentSteps;
+            const ang = startAng + sigma * Delta * t;
+            currentLoadTrackPoints.push([
+                midR * Math.cos(ang),
+                midR * Math.sin(ang)
+            ]);
+        }
+
+        // 用完整区域做坐标映射，避免动画过程中图像缩放跳动
         const allPoints = [
-            [-2, -2], [14, 14], A, B, P0, P1,
-            [boomLength * 0.25, boomLength * 0.25],
-            ...fanPoints, ...loadPoints
+            O, A, B, P0, P1,
+            workerNow,
+            currentBoomEnd,
+            currentLoad,
+            [-2, -2],
+            [14, 14],
+            ...fanPoints,
+            ...loadTrackPoints
         ];
-        const map = makeWorldMapper(allPoints, width, height, 20);
+
+        const map = makeWorldMapper(allPoints, width, height, 24);
+
         function drawLine(p, q, color, lw = 2) {
-            const a = map(p), b = map(q);
-            ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
-            ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
-        }
-        function drawPoint(p, color, r = 4) {
             const a = map(p);
-            ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
-            ctx.fillStyle = color; ctx.fill();
+            const b = map(q);
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lw;
+            ctx.lineCap = "round";
+            ctx.stroke();
         }
+
+        function drawPoint(p, color, r = 4, stroke = true) {
+            const a = map(p);
+            ctx.beginPath();
+            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            if (stroke) {
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
         function drawText(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
             const a = map(p);
-            ctx.fillStyle = color; ctx.font = "12px Times New Roman";
+            ctx.save();
+            ctx.font = "12px Times New Roman";
+            ctx.fillStyle = color;
+            ctx.strokeStyle = "rgba(255,255,255,0.85)";
+            ctx.lineWidth = 3;
+            ctx.strokeText(txt, a[0] + offsetX, a[1] + offsetY);
             ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
+            ctx.restore();
         }
+
+        // 背景
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(0, 0, width, height);
+
+        // 坐标轴
         drawLine([-2, 0], [14, 0], "#cbd5e1", 1);
         drawLine([0, -2], [0, 14], "#cbd5e1", 1);
+
+        drawText([13.2, 0], "X", "#64748b", 4, -4);
+        drawText([0, 13.2], "Y", "#64748b", 4, -4);
+
+        // ============================================================
+        // 1. Risk1 完整大臂扫过区域，浅色背景
+        // ============================================================
         ctx.beginPath();
         let center = map(O);
         ctx.moveTo(center[0], center[1]);
+
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps, ang = startAng + sigma * Delta * t;
-            const p = [boomLength * Math.cos(ang), boomLength * Math.sin(ang)];
-            const q = map(p);
+            const q = map(fanPoints[i]);
             ctx.lineTo(q[0], q[1]);
         }
+
         ctx.closePath();
-        ctx.fillStyle = "rgba(249,115,22,0.25)";
+        ctx.fillStyle = "rgba(249,115,22,0.12)";
         ctx.fill();
+
+        // ============================================================
+        // 2. Risk1 当前已经扫过区域，动态加深
+        // ============================================================
         ctx.beginPath();
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps, ang = startAng + sigma * Delta * t;
-            const p = [midR * Math.cos(ang), midR * Math.sin(ang)];
-            const q = map(p);
+        center = map(O);
+        ctx.moveTo(center[0], center[1]);
+
+        for (let i = 0; i < currentFanPoints.length; i++) {
+            const q = map(currentFanPoints[i]);
+            ctx.lineTo(q[0], q[1]);
+        }
+
+        ctx.closePath();
+        ctx.fillStyle = "rgba(249,115,22,0.32)";
+        ctx.fill();
+
+        // ============================================================
+        // 3. Risk2 吊物完整外扩危险带，浅蓝色
+        // ============================================================
+        ctx.beginPath();
+        for (let i = 0; i < loadTrackPoints.length; i++) {
+            const q = map(loadTrackPoints[i]);
             if (i === 0) ctx.moveTo(q[0], q[1]);
             else ctx.lineTo(q[0], q[1]);
         }
-        const pRef1 = map([0, 0]), pRef2 = map([loadRadius, 0]);
+
+        const pRef1 = map([0, 0]);
+        const pRef2 = map([loadRadius, 0]);
         const pixelLoadRadius = Math.abs(pRef2[0] - pRef1[0]);
-        ctx.strokeStyle = "rgba(59,130,246,0.40)";
-        ctx.lineWidth = Math.max(4, 2 * pixelLoadRadius);
-        ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+        ctx.strokeStyle = "rgba(59,130,246,0.20)";
+        ctx.lineWidth = Math.max(5, 2 * pixelLoadRadius);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
         ctx.stroke();
+
+        // ============================================================
+        // 4. Risk2 当前已经运动过的危险带，动态加深
+        // ============================================================
+        ctx.beginPath();
+        for (let i = 0; i < currentLoadTrackPoints.length; i++) {
+            const q = map(currentLoadTrackPoints[i]);
+            if (i === 0) ctx.moveTo(q[0], q[1]);
+            else ctx.lineTo(q[0], q[1]);
+        }
+
+        ctx.strokeStyle = "rgba(59,130,246,0.48)";
+        ctx.lineWidth = Math.max(5, 2 * pixelLoadRadius);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // ============================================================
+        // 5. 起始大臂、终止大臂、当前大臂
+        // ============================================================
+        drawLine(O, [
+            boomLength * Math.cos(startAng),
+            boomLength * Math.sin(startAng)
+        ], "rgba(37,99,235,0.35)", 2);
+
+        drawLine(O, [
+            boomLength * Math.cos(startAng + sigma * Delta),
+            boomLength * Math.sin(startAng + sigma * Delta)
+        ], "rgba(220,38,38,0.35)", 2);
+
+        drawLine(O, currentBoomEnd, "#f97316", 4);
+
+        // 原始起吊点/落吊点半径线
         drawLine(O, A, "#2563eb", 3);
         drawLine(O, B, "#dc2626", 3);
-        drawLine(P0, P1, "#16a34a", 6);
-        drawPoint(O, "#0f172a", 4); drawPoint(A, "#2563eb", 4); drawPoint(B, "#dc2626", 4);
-        drawPoint(P0, "#16a34a", 4); drawPoint(P1, "#22c55e", 4);
-        drawText(O, "O"); drawText(A, "Lift", "#2563eb");
-        drawText(B, "Drop", "#dc2626"); drawText(P0, "Worker Start", "#16a34a");
-        drawText(P1, "Worker End", "#16a34a");
-    }
+
+        // ============================================================
+        // 6. 塔吊旋转方向箭头
+        // ============================================================
+        const rotateArrowR = Math.min(boomLength * 0.35, Math.max(4, midR * 0.85));
+        const rotateArrowPts = [];
+
+        for (let i = 0; i <= 28; i++) {
+            const t = progress * i / 28;
+            const ang = startAng + sigma * Delta * t;
+            rotateArrowPts.push([
+                rotateArrowR * Math.cos(ang),
+                rotateArrowR * Math.sin(ang)
+            ]);
+        }
+
+        drawPolylineArrowOnTop(ctx, map, rotateArrowPts, "#ea580c", 3);
+
+        // ============================================================
+        // 7. 角度标注
+        // ============================================================
+        const angleMarkR = Math.min(boomLength * 0.22, Math.max(3, midR * 0.55));
+        drawAngleMarkOnTop(
+            ctx,
+            map,
+            O,
+            angleMarkR,
+            startAng,
+            sigma,
+            Delta,
+            `${sweep.DeltaDeg.toFixed(1)}°`
 
     function updateRiskDrawArea(Pmat) {
         const demo = buildRiskDemoFromP(Pmat);
