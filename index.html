@@ -1149,19 +1149,29 @@
 
     function fitCanvas(canvas) {
         const rect = canvas.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
+        let w = rect.width;
+        let h = rect.height;
 
-        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        // 如果尺寸为0，尝试从父容器获取
+        if (w === 0 || h === 0) {
+            const parent = canvas.parentElement;
+            if (parent) {
+                const parentRect = parent.getBoundingClientRect();
+                w = parentRect.width || 300;
+                h = parentRect.height || 200;
+            } else {
+                w = 300;
+                h = 200;
+            }
+        }
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.floor(w * dpr));
+        canvas.height = Math.max(1, Math.floor(h * dpr));
 
         const ctx = canvas.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        return {
-            ctx,
-            width: rect.width,
-            height: rect.height
-        };
+        return { ctx, width: w, height: h };
     }
 
     function makeWorldMapper(points, width, height, padding = 28) {
@@ -1206,22 +1216,50 @@
         const B = [demo.dropGround[0], demo.dropGround[1], 0];
         const P0 = [demo.workerStartGround[0], demo.workerStartGround[1], 0];
         const P1 = [demo.workerEndGround[0], demo.workerEndGround[1], 0];
+        const towerTop = [0, 0, 12]; // 塔顶高度
+        const boomHeight = 10;
+
+        // 收集所有点计算范围
+        const allPoints = [O, A, B, P0, P1, towerTop, 
+                           [A[0], A[1], boomHeight], [B[0], B[1], boomHeight]];
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        allPoints.forEach(p => {
+            if (p[0] < minX) minX = p[0];
+            if (p[0] > maxX) maxX = p[0];
+            if (p[1] < minY) minY = p[1];
+            if (p[1] > maxY) maxY = p[1];
+            if (p[2] < minZ) minZ = p[2];
+            if (p[2] > maxZ) maxZ = p[2];
+        });
+        // 增加边界余量
+        const pad = 1.5;
+        minX -= pad; maxX += pad; minY -= pad; maxY += pad; minZ -= pad; maxZ += pad;
+        const spanX = maxX - minX || 1;
+        const spanY = maxY - minY || 1;
+        const spanZ = maxZ - minZ || 1;
+
+        // 等距投影参数（保持比例）
+        const projX = 1.0;         // x轴水平因子
+        const projY = 0.55;        // y轴斜向因子
+        const projZ = 0.45;        // z轴垂直因子（与y共享垂直空间）
+        const scaleX = (width) / (spanX + projY * spanY);
+        const scaleZ = (height) / (projZ * spanY + spanZ);
+        const scale = Math.min(scaleX, scaleZ) * 0.9;
+
+        const cx = 0.5 * (minX + maxX);
+        const cy = 0.5 * (minY + maxY);
+        const cz = 0.5 * (minZ + maxZ);
 
         function project3D(p) {
-            const scale = 15;
-            const ox = width * 0.45;
-            const oy = height * 0.68;
-
-            const x = p[0];
-            const y = p[1];
-            const z = p[2];
-
-            return [
-                ox + scale * (x - 0.55 * y),
-                oy - scale * (0.45 * y + z)
-            ];
+            const x = p[0] - cx;
+            const y = p[1] - cy;
+            const z = p[2] - cz;
+            const px = width/2 + scale * (x - projY * y);
+            const py = height/2 - scale * (projZ * y + z);
+            return [px, py];
         }
 
+        // 绘图辅助函数
         function line(p, q, color, lw = 2) {
             const a = project3D(p);
             const b = project3D(q);
@@ -1241,40 +1279,47 @@
             ctx.fill();
         }
 
-        // 地面网格
+        function text(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
+            const a = project3D(p);
+            ctx.fillStyle = color;
+            ctx.font = "12px Times New Roman";
+            ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
+        }
+
+        // ---- 绘图 ----
+        // 地面网格（简单示意）
         ctx.strokeStyle = "#e2e8f0";
         ctx.lineWidth = 1;
-        for (let i = -10; i <= 15; i += 5) {
+        for (let i = -5; i <= 15; i += 5) {
             line([i, -5, 0], [i, 15, 0], "#e2e8f0", 1);
             line([-5, i, 0], [15, i, 0], "#e2e8f0", 1);
         }
 
         // 塔身
-        line(O, [0, 0, 12], "#64748b", 3);
+        line(O, towerTop, "#64748b", 3);
 
-        // 起始臂、终止臂
-        line([0, 0, 10], [A[0], A[1], 10], "#2563eb", 3);
-        line([0, 0, 10], [B[0], B[1], 10], "#dc2626", 3);
+        // 大臂（起始、终止）
+        line([0, 0, boomHeight], [A[0], A[1], boomHeight], "#2563eb", 3);
+        line([0, 0, boomHeight], [B[0], B[1], boomHeight], "#dc2626", 3);
 
-        // 地面投影
+        // 地面投影线
         line(O, A, "rgba(37,99,235,0.35)", 2);
         line(O, B, "rgba(220,38,38,0.35)", 2);
 
         // 工人轨迹
         line(P0, P1, "#16a34a", 5);
 
+        // 标记点
         point(O, "#0f172a", 4);
         point(A, "#2563eb", 4);
         point(B, "#dc2626", 4);
         point(P0, "#16a34a", 4);
         point(P1, "#22c55e", 4);
 
-        ctx.fillStyle = "#334155";
-        ctx.font = "12px Times New Roman";
-        ctx.fillText("O", project3D(O)[0] + 5, project3D(O)[1] - 5);
-        ctx.fillText("Lift", project3D(A)[0] + 5, project3D(A)[1] - 5);
-        ctx.fillText("Drop", project3D(B)[0] + 5, project3D(B)[1] - 5);
-        ctx.fillText("Worker", project3D(P1)[0] + 5, project3D(P1)[1] - 5);
+        text(O, "O");
+        text(A, "Lift", "#2563eb");
+        text(B, "Drop", "#dc2626");
+        text(P1, "Worker", "#16a34a");
     }
 
     function drawRiskTopView(demo) {
@@ -1289,22 +1334,42 @@
         const B = demo.dropGround;
         const P0 = demo.workerStartGround;
         const P1 = demo.workerEndGround;
-
         const boomLength = demo.boomLength;
         const loadRadius = demo.loadRadius;
         const sweep = demo.sweep;
 
-        const points = [
-            [-2, -2],
-            [12, 12],
-            A,
-            B,
-            P0,
-            P1,
-            [boomLength * 0.25, boomLength * 0.25]
+        // 生成扇形边界点
+        const steps = 60;
+        const startAng = Math.atan2(A[1], A[0]);
+        const sigma = sweep.sigma;
+        const Delta = sweep.Delta;
+        const fanPoints = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            const r = boomLength;
+            fanPoints.push([r * Math.cos(ang), r * Math.sin(ang)]);
+        }
+        // 负载轨迹点
+        const midR = 0.5 * (sweep.rA + sweep.rB);
+        const loadPoints = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const ang = startAng + sigma * Delta * t;
+            const r = midR;
+            loadPoints.push([r * Math.cos(ang), r * Math.sin(ang)]);
+        }
+
+        // 所有需要显示的点
+        const allPoints = [
+            [-2, -2], [14, 14],
+            A, B, P0, P1,
+            [boomLength * 0.25, boomLength * 0.25],
+            ...fanPoints,
+            ...loadPoints
         ];
 
-        const map = makeWorldMapper(points, width, height, 30);
+        const map = makeWorldMapper(allPoints, width, height, 20);
 
         function drawLine(p, q, color, lw = 2) {
             const a = map(p);
@@ -1325,61 +1390,47 @@
             ctx.fill();
         }
 
-        function drawText(text, p, color = "#334155") {
+        function drawText(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
             const a = map(p);
             ctx.fillStyle = color;
             ctx.font = "12px Times New Roman";
-            ctx.fillText(text, a[0] + 5, a[1] - 5);
+            ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
         }
 
+        // ---- 绘图 ----
         // 坐标轴
         drawLine([-2, 0], [14, 0], "#cbd5e1", 1);
         drawLine([0, -2], [0, 14], "#cbd5e1", 1);
 
-        // Risk1 大臂扫过扇形
-        const startAng = Math.atan2(A[1], A[0]);
-        const sigma = sweep.sigma;
-        const Delta = sweep.Delta;
-        const steps = 80;
-
+        // Risk1 大臂扫过区域
         ctx.beginPath();
         let center = map(O);
         ctx.moveTo(center[0], center[1]);
-
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             const ang = startAng + sigma * Delta * t;
-            const p = [
-                boomLength * Math.cos(ang),
-                boomLength * Math.sin(ang)
-            ];
+            const p = [boomLength * Math.cos(ang), boomLength * Math.sin(ang)];
             const q = map(p);
             ctx.lineTo(q[0], q[1]);
         }
-
         ctx.closePath();
         ctx.fillStyle = "rgba(249,115,22,0.25)";
         ctx.fill();
 
-        // Risk2 吊物轨迹外扩区域：用粗透明圆弧近似表示
+        // Risk2 吊物轨迹（粗线表示外扩区域）
         ctx.beginPath();
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             const ang = startAng + sigma * Delta * t;
-            const r = 0.5 * (sweep.rA + sweep.rB);
-            const p = [
-                r * Math.cos(ang),
-                r * Math.sin(ang)
-            ];
+            const r = midR;
+            const p = [r * Math.cos(ang), r * Math.sin(ang)];
             const q = map(p);
             if (i === 0) ctx.moveTo(q[0], q[1]);
             else ctx.lineTo(q[0], q[1]);
         }
-
         const pRef1 = map([0, 0]);
         const pRef2 = map([loadRadius, 0]);
         const pixelLoadRadius = Math.abs(pRef2[0] - pRef1[0]);
-
         ctx.strokeStyle = "rgba(59,130,246,0.40)";
         ctx.lineWidth = Math.max(4, 2 * pixelLoadRadius);
         ctx.lineCap = "round";
@@ -1390,28 +1441,32 @@
         drawLine(O, A, "#2563eb", 3);
         drawLine(O, B, "#dc2626", 3);
 
-        // 工人移动轨迹
+        // 工人轨迹
         drawLine(P0, P1, "#16a34a", 6);
 
+        // 标记点
         drawPoint(O, "#0f172a", 4);
         drawPoint(A, "#2563eb", 4);
         drawPoint(B, "#dc2626", 4);
         drawPoint(P0, "#16a34a", 4);
         drawPoint(P1, "#22c55e", 4);
 
-        drawText("O", O);
-        drawText("Lift", A, "#2563eb");
-        drawText("Drop", B, "#dc2626");
-        drawText("Worker Start", P0, "#16a34a");
-        drawText("Worker End", P1, "#16a34a");
+        drawText(O, "O");
+        drawText(A, "Lift", "#2563eb");
+        drawText(B, "Drop", "#dc2626");
+        drawText(P0, "Worker Start", "#16a34a");
+        drawText(P1, "Worker End", "#16a34a");
     }
 
     function updateRiskDrawArea(Pmat) {
         const demo = buildRiskDemoFromP(Pmat);
-
         updateRiskParamPanel(demo);
-        drawRisk3D(demo);
-        drawRiskTopView(demo);
+
+        // 等待浏览器完成布局后再绘制
+        requestAnimationFrame(() => {
+            drawRisk3D(demo);
+            drawRiskTopView(demo);
+        });
     }
 
     // ================================================================
