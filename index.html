@@ -567,9 +567,15 @@
                         <canvas id="riskTopCanvas" class="risk-canvas"></canvas>
                     </div>
                     <div class="risk-legend">
-                        <span class="legend-item"><span class="legend-color" style="background:rgba(249,115,22,0.4);"></span>Risk1 大臂扫过区域</span>
-                        <span class="legend-item"><span class="legend-color" style="background:rgba(59,130,246,0.4);"></span>Risk2 吊物外扩区域</span>
-                        <span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>工人移动</span>
+                        <span class="legend-item">
+                            <span class="legend-color" style="background:#16a34a;"></span>Worker
+                        </span>
+                        <span class="legend-item">
+                            <span class="legend-color" style="background:rgba(249,115,22,0.4);"></span>大臂扫过区域
+                        </span>
+                        <span class="legend-item">
+                            <span class="legend-color" style="background:rgba(59,130,246,0.4);"></span>吊物危险区域
+                        </span>
                     </div>
                 </div>
             </div>
@@ -1358,26 +1364,16 @@
         const sigma = sweep.sigma;
         const Delta = sweep.Delta;
 
-        const currentAng = startAng + sigma * Delta * progress;
-
         const midR = 0.5 * (sweep.rA + sweep.rB);
-
-        const currentBoomEnd = [
-            boomLength * Math.cos(currentAng),
-            boomLength * Math.sin(currentAng)
-        ];
-
-        const currentLoad = [
-            midR * Math.cos(currentAng),
-            midR * Math.sin(currentAng)
-        ];
 
         const workerNow = [
             P0[0] + progress * (P1[0] - P0[0]),
             P0[1] + progress * (P1[1] - P0[1])
         ];
 
-        // 完整大臂扫过扇形边界点
+        // ============================================================
+        // 1. 大臂扫过区域点
+        // ============================================================
         const fanPoints = [];
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
@@ -1388,7 +1384,6 @@
             ]);
         }
 
-        // 当前已经扫过的扇形边界点
         const currentFanPoints = [];
         const currentSteps = Math.max(2, Math.floor(steps * progress));
         for (let i = 0; i <= currentSteps; i++) {
@@ -1400,7 +1395,9 @@
             ]);
         }
 
-        // 吊物完整轨迹
+        // ============================================================
+        // 2. 吊物危险区域点
+        // ============================================================
         const loadTrackPoints = [];
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
@@ -1411,7 +1408,6 @@
             ]);
         }
 
-        // 吊物当前已经走过轨迹
         const currentLoadTrackPoints = [];
         for (let i = 0; i <= currentSteps; i++) {
             const t = progress * i / currentSteps;
@@ -1422,12 +1418,14 @@
             ]);
         }
 
-        // 用完整区域做坐标映射，避免动画过程中图像缩放跳动
+        // ============================================================
+        // 3. 坐标映射
+        // ============================================================
         const allPoints = [
-            O, A, B, P0, P1,
+            O,
+            P0,
+            P1,
             workerNow,
-            currentBoomEnd,
-            currentLoad,
             [-2, -2],
             [14, 14],
             ...fanPoints,
@@ -1436,19 +1434,7 @@
 
         const map = makeWorldMapper(allPoints, width, height, 24);
 
-        function drawLine(p, q, color, lw = 2) {
-            const a = map(p);
-            const b = map(q);
-            ctx.beginPath();
-            ctx.moveTo(a[0], a[1]);
-            ctx.lineTo(b[0], b[1]);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lw;
-            ctx.lineCap = "round";
-            ctx.stroke();
-        }
-
-        function drawPoint(p, color, r = 4, stroke = true) {
+        function drawPoint(p, color, r = 5, stroke = true) {
             const a = map(p);
             ctx.beginPath();
             ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
@@ -1462,37 +1448,20 @@
             }
         }
 
-        function drawText(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
-            const a = map(p);
-            ctx.save();
-            ctx.font = "12px Times New Roman";
-            ctx.fillStyle = color;
-            ctx.strokeStyle = "rgba(255,255,255,0.85)";
-            ctx.lineWidth = 3;
-            ctx.strokeText(txt, a[0] + offsetX, a[1] + offsetY);
-            ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
-            ctx.restore();
-        }
-
-        // 背景
+        // ============================================================
+        // 4. 背景
+        // ============================================================
         ctx.fillStyle = "#f8fafc";
         ctx.fillRect(0, 0, width, height);
 
-        // 坐标轴
-        drawLine([-2, 0], [14, 0], "#cbd5e1", 1);
-        drawLine([0, -2], [0, 14], "#cbd5e1", 1);
-
-        drawText([13.2, 0], "X", "#64748b", 4, -4);
-        drawText([0, 13.2], "Y", "#64748b", 4, -4);
-
         // ============================================================
-        // 1. Risk1 完整大臂扫过区域，浅色背景
+        // 5. 大臂完整扫过区域：浅橙色
         // ============================================================
         ctx.beginPath();
         let center = map(O);
         ctx.moveTo(center[0], center[1]);
 
-        for (let i = 0; i <= steps; i++) {
+        for (let i = 0; i < fanPoints.length; i++) {
             const q = map(fanPoints[i]);
             ctx.lineTo(q[0], q[1]);
         }
@@ -1502,7 +1471,7 @@
         ctx.fill();
 
         // ============================================================
-        // 2. Risk1 当前已经扫过区域，动态加深
+        // 6. 当前已经扫过区域：深橙色
         // ============================================================
         ctx.beginPath();
         center = map(O);
@@ -1518,9 +1487,10 @@
         ctx.fill();
 
         // ============================================================
-        // 3. Risk2 吊物完整外扩危险带，浅蓝色
+        // 7. 吊物完整危险区域：浅蓝色
         // ============================================================
         ctx.beginPath();
+
         for (let i = 0; i < loadTrackPoints.length; i++) {
             const q = map(loadTrackPoints[i]);
             if (i === 0) ctx.moveTo(q[0], q[1]);
@@ -1538,9 +1508,10 @@
         ctx.stroke();
 
         // ============================================================
-        // 4. Risk2 当前已经运动过的危险带，动态加深
+        // 8. 当前已经经过的吊物危险区域：深蓝色
         // ============================================================
         ctx.beginPath();
+
         for (let i = 0; i < currentLoadTrackPoints.length; i++) {
             const q = map(currentLoadTrackPoints[i]);
             if (i === 0) ctx.moveTo(q[0], q[1]);
@@ -1554,43 +1525,7 @@
         ctx.stroke();
 
         // ============================================================
-        // 5. 起始大臂、终止大臂、当前大臂
-        // ============================================================
-        drawLine(O, [
-            boomLength * Math.cos(startAng),
-            boomLength * Math.sin(startAng)
-        ], "rgba(37,99,235,0.35)", 2);
-
-        drawLine(O, [
-            boomLength * Math.cos(startAng + sigma * Delta),
-            boomLength * Math.sin(startAng + sigma * Delta)
-        ], "rgba(220,38,38,0.35)", 2);
-
-        drawLine(O, currentBoomEnd, "#f97316", 4);
-
-        // 原始起吊点/落吊点半径线
-        drawLine(O, A, "#2563eb", 3);
-        drawLine(O, B, "#dc2626", 3);
-
-        // ============================================================
-        // 6. 塔吊旋转方向箭头
-        // ============================================================
-        const rotateArrowR = Math.min(boomLength * 0.35, Math.max(4, midR * 0.85));
-        const rotateArrowPts = [];
-
-        for (let i = 0; i <= 28; i++) {
-            const t = progress * i / 28;
-            const ang = startAng + sigma * Delta * t;
-            rotateArrowPts.push([
-                rotateArrowR * Math.cos(ang),
-                rotateArrowR * Math.sin(ang)
-            ]);
-        }
-
-        drawPolylineArrowOnTop(ctx, map, rotateArrowPts, "#ea580c", 3);
-
-        // ============================================================
-        // 7. 角度标注
+        // 9. 扫过角度标注
         // ============================================================
         const angleMarkR = Math.min(boomLength * 0.22, Math.max(3, midR * 0.55));
 
@@ -1606,20 +1541,20 @@
         );
 
         // ============================================================
-        // 8. 工人移动轨迹与方向
+        // 10. Worker 移动轨迹
         // ============================================================
 
-        // 工人完整移动轨迹，浅绿色
+        // Worker 完整轨迹：浅绿色
         drawArrowLineOnTop(
             ctx,
             map,
             P0,
             P1,
-            "rgba(22,163,74,0.35)",
+            "rgba(22,163,74,0.28)",
             5
         );
 
-        // 工人已经走过的轨迹，深绿色
+        // Worker 已经走过的轨迹：深绿色
         if (progress > 0.02) {
             drawArrowLineOnTop(
                 ctx,
@@ -1631,83 +1566,10 @@
             );
         }
 
-        // 当前工人位置
+        // Worker 当前位置
         drawPoint(workerNow, "#16a34a", 6);
-        drawText(workerNow, "Worker", "#15803d", 7, -8);
-
-        // 起点和终点
-        drawPoint(P0, "#86efac", 4);
-        drawPoint(P1, "#22c55e", 4);
-        drawText(P0, "Start", "#15803d", 6, 14);
-        drawText(P1, "End", "#15803d", 6, -6);
-
-        // ============================================================
-        // 9. 当前吊物位置
-        // ============================================================
-        drawPoint(currentLoad, "#3b82f6", 6);
-        drawText(currentLoad, "Load", "#2563eb", 7, -8);
-
-        // 吊物危险圆
-        const loadCenterPx = map(currentLoad);
-        const loadRadiusPx = Math.abs(map([currentLoad[0] + loadRadius, currentLoad[1]])[0] - loadCenterPx[0]);
-
-        ctx.beginPath();
-        ctx.arc(loadCenterPx[0], loadCenterPx[1], loadRadiusPx, 0, 2 * Math.PI);
-        ctx.fillStyle = "rgba(59,130,246,0.18)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(37,99,235,0.75)";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // ============================================================
-        // 10. 关键点标注
-        // ============================================================
-        drawPoint(O, "#0f172a", 5);
-        drawPoint(A, "#2563eb", 5);
-        drawPoint(B, "#dc2626", 5);
-
-        drawText(O, "O", "#0f172a", 6, -6);
-        drawText(A, "Lift", "#2563eb", 6, -6);
-        drawText(B, "Drop", "#dc2626", 6, -6);
-
-        // ============================================================
-        // 11. 当前风险状态提示
-        // ============================================================
-        const risk1Now = checkRisk1PointJS(workerNow, sweep, boomLength);
-        const risk2Now = checkRisk2PointJS(workerNow, sweep, loadRadius);
-
-        const dangerNow = risk1Now.inside || risk2Now.inside;
-
-        // 当前工人进入危险区域时，外圈闪红
-        if (dangerNow) {
-            const wp = map(workerNow);
-            ctx.beginPath();
-            ctx.arc(wp[0], wp[1], 11, 0, 2 * Math.PI);
-            ctx.strokeStyle = "#dc2626";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(wp[0], wp[1], 15, 0, 2 * Math.PI);
-            ctx.strokeStyle = "rgba(220,38,38,0.35)";
-            ctx.lineWidth = 5;
-            ctx.stroke();
-        }
-
-        ctx.save();
-        ctx.font = "bold 13px Times New Roman";
-        ctx.fillStyle = dangerNow ? "#dc2626" : "#16a34a";
-        ctx.strokeStyle = "rgba(255,255,255,0.9)";
-        ctx.lineWidth = 4;
-
-        const statusText = dangerNow
-            ? `当前状态: 危险  Risk1=${risk1Now.inside ? "是" : "否"}  Risk2=${risk2Now.inside ? "是" : "否"}`
-            : "当前状态: 安全";
-
-        ctx.strokeText(statusText, 12, 20);
-        ctx.fillText(statusText, 12, 20);
-        ctx.restore();
     }
+
 
     // 俯视图动画 ID，防止重复点击后多个动画叠加
     let riskTopAnimId = null;
