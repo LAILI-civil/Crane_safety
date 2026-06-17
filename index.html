@@ -49,7 +49,6 @@
             cursor: crosshair;
             background: #000;
         }
-        /* 视频区域装饰：右上角标题 */
         .video-deco {
             position: absolute;
             top: 16px;
@@ -66,22 +65,6 @@
             pointer-events: none;
             user-select: none;
             font-weight: 300;
-        }
-        /* 左下角小标 */
-        .video-corner {
-            position: absolute;
-            bottom: 16px;
-            right: 20px;
-            color: rgba(255,255,255,0.25);
-            font-size: 11px;
-            font-family: 'Times New Roman', monospace;
-            letter-spacing: 1px;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            user-select: none;
         }
         .pick-tip {
             position: absolute;
@@ -497,7 +480,7 @@
     <!-- 右侧面板 -->
     <div class="right-panel">
         <div class="calib-area">
-            <h3>📐 相机标定 &amp; 3×4 投影矩阵 (Demo3 对标)</h3>
+            <h3>📐 相机标定 &amp; 3×4 投影矩阵</h3>
             <div class="horizontal-cards">
 
                 <!-- 卡片1: 塔吊底座参数 -->
@@ -510,16 +493,14 @@
                         </div>
                     </div>
                     <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
-                    <!-- 与 Python demo3 完全一致，保留3位小数 -->
                     <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="705.720"><input id="b1v" value="403.008"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="596.730"><input id="b2v" value="391.163"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="573.343"><input id="b3v" value="437.234"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
                     <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="683.393"><input id="b4v" value="448.919"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
-                    <!-- C 中心留空 (与 demo3 一致) -->
                     <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                 </div>
 
-                <!-- 卡片2: 塔身垂直参考点 (与 demo3 一致) -->
+                <!-- 卡片2: 塔身垂直参考点 -->
                 <div class="param-card">
                     <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                     <div id="verticalPointsContainer">
@@ -539,7 +520,7 @@
                     <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                 </div>
 
-                <!-- 卡片3: 小车与吊钩关键点 (与 demo3 一致) -->
+                <!-- 卡片3: 小车与吊钩关键点 -->
                 <div class="param-card">
                     <h4>🚛 小车与吊钩关键点</h4>
                     <div class="compact-row"><div class="compact-field"><label>小车高度 (米)</label><input id="trolleyHeight" type="number" value="10.00"></div></div>
@@ -552,7 +533,7 @@
 
             <div id="resultPanel">
                 <div class="matrix-output">
-                    <strong style="color:#94a3b8; font-size:0.7rem; font-family:'Times New Roman', monospace;">📹 3×4 相机投影矩阵 P</strong>
+                    <strong>📹 3×4 相机投影矩阵 P</strong>
                     <div id="matrixGrid" class="matrix-grid"></div>
                 </div>
                 <div id="calibStatus"></div>
@@ -602,7 +583,6 @@
     // 1. 基础数学工具 (与 Python 一致)
     // ================================================================
 
-    // 最小二乘求解 (自动处理行列数)
     function leastSquares(A, b) {
         const rows = A.length, cols = A[0].length;
         let U, S, V;
@@ -629,7 +609,6 @@
         return x;
     }
 
-    // 二维点归一化
     function normalizePoints(points) {
         const n = points.length;
         let meanX = 0, meanY = 0;
@@ -653,7 +632,6 @@
         return { normPoints, T };
     }
 
-    // 计算单应矩阵 H (DLT) —— 修正：稳健处理行<列情况
     function computeHomography(worldPts, imgPts) {
         if (worldPts.length < 4) throw new Error("至少需要4对点");
         const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -665,18 +643,13 @@
             A.push([X, Y, 1, 0, 0, 0, -u*X, -u*Y, -u]);
             A.push([0, 0, 0, X, Y, 1, -v*X, -v*Y, -v]);
         }
-        // 稳健 SVD：处理行<列的情况
         const AT = numeric.transpose(A);
         const ATA = numeric.dot(AT, A);
-
         const eig = numeric.eig(ATA);
         const eigenValues = eig.lambda.x;
         const eigenVectors = eig.E.x;
-
-        // 找最小特征值对应的特征向量
         let minIdx = 0;
         let minVal = Math.abs(eigenValues[0]);
-
         for (let i = 1; i < eigenValues.length; i++) {
             const val = Math.abs(eigenValues[i]);
             if (val < minVal) {
@@ -684,8 +657,6 @@
                 minIdx = i;
             }
         }
-
-        // numeric.eig 返回的 eigenVectors 是按列存储特征向量
         const h = eigenVectors.map(row => row[minIdx]);
         const Hn = [
             [h[0], h[1], h[2]],
@@ -694,8 +665,6 @@
         ];
         const TiInv = numeric.inv(Ti);
         let H = numeric.dot(numeric.dot(TiInv, Hn), Tw);
-
-        // 归一化：强制除以 H[2][2]（若不为零），否则除以范数
         const scale = H[2][2];
         if (Math.abs(scale) > 1e-12) {
             for (let i = 0; i < 3; i++) {
@@ -718,7 +687,6 @@
         return H;
     }
 
-    // 地面点到图像
     function groundToImage(H, X, Y) {
         const p = [X, Y, 1];
         const res = numeric.dot(H, p);
@@ -726,7 +694,6 @@
         return [res[0]*inv, res[1]*inv];
     }
 
-    // 图像点到平面 (通过单应)
     function imageToPlane(H, u, v) {
         const Hinv = numeric.inv(H);
         const p = [u, v, 1];
@@ -735,7 +702,6 @@
         return [res[0]*inv, res[1]*inv];
     }
 
-    // 分离 H0 的三列
     function splitH0(H0) {
         return [
             [H0[0][0], H0[1][0], H0[2][0]],
@@ -745,7 +711,7 @@
     }
 
     // ================================================================
-    // 2. 塔吊底座鲁棒补全逻辑 (与 Python 一致)
+    // 2. 塔吊底座鲁棒补全逻辑
     // ================================================================
 
     const BASE_LABELS = ["B1", "B2", "B3", "B4"];
@@ -910,7 +876,7 @@
     }
 
     // ================================================================
-    // 3. 其他模块 (p3估计、小车吊钩等) 保持不变
+    // 3. 其他模块
     // ================================================================
 
     function estimateP3(H0, verticalPoints) {
@@ -1033,211 +999,101 @@
     function computeSweepParamsJS(A, B, direction) {
         const rA = norm2JS(A);
         const rB = norm2JS(B);
-
         const aHat = [A[0] / rA, A[1] / rA];
         const bHat = [B[0] / rB, B[1] / rB];
-
         const sigma = direction === "ccw" ? 1.0 : -1.0;
-
         const alphaAB = signedAngleJS(aHat, bHat);
         const Delta = wrap2PiJS(sigma * alphaAB);
-
         return {
-            A,
-            B,
-            rA,
-            rB,
-            aHat,
-            bHat,
-            sigma,
-            Delta,
+            A, B, rA, rB, aHat, bHat, sigma, Delta,
             DeltaDeg: Delta * 180 / Math.PI
         };
     }
 
     function pointProgressJS(P, sweep) {
         const rho = norm2JS(P);
-
         if (rho < 1e-12) {
-            return {
-                rho,
-                delta: 0,
-                deltaDeg: 0,
-                hasDirection: false
-            };
+            return { rho, delta: 0, deltaDeg: 0, hasDirection: false };
         }
-
         const pHat = [P[0] / rho, P[1] / rho];
         const alphaAP = signedAngleJS(sweep.aHat, pHat);
         const delta = wrap2PiJS(sweep.sigma * alphaAP);
-
-        return {
-            rho,
-            delta,
-            deltaDeg: delta * 180 / Math.PI,
-            hasDirection: true
-        };
+        return { rho, delta, deltaDeg: delta * 180 / Math.PI, hasDirection: true };
     }
 
     function checkRisk1PointJS(P, sweep, boomLength) {
         const progress = pointProgressJS(P, sweep);
-
         const inRadius = progress.rho <= boomLength + 1e-9;
         const inAngle = !progress.hasDirection || progress.delta <= sweep.Delta + 1e-9;
-
-        return {
-            inside: inRadius && inAngle,
-            rho: progress.rho,
-            deltaDeg: progress.deltaDeg,
-            inRadius,
-            inAngle
-        };
+        return { inside: inRadius && inAngle, rho: progress.rho, deltaDeg: progress.deltaDeg, inRadius, inAngle };
     }
 
     function pointToArcDistanceJS(P, sweep) {
-        const A = sweep.A;
-        const B = sweep.B;
-
+        const A = sweep.A, B = sweep.B;
         const r = 0.5 * (sweep.rA + sweep.rB);
         const rho = norm2JS(P);
-
         if (rho < 1e-12) {
-            return {
-                distance: r,
-                closestPart: "center",
-                rho,
-                deltaDeg: null
-            };
+            return { distance: r, closestPart: "center", rho, deltaDeg: null };
         }
-
         const progress = pointProgressJS(P, sweep);
         const inAngle = progress.delta <= sweep.Delta + 1e-12;
-
         if (inAngle) {
-            return {
-                distance: Math.abs(rho - r),
-                closestPart: "arc_middle",
-                rho,
-                deltaDeg: progress.deltaDeg
-            };
+            return { distance: Math.abs(rho - r), closestPart: "arc_middle", rho, deltaDeg: progress.deltaDeg };
         }
-
         const dA = norm2JS([P[0] - A[0], P[1] - A[1]]);
         const dB = norm2JS([P[0] - B[0], P[1] - B[1]]);
-
         if (dA <= dB) {
-            return {
-                distance: dA,
-                closestPart: "start_cap",
-                rho,
-                deltaDeg: progress.deltaDeg
-            };
+            return { distance: dA, closestPart: "start_cap", rho, deltaDeg: progress.deltaDeg };
         }
-
-        return {
-            distance: dB,
-            closestPart: "end_cap",
-            rho,
-            deltaDeg: progress.deltaDeg
-        };
+        return { distance: dB, closestPart: "end_cap", rho, deltaDeg: progress.deltaDeg };
     }
 
     function checkRisk2PointJS(P, sweep, loadRadius) {
         const d = pointToArcDistanceJS(P, sweep);
-
-        return {
-            inside: d.distance <= loadRadius + 1e-12,
-            distance: d.distance,
-            closestPart: d.closestPart,
-            rho: d.rho,
-            deltaDeg: d.deltaDeg
-        };
+        return { inside: d.distance <= loadRadius + 1e-12, distance: d.distance, closestPart: d.closestPart, rho: d.rho, deltaDeg: d.deltaDeg };
     }
 
     function buildRiskDemoFromP(P) {
-        // 与 Python demo 保持一致
         const liftGround = [10.0, 0.0];
         const dropGround = [8.000170741682815, 6.000241409902737];
-
         const workerStartGround = [8.0, -1.0];
         const workerEndGround = [8.0, 8.0];
-
         const liftPixel = groundToImageFromP(P, liftGround[0], liftGround[1]);
         const dropPixel = groundToImageFromP(P, dropGround[0], dropGround[1]);
         const workerStartPixel = groundToImageFromP(P, workerStartGround[0], workerStartGround[1]);
         const workerEndPixel = groundToImageFromP(P, workerEndGround[0], workerEndGround[1]);
-
         const boomLength = 50.0;
         const loadRadius = 2.0;
         const direction = "ccw";
         const numSamples = 200;
-
         const A = imageToGroundFromP(P, liftPixel);
         const B = imageToGroundFromP(P, dropPixel);
         const P0 = imageToGroundFromP(P, workerStartPixel);
         const P1 = imageToGroundFromP(P, workerEndPixel);
-
         const sweep = computeSweepParamsJS(A, B, direction);
-
-        let risk1Danger = false;
-        let risk2Danger = false;
-        let risk1Count = 0;
-        let risk2Count = 0;
+        let risk1Danger = false, risk2Danger = false;
+        let risk1Count = 0, risk2Count = 0;
         let risk2MinDistance = Infinity;
-
         for (let k = 0; k <= numSamples; k++) {
             const t = k / numSamples;
-            const Pw = [
-                P0[0] + t * (P1[0] - P0[0]),
-                P0[1] + t * (P1[1] - P0[1])
-            ];
-
+            const Pw = [P0[0] + t * (P1[0] - P0[0]), P0[1] + t * (P1[1] - P0[1])];
             const r1 = checkRisk1PointJS(Pw, sweep, boomLength);
             const r2 = checkRisk2PointJS(Pw, sweep, loadRadius);
-
-            if (r1.inside) {
-                risk1Danger = true;
-                risk1Count++;
-            }
-
-            if (r2.inside) {
-                risk2Danger = true;
-                risk2Count++;
-            }
-
-            if (r2.distance < risk2MinDistance) {
-                risk2MinDistance = r2.distance;
-            }
+            if (r1.inside) { risk1Danger = true; risk1Count++; }
+            if (r2.inside) { risk2Danger = true; risk2Count++; }
+            if (r2.distance < risk2MinDistance) risk2MinDistance = r2.distance;
         }
-
         return {
-            P,
-            liftGround,
-            dropGround,
-            workerStartGround,
-            workerEndGround,
-            liftPixel,
-            dropPixel,
-            workerStartPixel,
-            workerEndPixel,
-            boomLength,
-            loadRadius,
-            direction,
-            numSamples,
-            sweep,
-            risk1Danger,
-            risk2Danger,
-            risk1Count,
-            risk2Count,
-            risk2MinDistance
+            P, liftGround, dropGround, workerStartGround, workerEndGround,
+            liftPixel, dropPixel, workerStartPixel, workerEndPixel,
+            boomLength, loadRadius, direction, numSamples, sweep,
+            risk1Danger, risk2Danger, risk1Count, risk2Count, risk2MinDistance
         };
     }
 
     function updateRiskParamPanel(demo) {
         const el = document.getElementById("riskParamInfo");
         if (!el) return;
-
-        // 每行一个参数，用 <br> 分隔，去掉多余空行
         el.innerHTML =
             `工人起点像素: (${demo.workerStartPixel[0].toFixed(3)}, ${demo.workerStartPixel[1].toFixed(3)})<br>` +
             `工人终点像素: (${demo.workerEndPixel[0].toFixed(3)}, ${demo.workerEndPixel[1].toFixed(3)})<br>` +
@@ -1256,10 +1112,7 @@
 
     function fitCanvas(canvas) {
         const rect = canvas.getBoundingClientRect();
-        let w = rect.width;
-        let h = rect.height;
-
-        // 如果尺寸为0，尝试从父容器获取
+        let w = rect.width, h = rect.height;
         if (w === 0 || h === 0) {
             const parent = canvas.parentElement;
             if (parent) {
@@ -1271,251 +1124,146 @@
                 h = 200;
             }
         }
-
         const dpr = window.devicePixelRatio || 1;
         canvas.width = Math.max(1, Math.floor(w * dpr));
         canvas.height = Math.max(1, Math.floor(h * dpr));
-
         const ctx = canvas.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         return { ctx, width: w, height: h };
     }
 
     function makeWorldMapper(points, width, height, padding = 28) {
-        let minX = Infinity, maxX = -Infinity;
-        let minY = Infinity, maxY = -Infinity;
-
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         points.forEach(p => {
-            minX = Math.min(minX, p[0]);
-            maxX = Math.max(maxX, p[0]);
-            minY = Math.min(minY, p[1]);
-            maxY = Math.max(maxY, p[1]);
+            minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+            minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
         });
-
         const spanX = Math.max(1e-6, maxX - minX);
         const spanY = Math.max(1e-6, maxY - minY);
-
-        const scale = Math.min(
-            (width - 2 * padding) / spanX,
-            (height - 2 * padding) / spanY
-        );
-
+        const scale = Math.min((width - 2 * padding) / spanX, (height - 2 * padding) / spanY);
         const cx = 0.5 * (minX + maxX);
         const cy = 0.5 * (minY + maxY);
-
         return function map(p) {
-            return [
-                width / 2 + (p[0] - cx) * scale,
-                height / 2 - (p[1] - cy) * scale
-            ];
+            return [width / 2 + (p[0] - cx) * scale, height / 2 - (p[1] - cy) * scale];
         };
     }
 
     function drawRisk3D(demo) {
         const canvas = document.getElementById("risk3DCanvas");
         if (!canvas) return;
-
         const { ctx, width, height } = fitCanvas(canvas);
         ctx.clearRect(0, 0, width, height);
-
         const O = [0, 0, 0];
         const A = [demo.liftGround[0], demo.liftGround[1], 0];
         const B = [demo.dropGround[0], demo.dropGround[1], 0];
         const P0 = [demo.workerStartGround[0], demo.workerStartGround[1], 0];
         const P1 = [demo.workerEndGround[0], demo.workerEndGround[1], 0];
-        const towerTop = [0, 0, 12]; // 塔顶高度
+        const towerTop = [0, 0, 12];
         const boomHeight = 10;
-
-        // 收集所有点计算范围
         const allPoints = [O, A, B, P0, P1, towerTop, 
                            [A[0], A[1], boomHeight], [B[0], B[1], boomHeight]];
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
         allPoints.forEach(p => {
-            if (p[0] < minX) minX = p[0];
-            if (p[0] > maxX) maxX = p[0];
-            if (p[1] < minY) minY = p[1];
-            if (p[1] > maxY) maxY = p[1];
-            if (p[2] < minZ) minZ = p[2];
-            if (p[2] > maxZ) maxZ = p[2];
+            if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
+            if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
+            if (p[2] < minZ) minZ = p[2]; if (p[2] > maxZ) maxZ = p[2];
         });
-        // 增加边界余量
         const pad = 1.5;
         minX -= pad; maxX += pad; minY -= pad; maxY += pad; minZ -= pad; maxZ += pad;
-        const spanX = maxX - minX || 1;
-        const spanY = maxY - minY || 1;
-        const spanZ = maxZ - minZ || 1;
-
-        // 等距投影参数（保持比例）
-        const projX = 1.0;         // x轴水平因子
-        const projY = 0.55;        // y轴斜向因子
-        const projZ = 0.45;        // z轴垂直因子（与y共享垂直空间）
+        const spanX = maxX - minX || 1, spanY = maxY - minY || 1, spanZ = maxZ - minZ || 1;
+        const projX = 1.0, projY = 0.55, projZ = 0.45;
         const scaleX = (width) / (spanX + projY * spanY);
         const scaleZ = (height) / (projZ * spanY + spanZ);
         const scale = Math.min(scaleX, scaleZ) * 0.9;
-
-        const cx = 0.5 * (minX + maxX);
-        const cy = 0.5 * (minY + maxY);
-        const cz = 0.5 * (minZ + maxZ);
-
+        const cx = 0.5 * (minX + maxX), cy = 0.5 * (minY + maxY), cz = 0.5 * (minZ + maxZ);
         function project3D(p) {
-            const x = p[0] - cx;
-            const y = p[1] - cy;
-            const z = p[2] - cz;
+            const x = p[0] - cx, y = p[1] - cy, z = p[2] - cz;
             const px = width/2 + scale * (x - projY * y);
             const py = height/2 - scale * (projZ * y + z);
             return [px, py];
         }
-
-        // 绘图辅助函数
         function line(p, q, color, lw = 2) {
-            const a = project3D(p);
-            const b = project3D(q);
-            ctx.beginPath();
-            ctx.moveTo(a[0], a[1]);
-            ctx.lineTo(b[0], b[1]);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lw;
-            ctx.stroke();
+            const a = project3D(p), b = project3D(q);
+            ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
         }
-
         function point(p, color, r = 4) {
             const a = project3D(p);
-            ctx.beginPath();
-            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
-            ctx.fillStyle = color;
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color; ctx.fill();
         }
-
         function text(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
             const a = project3D(p);
-            ctx.fillStyle = color;
-            ctx.font = "12px Times New Roman";
+            ctx.fillStyle = color; ctx.font = "12px Times New Roman";
             ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
         }
-
-        // ---- 绘图 ----
-        // 地面网格（简单示意）
-        ctx.strokeStyle = "#e2e8f0";
-        ctx.lineWidth = 1;
+        // 绘图
+        ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1;
         for (let i = -5; i <= 15; i += 5) {
             line([i, -5, 0], [i, 15, 0], "#e2e8f0", 1);
             line([-5, i, 0], [15, i, 0], "#e2e8f0", 1);
         }
-
-        // 塔身
         line(O, towerTop, "#64748b", 3);
-
-        // 大臂（起始、终止）
         line([0, 0, boomHeight], [A[0], A[1], boomHeight], "#2563eb", 3);
         line([0, 0, boomHeight], [B[0], B[1], boomHeight], "#dc2626", 3);
-
-        // 地面投影线
         line(O, A, "rgba(37,99,235,0.35)", 2);
         line(O, B, "rgba(220,38,38,0.35)", 2);
-
-        // 工人轨迹
         line(P0, P1, "#16a34a", 5);
-
-        // 标记点
-        point(O, "#0f172a", 4);
-        point(A, "#2563eb", 4);
-        point(B, "#dc2626", 4);
-        point(P0, "#16a34a", 4);
-        point(P1, "#22c55e", 4);
-
-        text(O, "O");
-        text(A, "Lift", "#2563eb");
-        text(B, "Drop", "#dc2626");
-        text(P1, "Worker", "#16a34a");
+        point(O, "#0f172a", 4); point(A, "#2563eb", 4); point(B, "#dc2626", 4);
+        point(P0, "#16a34a", 4); point(P1, "#22c55e", 4);
+        text(O, "O"); text(A, "Lift", "#2563eb"); text(B, "Drop", "#dc2626"); text(P1, "Worker", "#16a34a");
     }
 
     function drawRiskTopView(demo) {
         const canvas = document.getElementById("riskTopCanvas");
         if (!canvas) return;
-
         const { ctx, width, height } = fitCanvas(canvas);
         ctx.clearRect(0, 0, width, height);
-
-        const O = [0, 0];
-        const A = demo.liftGround;
-        const B = demo.dropGround;
-        const P0 = demo.workerStartGround;
-        const P1 = demo.workerEndGround;
-        const boomLength = demo.boomLength;
-        const loadRadius = demo.loadRadius;
-        const sweep = demo.sweep;
-
-        // 生成扇形边界点
+        const O = [0, 0], A = demo.liftGround, B = demo.dropGround;
+        const P0 = demo.workerStartGround, P1 = demo.workerEndGround;
+        const boomLength = demo.boomLength, loadRadius = demo.loadRadius, sweep = demo.sweep;
         const steps = 60;
         const startAng = Math.atan2(A[1], A[0]);
-        const sigma = sweep.sigma;
-        const Delta = sweep.Delta;
+        const sigma = sweep.sigma, Delta = sweep.Delta;
         const fanPoints = [];
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const ang = startAng + sigma * Delta * t;
-            const r = boomLength;
-            fanPoints.push([r * Math.cos(ang), r * Math.sin(ang)]);
+            const t = i / steps, ang = startAng + sigma * Delta * t;
+            fanPoints.push([boomLength * Math.cos(ang), boomLength * Math.sin(ang)]);
         }
-        // 负载轨迹点
         const midR = 0.5 * (sweep.rA + sweep.rB);
         const loadPoints = [];
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const ang = startAng + sigma * Delta * t;
-            const r = midR;
-            loadPoints.push([r * Math.cos(ang), r * Math.sin(ang)]);
+            const t = i / steps, ang = startAng + sigma * Delta * t;
+            loadPoints.push([midR * Math.cos(ang), midR * Math.sin(ang)]);
         }
-
-        // 所有需要显示的点
         const allPoints = [
-            [-2, -2], [14, 14],
-            A, B, P0, P1,
+            [-2, -2], [14, 14], A, B, P0, P1,
             [boomLength * 0.25, boomLength * 0.25],
-            ...fanPoints,
-            ...loadPoints
+            ...fanPoints, ...loadPoints
         ];
-
         const map = makeWorldMapper(allPoints, width, height, 20);
-
         function drawLine(p, q, color, lw = 2) {
-            const a = map(p);
-            const b = map(q);
-            ctx.beginPath();
-            ctx.moveTo(a[0], a[1]);
-            ctx.lineTo(b[0], b[1]);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lw;
-            ctx.stroke();
+            const a = map(p), b = map(q);
+            ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
         }
-
         function drawPoint(p, color, r = 4) {
             const a = map(p);
-            ctx.beginPath();
-            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
-            ctx.fillStyle = color;
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color; ctx.fill();
         }
-
         function drawText(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
             const a = map(p);
-            ctx.fillStyle = color;
-            ctx.font = "12px Times New Roman";
+            ctx.fillStyle = color; ctx.font = "12px Times New Roman";
             ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
         }
-
-        // ---- 绘图 ----
-        // 坐标轴
         drawLine([-2, 0], [14, 0], "#cbd5e1", 1);
         drawLine([0, -2], [0, 14], "#cbd5e1", 1);
-
-        // Risk1 大臂扫过区域
         ctx.beginPath();
         let center = map(O);
         ctx.moveTo(center[0], center[1]);
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const ang = startAng + sigma * Delta * t;
+            const t = i / steps, ang = startAng + sigma * Delta * t;
             const p = [boomLength * Math.cos(ang), boomLength * Math.sin(ang)];
             const q = map(p);
             ctx.lineTo(q[0], q[1]);
@@ -1523,53 +1271,33 @@
         ctx.closePath();
         ctx.fillStyle = "rgba(249,115,22,0.25)";
         ctx.fill();
-
-        // Risk2 吊物轨迹（粗线表示外扩区域）
         ctx.beginPath();
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const ang = startAng + sigma * Delta * t;
-            const r = midR;
-            const p = [r * Math.cos(ang), r * Math.sin(ang)];
+            const t = i / steps, ang = startAng + sigma * Delta * t;
+            const p = [midR * Math.cos(ang), midR * Math.sin(ang)];
             const q = map(p);
             if (i === 0) ctx.moveTo(q[0], q[1]);
             else ctx.lineTo(q[0], q[1]);
         }
-        const pRef1 = map([0, 0]);
-        const pRef2 = map([loadRadius, 0]);
+        const pRef1 = map([0, 0]), pRef2 = map([loadRadius, 0]);
         const pixelLoadRadius = Math.abs(pRef2[0] - pRef1[0]);
         ctx.strokeStyle = "rgba(59,130,246,0.40)";
         ctx.lineWidth = Math.max(4, 2 * pixelLoadRadius);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
         ctx.stroke();
-
-        // 起始臂、终止臂
         drawLine(O, A, "#2563eb", 3);
         drawLine(O, B, "#dc2626", 3);
-
-        // 工人轨迹
         drawLine(P0, P1, "#16a34a", 6);
-
-        // 标记点
-        drawPoint(O, "#0f172a", 4);
-        drawPoint(A, "#2563eb", 4);
-        drawPoint(B, "#dc2626", 4);
-        drawPoint(P0, "#16a34a", 4);
-        drawPoint(P1, "#22c55e", 4);
-
-        drawText(O, "O");
-        drawText(A, "Lift", "#2563eb");
-        drawText(B, "Drop", "#dc2626");
-        drawText(P0, "Worker Start", "#16a34a");
+        drawPoint(O, "#0f172a", 4); drawPoint(A, "#2563eb", 4); drawPoint(B, "#dc2626", 4);
+        drawPoint(P0, "#16a34a", 4); drawPoint(P1, "#22c55e", 4);
+        drawText(O, "O"); drawText(A, "Lift", "#2563eb");
+        drawText(B, "Drop", "#dc2626"); drawText(P0, "Worker Start", "#16a34a");
         drawText(P1, "Worker End", "#16a34a");
     }
 
     function updateRiskDrawArea(Pmat) {
         const demo = buildRiskDemoFromP(Pmat);
         updateRiskParamPanel(demo);
-
-        // 等待浏览器完成布局后再绘制
         requestAnimationFrame(() => {
             drawRisk3D(demo);
             drawRiskTopView(demo);
@@ -1591,18 +1319,18 @@
     }
 
     // ================================================================
-    // 4. 主计算流程 (与 Demo3 对标)
+    // 4. 主计算流程
     // ================================================================
     function calibrateCamera() {
         try {
             document.getElementById('calibStatus').innerHTML = '';
-            document.getElementById('cameraMatrixDisplay').innerHTML = '计算中...';
+            // 清空矩阵网格，显示等待信息
+            const grid = document.getElementById('matrixGrid');
+            if (grid) grid.innerHTML = '<div style="grid-column:span 4; text-align:center; color:#94a3b8; padding:8px;">计算中...</div>';
 
-            // ---- 读取底座数据 ----
             const baseRadius = parseFloat(document.getElementById('baseRadius').value);
             if (isNaN(baseRadius) || baseRadius <= 0) throw new Error("底座距离必须为正数");
 
-            // 构造 imageMarks 对象 (null 表示缺失)
             const imageMarks = {
                 B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
                 B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
@@ -1614,29 +1342,24 @@
             if (cu && cv) {
                 imageMarks.C = [parseFloat(cu), parseFloat(cv)];
             }
-
-            // 检查每个点是否有效 (如果是 NaN 则置为 null)
             for (let key of ['B1','B2','B3','B4','C']) {
                 if (imageMarks[key] !== null && (isNaN(imageMarks[key][0]) || isNaN(imageMarks[key][1]))) {
                     imageMarks[key] = null;
                 }
             }
 
-            // ---- 鲁棒底座标定 ----
-            const useCenter = true;  // 若有中心则使用，但 demo3 无中心所以不会用
+            const useCenter = true;
             const blendWeight = 0.7;
             const { H0, completed, estimatedInfo } = calibrateGroundHomography(
                 imageMarks, baseRadius, useCenter, blendWeight
             );
 
-            // 收集补全信息
             let infoMsg = "";
             if (estimatedInfo.estimatedLabels.length > 0) {
                 infoMsg = `⚠️ 底座点补全: ${estimatedInfo.estimatedLabels.join(', ')} (方法: ${estimatedInfo.method})`;
                 if (estimatedInfo.warning) infoMsg += ` ${estimatedInfo.warning}`;
             }
 
-            // ---- 垂直参考点 ----
             const vrows = document.querySelectorAll('.vpoint-row');
             let verticalPts = [];
             vrows.forEach(row => {
@@ -1647,22 +1370,18 @@
             });
             if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
 
-            // ---- 估计 p3 ----
             const p3 = estimateP3(H0, verticalPts);
 
-            // ---- 小车与吊钩 ----
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value);
             const trolleyPixel = [parseFloat(document.getElementById('trolleyU').value), parseFloat(document.getElementById('trolleyV').value)];
             const hookPixel = [parseFloat(document.getElementById('hookU').value), parseFloat(document.getElementById('hookV').value)];
 
-            // ---- 计算吊物位置 ----
             const [X, Y] = imageToXYAtHeight(H0, p3, trolleyPixel, trolleyHeight);
             const Z_hook = estimateHeight(H0, p3, X, Y, hookPixel);
             const groundPixel = groundToImage(H0, X, Y);
             const trolleyRadius = Math.hypot(X, Y);
             const theta_deg = Math.atan2(Y, X) * 180 / Math.PI;
 
-            // ---- 构建 4x3 矩阵 (保留更多小数以便对比) ----
             const [p1, p2, p4] = splitH0(H0);
             const Pmat = [
                 [p1[0], p2[0], p3[0], p4[0]],
@@ -1670,14 +1389,10 @@
                 [p1[2], p2[2], p3[2], p4[2]]
             ];
 
-            // ---- 更新右下角 Risk Demo 绘图区 ----
             updateRiskDrawArea(Pmat);
-
-            // ---- 渲染矩阵网格 ----
             window.lastPmat = Pmat;
             renderMatrix(Pmat);
 
-            // 显示结果 (保留6位小数)
             let statusHtml = `
                 <div class="success-info">
                     ✅ 标定成功<br>
@@ -1693,12 +1408,13 @@
 
         } catch (err) {
             document.getElementById('calibStatus').innerHTML = `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
-            document.getElementById('cameraMatrixDisplay').innerHTML = "计算失败";
+            const grid = document.getElementById('matrixGrid');
+            if (grid) grid.innerHTML = '<div style="grid-column:span 4; text-align:center; color:#dc2626; padding:8px;">计算失败</div>';
         }
     }
 
     // ================================================================
-    // 5. 视频交互选取 (不变)
+    // 5. 视频交互选取
     // ================================================================
     let activePickMode = null, pickCallback = null;
     const video = document.getElementById('mainVideo');
@@ -1747,7 +1463,7 @@
             if (btn) {
                 btn.addEventListener('click', () => {
                     enterPickMode(m.id, (mode, u, v) => {
-                        document.getElementById(m.uId).value = u.toFixed(3);  // 保留3位小数，与Python一致
+                        document.getElementById(m.uId).value = u.toFixed(3);
                         document.getElementById(m.vId).value = v.toFixed(3);
                     });
                 });
@@ -1795,7 +1511,6 @@
                 btn.addEventListener('click', handleVerticalPick);
             });
         });
-
         observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
 
         window.addEventListener("resize", () => {
