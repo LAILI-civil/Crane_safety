@@ -287,42 +287,35 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 18px;
-            padding: 14px 18px;
+            padding: 12px 14px;          
             margin-top: 12px;
             position: relative;
             box-shadow: none;
         }
+        
         .matrix-output::before {
-            content: "P =";
-            position: absolute;
-            top: -10px;
-            left: 16px;
-            background: #f8fafc;
-            padding: 0 8px;
-            font-size: 0.7rem;
-            color: #64748b;
-            font-family: 'Times New Roman', monospace;
+            content: none;
         }
         .matrix-output strong {
             display: block;
             color: #0f172a;
-            font-size: 0.8rem;
-            margin-bottom: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 6px; 
         }
         .matrix-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+            gap: 4px;
             background: #f8fafc;
-            padding: 4px;
+            padding: 2px;
         }
         .matrix-grid .cell {
             background: white;
-            border-radius: 6px;
-            padding: 8px 4px;
+            border-radius: 4px;
+            padding: 4px 2px;
             text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
+            font-family: 'Times New Roman', monospace;
+            font-size: 0.75rem;
             color: #0f172a;
             border: 1px solid #e9edf4;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
@@ -1312,7 +1305,7 @@
             for (let j = 0; j < 4; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.textContent = matrix[i][j].toFixed(6);
+                cell.textContent = matrix[i][j].toFixed(4);   // 改为 4 位小数
                 grid.appendChild(cell);
             }
         }
