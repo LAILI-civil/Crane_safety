@@ -1587,6 +1587,7 @@
         // 7. 角度标注
         // ============================================================
         const angleMarkR = Math.min(boomLength * 0.22, Math.max(3, midR * 0.55));
+
         drawAngleMarkOnTop(
             ctx,
             map,
@@ -1596,15 +1597,150 @@
             sigma,
             Delta,
             `${sweep.DeltaDeg.toFixed(1)}°`
+        );
+
+        // ============================================================
+        // 8. 工人移动轨迹与方向
+        // ============================================================
+
+        // 工人完整移动轨迹，浅绿色
+        drawArrowLineOnTop(
+            ctx,
+            map,
+            P0,
+            P1,
+            "rgba(22,163,74,0.35)",
+            5
+        );
+
+        // 工人已经走过的轨迹，深绿色
+        if (progress > 0.02) {
+            drawArrowLineOnTop(
+                ctx,
+                map,
+                P0,
+                workerNow,
+                "#16a34a",
+                5
+            );
+        }
+
+        // 当前工人位置
+        drawPoint(workerNow, "#16a34a", 6);
+        drawText(workerNow, "Worker", "#15803d", 7, -8);
+
+        // 起点和终点
+        drawPoint(P0, "#86efac", 4);
+        drawPoint(P1, "#22c55e", 4);
+        drawText(P0, "Start", "#15803d", 6, 14);
+        drawText(P1, "End", "#15803d", 6, -6);
+
+        // ============================================================
+        // 9. 当前吊物位置
+        // ============================================================
+        drawPoint(currentLoad, "#3b82f6", 6);
+        drawText(currentLoad, "Load", "#2563eb", 7, -8);
+
+        // 吊物危险圆
+        const loadCenterPx = map(currentLoad);
+        const loadRadiusPx = Math.abs(map([currentLoad[0] + loadRadius, currentLoad[1]])[0] - loadCenterPx[0]);
+
+        ctx.beginPath();
+        ctx.arc(loadCenterPx[0], loadCenterPx[1], loadRadiusPx, 0, 2 * Math.PI);
+        ctx.fillStyle = "rgba(59,130,246,0.18)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(37,99,235,0.75)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // ============================================================
+        // 10. 关键点标注
+        // ============================================================
+        drawPoint(O, "#0f172a", 5);
+        drawPoint(A, "#2563eb", 5);
+        drawPoint(B, "#dc2626", 5);
+
+        drawText(O, "O", "#0f172a", 6, -6);
+        drawText(A, "Lift", "#2563eb", 6, -6);
+        drawText(B, "Drop", "#dc2626", 6, -6);
+
+        // ============================================================
+        // 11. 当前风险状态提示
+        // ============================================================
+        const risk1Now = checkRisk1PointJS(workerNow, sweep, boomLength);
+        const risk2Now = checkRisk2PointJS(workerNow, sweep, loadRadius);
+
+        const dangerNow = risk1Now.inside || risk2Now.inside;
+
+        // 当前工人进入危险区域时，外圈闪红
+        if (dangerNow) {
+            const wp = map(workerNow);
+            ctx.beginPath();
+            ctx.arc(wp[0], wp[1], 11, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#dc2626";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(wp[0], wp[1], 15, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(220,38,38,0.35)";
+            ctx.lineWidth = 5;
+            ctx.stroke();
+        }
+
+        ctx.save();
+        ctx.font = "bold 13px Times New Roman";
+        ctx.fillStyle = dangerNow ? "#dc2626" : "#16a34a";
+        ctx.strokeStyle = "rgba(255,255,255,0.9)";
+        ctx.lineWidth = 4;
+
+        const statusText = dangerNow
+            ? `当前状态: 危险  Risk1=${risk1Now.inside ? "是" : "否"}  Risk2=${risk2Now.inside ? "是" : "否"}`
+            : "当前状态: 安全";
+
+        ctx.strokeText(statusText, 12, 20);
+        ctx.fillText(statusText, 12, 20);
+        ctx.restore();
+    }
+
+    // 俯视图动画 ID，防止重复点击后多个动画叠加
+    let riskTopAnimId = null;
 
     function updateRiskDrawArea(Pmat) {
         const demo = buildRiskDemoFromP(Pmat);
         updateRiskParamPanel(demo);
-        requestAnimationFrame(() => {
-            drawRisk3D(demo);
-            drawRiskTopView(demo);
-        });
+
+        // 3D 图先画一次
+        drawRisk3D(demo);
+
+        // 如果之前有动画，先取消
+        if (riskTopAnimId !== null) {
+            cancelAnimationFrame(riskTopAnimId);
+            riskTopAnimId = null;
+        }
+
+        const duration = 5000; // 动画时长，单位 ms
+        let startTime = null;
+
+        function animateRiskTop(timestamp) {
+            if (startTime === null) startTime = timestamp;
+
+            let progress = (timestamp - startTime) / duration;
+
+            // 循环播放
+            if (progress > 1) {
+                startTime = timestamp;
+                progress = 0;
+            }
+
+            drawRiskTopView(demo, progress);
+
+            riskTopAnimId = requestAnimationFrame(animateRiskTop);
+        }
+
+        riskTopAnimId = requestAnimationFrame(animateRiskTop);
     }
+
 
     function renderMatrix(matrix) {
         const grid = document.getElementById('matrixGrid');
