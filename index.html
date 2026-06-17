@@ -486,7 +486,6 @@
         </video>
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
         <div class="video-deco">● LIVE</div>
-        <div class="video-corner">Crane Monitor</div>
     </div>
 
     <!-- 右侧面板 -->
@@ -1664,10 +1663,10 @@
             // 显示结果 (保留6位小数)
             let statusHtml = `
                 <div class="success-info">
-                    ✅ 标定成功 (Demo3 对标)<br>
-                    📍 地面投影点: (${groundPixel[0].toFixed(6)}, ${groundPixel[1].toFixed(6)})<br>
-                    🏗️ 吊物空间点: (${X.toFixed(6)}, ${Y.toFixed(6)}, ${Z_hook.toFixed(6)})<br>
-                    📏 小车半径: ${trolleyRadius.toFixed(6)} m, 角度: ${theta_deg.toFixed(6)}°
+                    ✅ 标定成功<br>
+                    📍 地面投影点 (像素): (${groundPixel[0].toFixed(3)}, ${groundPixel[1].toFixed(3)})<br>
+                    🏗️ 吊物空间点: (${X.toFixed(3)}, ${Y.toFixed(3)}, ${Z_hook.toFixed(3)})(m)<br>
+                    📏 小车半径: ${trolleyRadius.toFixed(3)} m, 角度: ${theta_deg.toFixed(3)}°
             `;
             if (infoMsg) {
                 statusHtml += `<br>📌 ${infoMsg}`;
