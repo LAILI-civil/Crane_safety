@@ -1308,7 +1308,7 @@
         ctx.fill();
     }
 
-    function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, delta, text) {
+    function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, delta, text, labelRadius = null) {
         const steps = 40;
         const arcPts = [];
 
@@ -1321,24 +1321,34 @@
             ]);
         }
 
-        drawPolylineArrowOnTop(ctx, map, arcPts, "#f97316", 2.5);
+        // 角度小弧线粗细在这里调，当前是 2.5
+        drawPolylineArrowOnTop(ctx, map, arcPts, "#f97316", 2.2);
 
         const midAng = startAng + sigma * delta * 0.5;
+
+        // 如果外部传入 labelRadius，就用外部的；
+        // 否则仍然用原来的 radius * 1.25
+        const textRadius = labelRadius !== null ? labelRadius : radius * 1.25;
+
         const labelPos = [
-            center[0] + radius * 1.25 * Math.cos(midAng),
-            center[1] + radius * 1.25 * Math.sin(midAng)
+            center[0] + textRadius * Math.cos(midAng),
+            center[1] + textRadius * Math.sin(midAng)
         ];
+
         const lp = map(labelPos);
 
         ctx.save();
-        ctx.font = "bold 13px Times New Roman";
+        ctx.font = "bold 14px Times New Roman";
         ctx.fillStyle = "#ea580c";
-        ctx.strokeStyle = "rgba(255,255,255,0.85)";
+        ctx.strokeStyle = "rgba(255,255,255,0.9)";
         ctx.lineWidth = 4;
-        ctx.strokeText(text, lp[0] - 12, lp[1] - 4);
-        ctx.fillText(text, lp[0] - 12, lp[1] - 4);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.strokeText(text, lp[0], lp[1]);
+        ctx.fillText(text, lp[0], lp[1]);
         ctx.restore();
     }
+
 
     function drawRiskTopView(demo, progress = 1) {
         const canvas = document.getElementById("riskTopCanvas");
@@ -1434,7 +1444,7 @@
 
         const map = makeWorldMapper(allPoints, width, height, 24);
 
-        function drawPoint(p, color, r = 5, stroke = true) {
+        function drawPoint(p, color, r = 2, stroke = true) {
             const a = map(p);
             ctx.beginPath();
             ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
@@ -1527,7 +1537,10 @@
         // ============================================================
         // 9. 扫过角度标注
         // ============================================================
-        const angleMarkR = Math.min(boomLength * 0.22, Math.max(3, midR * 0.55));
+        const angleMarkR = Math.min(boomLength * 0.18, Math.max(3, midR * 0.45));
+
+        // 角度文字放在扫描区域中部
+        const angleTextR = boomLength * 0.48;
 
         drawAngleMarkOnTop(
             ctx,
@@ -1537,7 +1550,8 @@
             startAng,
             sigma,
             Delta,
-            `${sweep.DeltaDeg.toFixed(1)}°`
+            `${sweep.DeltaDeg.toFixed(1)}°`,
+            angleTextR
         );
 
         // ============================================================
@@ -1551,7 +1565,7 @@
             P0,
             P1,
             "rgba(22,163,74,0.28)",
-            5
+            2
         );
 
         // Worker 已经走过的轨迹：深绿色
@@ -1562,12 +1576,12 @@
                 P0,
                 workerNow,
                 "#16a34a",
-                5
+                2
             );
         }
 
         // Worker 当前位置
-        drawPoint(workerNow, "#16a34a", 6);
+        drawPoint(workerNow, "#16a34a", 3);
     }
 
 
