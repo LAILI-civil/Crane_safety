@@ -1308,27 +1308,36 @@
         ctx.fill();
     }
 
-    function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, delta, text, labelRadius = null) {
+    function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, arcDelta, text, labelRadius = null, labelDelta = null) {
         const steps = 40;
         const arcPts = [];
 
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const ang = startAng + sigma * delta * t;
-            arcPts.push([
-                center[0] + radius * Math.cos(ang),
-                center[1] + radius * Math.sin(ang)
-            ]);
+        // ============================================================
+        // 1. 画橙色圆弧箭头
+        // arcDelta 控制箭头当前走到哪里，用于动画
+        // ============================================================
+        if (arcDelta > 1e-4) {
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const ang = startAng + sigma * arcDelta * t;
+                arcPts.push([
+                    center[0] + radius * Math.cos(ang),
+                    center[1] + radius * Math.sin(ang)
+                ]);
+            }
+
+            // 橙色箭头线条粗细在这里调
+            drawPolylineArrowOnTop(ctx, map, arcPts, "#f97316", 2.0);
         }
 
-        // 角度小弧线粗细在这里调，当前是 2.5
-        drawPolylineArrowOnTop(ctx, map, arcPts, "#f97316", 2.2);
+        // ============================================================
+        // 2. 画角度文字
+        // labelDelta 控制文字放在完整扇形的中间，不跟着动画乱跑
+        // ============================================================
+        const textDelta = labelDelta !== null ? labelDelta : arcDelta;
+        const midAng = startAng + sigma * textDelta * 0.5;
 
-        const midAng = startAng + sigma * delta * 0.5;
-
-        // 如果外部传入 labelRadius，就用外部的；
-        // 否则仍然用原来的 radius * 1.25
-        const textRadius = labelRadius !== null ? labelRadius : radius * 1.25;
+        const textRadius = labelRadius !== null ? labelRadius : radius * 0.5;
 
         const labelPos = [
             center[0] + textRadius * Math.cos(midAng),
@@ -1537,21 +1546,27 @@
         // ============================================================
         // 9. 扫过角度标注
         // ============================================================
-        const angleMarkR = Math.min(boomLength * 0.18, Math.max(3, midR * 0.45));
 
-        // 角度文字放在扫描区域中部
+        // 橙色箭头放到大臂扫过区域的外圆弧上
+        // 0.96 表示靠近扇形外边界，想更靠外可改 0.98，想稍微靠内可改 0.90
+        const angleArrowR = boomLength * 0.96;
+
+        // 角度文字仍然放在扫描区域中部
         const angleTextR = boomLength * 0.48;
 
+        // arcDelta 用 Delta * progress，让箭头随着动画从起点走到终点
+        // labelDelta 用 Delta，让角度文字始终位于完整扇形的中央
         drawAngleMarkOnTop(
             ctx,
             map,
             O,
-            angleMarkR,
+            angleArrowR,
             startAng,
             sigma,
-            Delta,
+            Delta * progress,
             `${sweep.DeltaDeg.toFixed(1)}°`,
-            angleTextR
+            angleTextR,
+            Delta
         );
 
         // ============================================================
