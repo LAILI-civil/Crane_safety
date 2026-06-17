@@ -17,41 +17,88 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            background: #f0f4f8;
         }
         .split-layout {
             display: flex;
             width: 100%;
             height: 100%;
             flex-direction: row;
+            gap: 0;
+            background: #f0f4f8;
         }
 
         /* ===== 左侧视频区 ===== */
         .left-video {
             flex: 1;
-            background: #000;
+            background: #111827;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            margin: 12px 0 12px 12px;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06);
+            overflow: hidden;
+            border: 2px solid #2a3a5a;
         }
         .left-video video {
             width: 100%;
             height: 100%;
             object-fit: contain;
             cursor: crosshair;
+            background: #000;
+        }
+        /* 视频区域装饰：右上角标题 */
+        .video-deco {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-family: 'Times New Roman', monospace;
+            background: rgba(0,0,0,0.4);
+            padding: 4px 14px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.08);
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+        }
+        /* 左下角小标 */
+        .video-corner {
+            position: absolute;
+            bottom: 16px;
+            right: 20px;
+            color: rgba(255,255,255,0.25);
+            font-size: 11px;
+            font-family: 'Times New Roman', monospace;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            user-select: none;
         }
         .pick-tip {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: rgba(0,0,0,0.75);
-            color: #ffdd99;
-            font-size: 14px;
+            top: 16px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            color: #fcd34d;
+            font-size: 13px;
             padding: 6px 16px;
-            border-radius: 24px;
+            border-radius: 30px;
             pointer-events: none;
             font-family: 'Times New Roman', monospace;
-            border-left: 3px solid #ffaa33;
+            border-left: 3px solid #f59e0b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-weight: 400;
+            letter-spacing: 0.3px;
         }
 
         /* ===== 右侧面板 ===== */
@@ -59,23 +106,39 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #f1f5f9;
+            background: #f0f4f8;
+            padding: 12px 12px 12px 6px;
             overflow: hidden;
+            gap: 8px;
         }
         .calib-area {
             flex: 1;
             overflow-y: auto;
             padding: 16px 20px;
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+            border: 1px solid #e9edf4;
         }
         .calib-area h3 {
             font-size: 1.2rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             border-left: 4px solid #3b82f6;
             padding-left: 12px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #0b1e33;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .calib-area h3::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+            margin-left: 10px;
         }
 
         /* 三列卡片横向布局 */
@@ -88,10 +151,16 @@
         .param-card {
             flex: 1;
             min-width: 0;
-            background: #f8fafc;
-            border-radius: 16px;
+            background: #f9fbfd;
+            border-radius: 18px;
             padding: 14px 16px;
-            border: 1px solid #e2edff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .param-card:hover {
+            border-color: #b9c8e0;
+            box-shadow: 0 8px 18px rgba(0,20,50,0.06);
         }
 
         .param-card h4 {
@@ -101,6 +170,7 @@
             border-left: 3px solid #3b82f6;
             padding-left: 8px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #1e293b;
         }
 
         .param-card label {
@@ -109,6 +179,7 @@
             display: block;
             margin-bottom: 2px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #475569;
         }
 
         .compact-row {
@@ -132,24 +203,25 @@
 
         input {
             padding: 5px 6px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            border: 1px solid #d0d7e2;
             font-size: 0.8rem;
             width: 100%;
             font-family: 'Times New Roman', monospace;
             background: white;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
         }
 
         button.pick-btn {
             background: #eef2ff;
             border: none;
-            border-radius: 8px;
-            padding: 5px 10px;
+            border-radius: 10px;
+            padding: 5px 12px;
             font-size: 0.7rem;
             font-weight: 500;
             color: #2563eb;
@@ -157,9 +229,11 @@
             height: 30px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             white-space: nowrap;
+            transition: background 0.15s, transform 0.1s;
         }
         button.pick-btn:hover {
             background: #d9e6ff;
+            transform: scale(0.97);
         }
 
         .vpoint-row {
@@ -170,7 +244,8 @@
             margin-bottom: 8px;
             background: #ffffffcc;
             padding: 6px;
-            border-radius: 10px;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
         }
         .vpoint-row .field {
             flex: 1;
@@ -187,7 +262,7 @@
         .add-point-btn {
             background: #eef2ff;
             border: 1px solid #cbd5e1;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 5px 10px;
             font-size: 0.7rem;
             cursor: pointer;
@@ -195,71 +270,112 @@
             width: 100%;
             text-align: center;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            transition: background 0.15s;
+        }
+        .add-point-btn:hover {
+            background: #d9e6ff;
         }
 
         button.calc-btn {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
             border: none;
             border-radius: 30px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             width: 100%;
             margin: 10px 0 14px 0;
             cursor: pointer;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+            transition: transform 0.15s, box-shadow 0.2s;
         }
         button.calc-btn:hover {
-            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(37,99,235,0.35);
+        }
+        button.calc-btn:active {
+            transform: scale(0.98);
         }
 
+        /* 矩阵输出区域 */
         .matrix-output {
             background: #0f172a;
             color: #e2e8f0;
-            border-radius: 16px;
-            padding: 12px;
+            border-radius: 18px;
+            padding: 14px 18px;
             font-family: 'Courier New', monospace;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             overflow-x: auto;
             margin-top: 12px;
+            border: 1px solid #1e2a44;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .matrix-output::before {
+            content: "P =";
+            position: absolute;
+            top: -10px;
+            left: 16px;
+            background: #0f172a;
+            padding: 0 8px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-family: 'Times New Roman', monospace;
         }
         .matrix-output pre {
             white-space: pre-wrap;
             word-break: break-all;
             margin: 0;
-            font-family: 'Times New Roman', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        .matrix-output pre span.row {
+            display: block;
+        }
+        .matrix-output pre .num {
+            color: #fcd34d;
+        }
+        .matrix-output pre .bracket {
+            color: #94a3b8;
         }
 
         .error-msg {
             color: #dc2626;
             background: #fee2e2;
-            padding: 8px;
-            border-radius: 10px;
+            padding: 10px 14px;
+            border-radius: 14px;
             font-size: 0.8rem;
             margin: 8px 0;
             font-family: 'Times New Roman', sans-serif;
+            border: 1px solid #fecaca;
         }
         .success-info {
-            color: #16a34a;
-            background: #e0f2e9;
-            padding: 8px 12px;
-            border-radius: 10px;
+            color: #065f46;
+            background: #d1fae5;
+            padding: 10px 14px;
+            border-radius: 14px;
             font-size: 0.8rem;
             font-family: 'Times New Roman', sans-serif;
             line-height: 1.6;
+            border: 1px solid #a7f3d0;
         }
 
         .draw-area {
             flex: 1;
-            background: #fefcf5;
-            border-top: 2px dashed #cbd5e1;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+            border: 1px solid #e9edf4;
             display: flex;
             flex-direction: column;
             padding: 14px 18px;
             gap: 12px;
             overflow: hidden;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            min-height: 0;
         }
 
         .risk-cards {
@@ -273,13 +389,19 @@
         .risk-card {
             flex: 1;
             min-width: 0;
-            background: #ffffff;
+            background: #f9fbfd;
             border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 10px 12px;
+            border-radius: 18px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .risk-card:hover {
+            border-color: #b9c8e0;
+            box-shadow: 0 8px 18px rgba(0,20,50,0.06);
         }
 
         .risk-card h4 {
@@ -288,7 +410,8 @@
             margin-bottom: 8px;
             border-left: 3px solid #f97316;
             padding-left: 8px;
-            color: #334155;
+            color: #1e293b;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
         }
 
         .risk-info {
@@ -298,13 +421,14 @@
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word; 
+            font-family: 'Times New Roman', monospace;
         }
 
         .risk-canvas-wrap {
             flex: 1;
             min-height: 0;
             position: relative;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -321,20 +445,22 @@
             color: #475569;
             margin-top: 6px;
             line-height: 1.4;
+            font-family: 'Times New Roman', sans-serif;
         }
 
         .legend-item {
             display: inline-flex;
             align-items: center;
-            margin-right: 8px;
+            margin-right: 10px;
         }
 
         .legend-color {
             width: 10px;
             height: 10px;
-            border-radius: 2px;
-            margin-right: 4px;
+            border-radius: 3px;
+            margin-right: 5px;
             display: inline-block;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         @media (max-width: 900px) {
@@ -359,6 +485,8 @@
             浏览器不支持视频播放。
         </video>
         <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
+        <div class="video-deco">● LIVE</div>
+        <div class="video-corner">Crane Monitor</div>
     </div>
 
     <!-- 右侧面板 -->
@@ -419,7 +547,7 @@
 
             <div id="resultPanel">
                 <div class="matrix-output">
-                    <strong>📷 3×4 相机投影矩阵 P</strong>
+                    <strong style="color:#94a3b8; font-size:0.7rem; font-family:'Times New Roman', monospace;">📷 3×4 相机投影矩阵 P</strong>
                     <pre id="cameraMatrixDisplay">尚未计算</pre>
                 </div>
                 <div id="calibStatus"></div>
@@ -454,8 +582,8 @@
                         <canvas id="riskTopCanvas" class="risk-canvas"></canvas>
                     </div>
                     <div class="risk-legend">
-                        <span class="legend-item"><span class="legend-color" style="background:rgba(249,115,22,0.35);"></span>Risk1 大臂扫过区域</span>
-                        <span class="legend-item"><span class="legend-color" style="background:rgba(59,130,246,0.35);"></span>Risk2 吊物外扩区域</span>
+                        <span class="legend-item"><span class="legend-color" style="background:rgba(249,115,22,0.4);"></span>Risk1 大臂扫过区域</span>
+                        <span class="legend-item"><span class="legend-color" style="background:rgba(59,130,246,0.4);"></span>Risk2 吊物外扩区域</span>
                         <span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>工人移动</span>
                     </div>
                 </div>
