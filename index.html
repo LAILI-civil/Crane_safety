@@ -292,11 +292,12 @@
         }
 
         .risk-info {
-            font-size: 0.75rem;
-            line-height: 1.55;
+            font-size: 0.7rem; 
+            line-height: 1.5;
             color: #334155;
             overflow-y: auto;
             white-space: pre-wrap;
+            word-break: break-word; 
         }
 
         .risk-canvas-wrap {
@@ -1103,48 +1104,23 @@
 
     function updateRiskParamPanel(demo) {
         const el = document.getElementById("riskParamInfo");
-
         if (!el) return;
 
+        // 每行一个参数，用 <br> 分隔，去掉多余空行
         el.innerHTML =
-    `工人起点像素:
-      (${demo.workerStartPixel[0].toFixed(3)}, ${demo.workerStartPixel[1].toFixed(3)})
-
-    工人终点像素:
-      (${demo.workerEndPixel[0].toFixed(3)}, ${demo.workerEndPixel[1].toFixed(3)})
-
-    工人起点地面:
-      (${demo.workerStartGround[0].toFixed(3)}, ${demo.workerStartGround[1].toFixed(3)}) m
-
-    工人终点地面:
-      (${demo.workerEndGround[0].toFixed(3)}, ${demo.workerEndGround[1].toFixed(3)}) m
-
-    起吊点地面:
-      (${demo.liftGround[0].toFixed(3)}, ${demo.liftGround[1].toFixed(3)}) m
-
-    落吊点地面:
-      (${demo.dropGround[0].toFixed(3)}, ${demo.dropGround[1].toFixed(3)}) m
-
-    塔吊旋转方向:
-      ${demo.direction === "ccw" ? "逆时针 ccw" : "顺时针 cw"}
-
-    扫过角度:
-      ${demo.sweep.DeltaDeg.toFixed(3)}°
-
-    大臂长度:
-      ${demo.boomLength.toFixed(3)} m
-
-    吊物危险半径:
-      ${demo.loadRadius.toFixed(3)} m
-
-    Risk1 大臂扫过:
-      ${demo.risk1Danger ? "危险" : "安全"}，采样点 ${demo.risk1Count}
-
-    Risk2 吊物外扩:
-      ${demo.risk2Danger ? "危险" : "安全"}，采样点 ${demo.risk2Count}
-
-    Risk2 最小距离:
-      ${demo.risk2MinDistance.toFixed(3)} m`;
+            `工人起点像素: (${demo.workerStartPixel[0].toFixed(3)}, ${demo.workerStartPixel[1].toFixed(3)})<br>` +
+            `工人终点像素: (${demo.workerEndPixel[0].toFixed(3)}, ${demo.workerEndPixel[1].toFixed(3)})<br>` +
+            `工人起点地面: (${demo.workerStartGround[0].toFixed(3)}, ${demo.workerStartGround[1].toFixed(3)}) m<br>` +
+            `工人终点地面: (${demo.workerEndGround[0].toFixed(3)}, ${demo.workerEndGround[1].toFixed(3)}) m<br>` +
+            `起吊点地面: (${demo.liftGround[0].toFixed(3)}, ${demo.liftGround[1].toFixed(3)}) m<br>` +
+            `落吊点地面: (${demo.dropGround[0].toFixed(3)}, ${demo.dropGround[1].toFixed(3)}) m<br>` +
+            `塔吊旋转方向: ${demo.direction === "ccw" ? "逆时针 ccw" : "顺时针 cw"}<br>` +
+            `扫过角度: ${demo.sweep.DeltaDeg.toFixed(3)}°<br>` +
+            `大臂长度: ${demo.boomLength.toFixed(3)} m<br>` +
+            `吊物危险半径: ${demo.loadRadius.toFixed(3)} m<br>` +
+            `Risk1 大臂扫过: ${demo.risk1Danger ? "危险" : "安全"}，采样点 ${demo.risk1Count}<br>` +
+            `Risk2 吊物外扩: ${demo.risk2Danger ? "危险" : "安全"}，采样点 ${demo.risk2Count}<br>` +
+            `Risk2 最小距离: ${demo.risk2MinDistance.toFixed(3)} m`;
     }
 
     function fitCanvas(canvas) {
