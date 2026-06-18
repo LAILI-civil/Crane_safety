@@ -1175,7 +1175,7 @@
         const Delta = sweep.Delta;
         const midR = 0.5 * (sweep.rA + sweep.rB);
 
-        // 塔臂很长时不画完整大臂，只画示意长度
+        // 塔臂不画完整长度，只画示意长度
         const boomDisplayLen = Math.min(14, Math.max(10, midR + 3));
 
         const boomStartEnd = [
@@ -1191,23 +1191,28 @@
         ];
 
         // ============================================================
-        // 2. 吊钩轨迹上的多条竖向虚线
+        // 2. 吊钩移动轨迹：上方轨迹 + 地面投影轨迹
         // ============================================================
-        const hookLines = [];
-        const hookCount = 7;
+        const hookTrackTop = [];
+        const hookTrackGround = [];
+        const hookSteps = 60;
 
-        for (let i = 0; i < hookCount; i++) {
-            const t = hookCount === 1 ? 0 : i / (hookCount - 1);
+        for (let i = 0; i <= hookSteps; i++) {
+            const t = i / hookSteps;
             const ang = startAng + sigma * Delta * t;
 
             const x = midR * Math.cos(ang);
             const y = midR * Math.sin(ang);
 
-            hookLines.push({
-                top: [x, y, boomHeight],
-                bottom: [x, y, 0]
-            });
+            // 吊钩在塔臂高度处的移动轨迹
+            hookTrackTop.push([x, y, boomHeight]);
+
+            // 吊钩在地面的投影轨迹
+            hookTrackGround.push([x, y, 0]);
         }
+
+        const hookStartTop = hookTrackTop[0];
+        const hookStartGround = hookTrackGround[0];
 
         // ============================================================
         // 3. 计算显示范围
@@ -1221,7 +1226,8 @@
             P1,
             A,
             B,
-            ...hookLines.flatMap(h => [h.top, h.bottom])
+            ...hookTrackTop,
+            ...hookTrackGround
         ];
 
         let minX = Infinity, maxX = -Infinity;
@@ -1295,6 +1301,35 @@
             ctx.restore();
         }
 
+        function polyline(points, color, lw = 1.5, dash = null) {
+            if (!points || points.length < 2) return;
+
+            ctx.save();
+
+            if (dash) {
+                ctx.setLineDash(dash);
+            } else {
+                ctx.setLineDash([]);
+            }
+
+            const first = project3D(points[0]);
+            ctx.beginPath();
+            ctx.moveTo(first[0], first[1]);
+
+            for (let i = 1; i < points.length; i++) {
+                const p = project3D(points[i]);
+                ctx.lineTo(p[0], p[1]);
+            }
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lw;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
         function point(p, color, r = 4, stroke = true) {
             const a = project3D(p);
 
@@ -1323,6 +1358,21 @@
             ctx.restore();
         }
 
+        function textCenter(p, txt, color = "#334155", offsetY = -10) {
+            const a = project3D(p);
+
+            ctx.save();
+            ctx.font = "bold 12px Times New Roman";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillStyle = color;
+            ctx.strokeStyle = "rgba(255,255,255,0.9)";
+            ctx.lineWidth = 3;
+            ctx.strokeText(txt, a[0], a[1] + offsetY);
+            ctx.fillText(txt, a[0], a[1] + offsetY);
+            ctx.restore();
+        }
+
         // ============================================================
         // 4. 背景
         // ============================================================
@@ -1332,16 +1382,13 @@
         // ============================================================
         // 5. 地面网格，淡灰色
         // ============================================================
-        ctx.strokeStyle = "#e2e8f0";
-        ctx.lineWidth = 1;
-
         const gridMin = -4;
         const gridMax = 16;
         const gridStep = 4;
 
         for (let g = gridMin; g <= gridMax; g += gridStep) {
-            line([g, gridMin, 0], [g, gridMax, 0], "rgba(148,163,184,0.28)", 1);
-            line([gridMin, g, 0], [gridMax, g, 0], "rgba(148,163,184,0.28)", 1);
+            line([g, gridMin, 0], [g, gridMax, 0], "rgba(148,163,184,0.25)", 1);
+            line([gridMin, g, 0], [gridMax, g, 0], "rgba(148,163,184,0.25)", 1);
         }
 
         // ============================================================
@@ -1351,7 +1398,6 @@
         // 主塔身
         line(O, towerTop, "#111827", 4);
 
-        // 塔身底部和顶部稍微加宽，形成结构感
         const towerHalf = 0.35;
         const baseZ = 0;
         const topZ = towerHeight;
@@ -1376,12 +1422,12 @@
             // 四根立柱
             line(towerBaseCorners[i], towerTopCorners[i], "#111827", 2);
 
-            // 底部和顶部框
+            // 底部框和顶部框
             line(towerBaseCorners[i], towerBaseCorners[j], "#111827", 1.5);
             line(towerTopCorners[i], towerTopCorners[j], "#111827", 1.5);
         }
 
-        // 塔身内部斜撑，简化画几段
+        // 塔身斜撑
         for (let k = 0; k < 4; k++) {
             const z0 = (towerHeight / 4) * k;
             const z1 = (towerHeight / 4) * (k + 1);
@@ -1390,66 +1436,70 @@
             line([towerHalf, -towerHalf, z0], [-towerHalf, towerHalf, z1], "rgba(17,24,39,0.75)", 1);
         }
 
+        // Tower 文字放在塔身正上方
+        textCenter([0, 0, towerHeight + 0.5], "Tower", "#111827", -2);
+
         // ============================================================
         // 7. 塔臂：两种黄色
         // ============================================================
 
-        // 起始塔臂，金黄色
+        // 起始塔臂，亮黄色
         line([0, 0, boomHeight], boomStartEnd, "#facc15", 4);
 
         // 终止塔臂，橙黄色
         line([0, 0, boomHeight], boomFinalEnd, "#f59e0b", 4);
 
-        // 为了让塔臂更像结构，加一条轻微偏移的副线
-        line([0, 0, boomHeight + 0.25], [boomStartEnd[0], boomStartEnd[1], boomStartEnd[2] + 0.25], "rgba(250,204,21,0.65)", 1.5);
-        line([0, 0, boomHeight + 0.25], [boomFinalEnd[0], boomFinalEnd[1], boomFinalEnd[2] + 0.25], "rgba(245,158,11,0.65)", 1.5);
+        // 塔臂副线，增强结构感
+        line(
+            [0, 0, boomHeight + 0.25],
+            [boomStartEnd[0], boomStartEnd[1], boomStartEnd[2] + 0.25],
+            "rgba(250,204,21,0.65)",
+            1.5
+        );
+
+        line(
+            [0, 0, boomHeight + 0.25],
+            [boomFinalEnd[0], boomFinalEnd[1], boomFinalEnd[2] + 0.25],
+            "rgba(245,158,11,0.65)",
+            1.5
+        );
 
         // ============================================================
-        // 8. 吊钩/吊物轨迹竖向虚线
+        // 8. 吊钩移动轨迹：两条蓝色细线
         // ============================================================
 
-        hookLines.forEach((h, idx) => {
-            const alpha = 0.28 + 0.07 * idx;
+        // 上方吊钩移动轨迹
+        polyline(hookTrackTop, "rgba(37,99,235,0.85)", 1.5);
 
-            line(
-                h.top,
-                h.bottom,
-                `rgba(37,99,235,${Math.min(alpha, 0.72)})`,
-                1.5,
-                [5, 5]
-            );
+        // 地面投影轨迹
+        polyline(hookTrackGround, "rgba(37,99,235,0.45)", 1.3);
 
-            // 地面吊物轨迹点
-            point(h.bottom, "rgba(37,99,235,0.75)", 2.2, false);
-        });
+        // 吊钩起始点标记
+        point(hookStartTop, "#2563eb", 3.5);
+        text(hookStartTop, "Hook", "#2563eb", 6, -6);
 
-        // 中间那条虚线稍微强调一下
-        const midHook = hookLines[Math.floor(hookLines.length / 2)];
-        if (midHook) {
-            line(midHook.top, midHook.bottom, "rgba(37,99,235,0.85)", 2, [6, 5]);
-        }
+        // 地面投影起点小点
+        point(hookStartGround, "rgba(37,99,235,0.55)", 2.5, false);
 
         // ============================================================
-        // 9. 工人在地面的移动轨迹：细绿色线
+        // 9. Worker 在地面的移动轨迹：细绿色
         // ============================================================
 
-        line(P0, P1, "#16a34a", 2);
+        line(P0, P1, "#16a34a", 1.6);
 
-        point(P0, "#86efac", 3);
+        // 工人起点和终点只画点，不在图上写 Worker
+        point(P0, "#86efac", 2.8);
         point(P1, "#16a34a", 3.5);
 
-        // 为了突出工人位置，在终点处标一个小圆点即可
-        text(P1, "Worker", "#15803d", 6, -6);
-
         // ============================================================
-        // 10. 少量必要文字，不显示 Risk 区域
+        // 10. 塔吊中心点
         // ============================================================
 
         point(O, "#111827", 3);
-        text(towerTop, "Tower", "#111827", 6, -6);
 
-        // 不再显示 Lift / Drop / Risk1 / Risk2 等信息
+        // 不再显示 Lift / Drop / Risk 区域文字
     }
+
 
     // ================================================================
     // 俯视图动画辅助绘图函数
