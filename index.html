@@ -1145,67 +1145,305 @@
     function drawRisk3D(demo) {
         const canvas = document.getElementById("risk3DCanvas");
         if (!canvas) return;
+
         const { ctx, width, height } = fitCanvas(canvas);
         ctx.clearRect(0, 0, width, height);
+
+        // ============================================================
+        // 1. 基础点位
+        // ============================================================
         const O = [0, 0, 0];
+
         const A = [demo.liftGround[0], demo.liftGround[1], 0];
         const B = [demo.dropGround[0], demo.dropGround[1], 0];
+
         const P0 = [demo.workerStartGround[0], demo.workerStartGround[1], 0];
         const P1 = [demo.workerEndGround[0], demo.workerEndGround[1], 0];
-        const towerTop = [0, 0, 12];
+
         const boomHeight = 10;
-        const allPoints = [O, A, B, P0, P1, towerTop, 
-                           [A[0], A[1], boomHeight], [B[0], B[1], boomHeight]];
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        const towerHeight = 12;
+        const towerTop = [0, 0, towerHeight];
+
+        const sweep = demo.sweep;
+        const startAng = Math.atan2(demo.liftGround[1], demo.liftGround[0]);
+        const sigma = sweep.sigma;
+        const Delta = sweep.Delta;
+        const midR = 0.5 * (sweep.rA + sweep.rB);
+
+        // 塔臂很长时不画完整大臂，只画示意长度
+        const boomDisplayLen = Math.min(14, Math.max(10, midR + 3));
+
+        const boomStartEnd = [
+            boomDisplayLen * Math.cos(startAng),
+            boomDisplayLen * Math.sin(startAng),
+            boomHeight
+        ];
+
+        const boomFinalEnd = [
+            boomDisplayLen * Math.cos(startAng + sigma * Delta),
+            boomDisplayLen * Math.sin(startAng + sigma * Delta),
+            boomHeight
+        ];
+
+        // ============================================================
+        // 2. 吊钩轨迹上的多条竖向虚线
+        // ============================================================
+        const hookLines = [];
+        const hookCount = 7;
+
+        for (let i = 0; i < hookCount; i++) {
+            const t = hookCount === 1 ? 0 : i / (hookCount - 1);
+            const ang = startAng + sigma * Delta * t;
+
+            const x = midR * Math.cos(ang);
+            const y = midR * Math.sin(ang);
+
+            hookLines.push({
+                top: [x, y, boomHeight],
+                bottom: [x, y, 0]
+            });
+        }
+
+        // ============================================================
+        // 3. 计算显示范围
+        // ============================================================
+        const allPoints = [
+            O,
+            towerTop,
+            boomStartEnd,
+            boomFinalEnd,
+            P0,
+            P1,
+            A,
+            B,
+            ...hookLines.flatMap(h => [h.top, h.bottom])
+        ];
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        let minZ = Infinity, maxZ = -Infinity;
+
         allPoints.forEach(p => {
-            if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
-            if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
-            if (p[2] < minZ) minZ = p[2]; if (p[2] > maxZ) maxZ = p[2];
+            minX = Math.min(minX, p[0]);
+            maxX = Math.max(maxX, p[0]);
+            minY = Math.min(minY, p[1]);
+            maxY = Math.max(maxY, p[1]);
+            minZ = Math.min(minZ, p[2]);
+            maxZ = Math.max(maxZ, p[2]);
         });
-        const pad = 1.5;
-        minX -= pad; maxX += pad; minY -= pad; maxY += pad; minZ -= pad; maxZ += pad;
-        const spanX = maxX - minX || 1, spanY = maxY - minY || 1, spanZ = maxZ - minZ || 1;
-        const projX = 1.0, projY = 0.55, projZ = 0.45;
-        const scaleX = (width) / (spanX + projY * spanY);
-        const scaleZ = (height) / (projZ * spanY + spanZ);
-        const scale = Math.min(scaleX, scaleZ) * 0.9;
-        const cx = 0.5 * (minX + maxX), cy = 0.5 * (minY + maxY), cz = 0.5 * (minZ + maxZ);
+
+        const pad = 2.0;
+        minX -= pad;
+        maxX += pad;
+        minY -= pad;
+        maxY += pad;
+        minZ = Math.min(0, minZ);
+        maxZ += pad;
+
+        const spanX = maxX - minX || 1;
+        const spanY = maxY - minY || 1;
+        const spanZ = maxZ - minZ || 1;
+
+        // 斜投影参数
+        const projY = 0.55;
+        const projZ = 0.48;
+
+        const scaleX = width / (spanX + projY * spanY);
+        const scaleZ = height / (projZ * spanY + spanZ);
+        const scale = Math.min(scaleX, scaleZ) * 0.86;
+
+        const cx = 0.5 * (minX + maxX);
+        const cy = 0.5 * (minY + maxY);
+        const cz = 0.5 * (minZ + maxZ);
+
         function project3D(p) {
-            const x = p[0] - cx, y = p[1] - cy, z = p[2] - cz;
-            const px = width/2 + scale * (x - projY * y);
-            const py = height/2 - scale * (projZ * y + z);
+            const x = p[0] - cx;
+            const y = p[1] - cy;
+            const z = p[2] - cz;
+
+            const px = width / 2 + scale * (x - projY * y);
+            const py = height / 2 - scale * (projZ * y + z);
+
             return [px, py];
         }
-        function line(p, q, color, lw = 2) {
-            const a = project3D(p), b = project3D(q);
-            ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
-            ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
-        }
-        function point(p, color, r = 4) {
+
+        function line(p, q, color, lw = 2, dash = null) {
             const a = project3D(p);
-            ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
-            ctx.fillStyle = color; ctx.fill();
+            const b = project3D(q);
+
+            ctx.save();
+
+            if (dash) {
+                ctx.setLineDash(dash);
+            } else {
+                ctx.setLineDash([]);
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lw;
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            ctx.restore();
         }
+
+        function point(p, color, r = 4, stroke = true) {
+            const a = project3D(p);
+
+            ctx.beginPath();
+            ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            if (stroke) {
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
         function text(p, txt, color = "#334155", offsetX = 5, offsetY = -5) {
             const a = project3D(p);
-            ctx.fillStyle = color; ctx.font = "12px Times New Roman";
+
+            ctx.save();
+            ctx.font = "12px Times New Roman";
+            ctx.fillStyle = color;
+            ctx.strokeStyle = "rgba(255,255,255,0.85)";
+            ctx.lineWidth = 3;
+            ctx.strokeText(txt, a[0] + offsetX, a[1] + offsetY);
             ctx.fillText(txt, a[0] + offsetX, a[1] + offsetY);
+            ctx.restore();
         }
-        // 绘图
-        ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1;
-        for (let i = -5; i <= 15; i += 5) {
-            line([i, -5, 0], [i, 15, 0], "#e2e8f0", 1);
-            line([-5, i, 0], [15, i, 0], "#e2e8f0", 1);
+
+        // ============================================================
+        // 4. 背景
+        // ============================================================
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(0, 0, width, height);
+
+        // ============================================================
+        // 5. 地面网格，淡灰色
+        // ============================================================
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+
+        const gridMin = -4;
+        const gridMax = 16;
+        const gridStep = 4;
+
+        for (let g = gridMin; g <= gridMax; g += gridStep) {
+            line([g, gridMin, 0], [g, gridMax, 0], "rgba(148,163,184,0.28)", 1);
+            line([gridMin, g, 0], [gridMax, g, 0], "rgba(148,163,184,0.28)", 1);
         }
-        line(O, towerTop, "#64748b", 3);
-        line([0, 0, boomHeight], [A[0], A[1], boomHeight], "#2563eb", 3);
-        line([0, 0, boomHeight], [B[0], B[1], boomHeight], "#dc2626", 3);
-        line(O, A, "rgba(37,99,235,0.35)", 2);
-        line(O, B, "rgba(220,38,38,0.35)", 2);
-        line(P0, P1, "#16a34a", 5);
-        point(O, "#0f172a", 4); point(A, "#2563eb", 4); point(B, "#dc2626", 4);
-        point(P0, "#16a34a", 4); point(P1, "#22c55e", 4);
-        text(O, "O"); text(A, "Lift", "#2563eb"); text(B, "Drop", "#dc2626"); text(P1, "Worker", "#16a34a");
+
+        // ============================================================
+        // 6. 塔身：黑色
+        // ============================================================
+
+        // 主塔身
+        line(O, towerTop, "#111827", 4);
+
+        // 塔身底部和顶部稍微加宽，形成结构感
+        const towerHalf = 0.35;
+        const baseZ = 0;
+        const topZ = towerHeight;
+
+        const towerBaseCorners = [
+            [-towerHalf, -towerHalf, baseZ],
+            [ towerHalf, -towerHalf, baseZ],
+            [ towerHalf,  towerHalf, baseZ],
+            [-towerHalf,  towerHalf, baseZ]
+        ];
+
+        const towerTopCorners = [
+            [-towerHalf, -towerHalf, topZ],
+            [ towerHalf, -towerHalf, topZ],
+            [ towerHalf,  towerHalf, topZ],
+            [-towerHalf,  towerHalf, topZ]
+        ];
+
+        for (let i = 0; i < 4; i++) {
+            const j = (i + 1) % 4;
+
+            // 四根立柱
+            line(towerBaseCorners[i], towerTopCorners[i], "#111827", 2);
+
+            // 底部和顶部框
+            line(towerBaseCorners[i], towerBaseCorners[j], "#111827", 1.5);
+            line(towerTopCorners[i], towerTopCorners[j], "#111827", 1.5);
+        }
+
+        // 塔身内部斜撑，简化画几段
+        for (let k = 0; k < 4; k++) {
+            const z0 = (towerHeight / 4) * k;
+            const z1 = (towerHeight / 4) * (k + 1);
+
+            line([-towerHalf, -towerHalf, z0], [towerHalf, towerHalf, z1], "rgba(17,24,39,0.75)", 1);
+            line([towerHalf, -towerHalf, z0], [-towerHalf, towerHalf, z1], "rgba(17,24,39,0.75)", 1);
+        }
+
+        // ============================================================
+        // 7. 塔臂：两种黄色
+        // ============================================================
+
+        // 起始塔臂，金黄色
+        line([0, 0, boomHeight], boomStartEnd, "#facc15", 4);
+
+        // 终止塔臂，橙黄色
+        line([0, 0, boomHeight], boomFinalEnd, "#f59e0b", 4);
+
+        // 为了让塔臂更像结构，加一条轻微偏移的副线
+        line([0, 0, boomHeight + 0.25], [boomStartEnd[0], boomStartEnd[1], boomStartEnd[2] + 0.25], "rgba(250,204,21,0.65)", 1.5);
+        line([0, 0, boomHeight + 0.25], [boomFinalEnd[0], boomFinalEnd[1], boomFinalEnd[2] + 0.25], "rgba(245,158,11,0.65)", 1.5);
+
+        // ============================================================
+        // 8. 吊钩/吊物轨迹竖向虚线
+        // ============================================================
+
+        hookLines.forEach((h, idx) => {
+            const alpha = 0.28 + 0.07 * idx;
+
+            line(
+                h.top,
+                h.bottom,
+                `rgba(37,99,235,${Math.min(alpha, 0.72)})`,
+                1.5,
+                [5, 5]
+            );
+
+            // 地面吊物轨迹点
+            point(h.bottom, "rgba(37,99,235,0.75)", 2.2, false);
+        });
+
+        // 中间那条虚线稍微强调一下
+        const midHook = hookLines[Math.floor(hookLines.length / 2)];
+        if (midHook) {
+            line(midHook.top, midHook.bottom, "rgba(37,99,235,0.85)", 2, [6, 5]);
+        }
+
+        // ============================================================
+        // 9. 工人在地面的移动轨迹：细绿色线
+        // ============================================================
+
+        line(P0, P1, "#16a34a", 2);
+
+        point(P0, "#86efac", 3);
+        point(P1, "#16a34a", 3.5);
+
+        // 为了突出工人位置，在终点处标一个小圆点即可
+        text(P1, "Worker", "#15803d", 6, -6);
+
+        // ============================================================
+        // 10. 少量必要文字，不显示 Risk 区域
+        // ============================================================
+
+        point(O, "#111827", 3);
+        text(towerTop, "Tower", "#111827", 6, -6);
+
+        // 不再显示 Lift / Drop / Risk1 / Risk2 等信息
     }
 
     // ================================================================
