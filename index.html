@@ -86,7 +86,7 @@
             letter-spacing: 0.3px;
         }
 
-        /* ===== 新增：视频选择控制栏 ===== */
+        /* ===== 新增：监控选择控制栏 ===== */
         .video-control-bar {
             position: absolute;
             top: 16px;
@@ -628,14 +628,14 @@
     <div class="split-layout">
         <!-- 左侧视频 -->
         <div class="left-video">
-            <!-- 视频选择控制栏（新增） -->
+            <!-- 监控选择控制栏（修改） -->
             <div class="video-control-bar" id="videoControlBar">
-                <span class="ctrl-label">🎬 视频</span>
+                <span class="ctrl-label">🎬 监控</span> <!-- 视频 → 监控 -->
                 <select id="videoSelect">
                     <option value="">加载中…</option>
                 </select>
                 <span class="video-count" id="videoCount"></span>
-                <button class="refresh-btn" id="refreshVideoList" title="刷新视频列表">⟳</button>
+                <button class="refresh-btn" id="refreshVideoList" title="刷新监控列表">⟳</button>
             </div>
 
             <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
@@ -755,7 +755,7 @@
 
     <script>
         // ================================================================
-        // 0. 视频列表管理（新增）
+        // 0. 监控列表管理（修改）
         // ================================================================
 
         // 仓库信息 —— 根据您的 GitHub 仓库自动适配
@@ -763,7 +763,7 @@
         const REPO_NAME = 'Crane_safety';
         const BRANCH = 'main';
 
-        // 视频文件扩展名（不区分大小写）
+        // 监控文件扩展名（不区分大小写）
         const VIDEO_EXTS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.m4v', '.mpg', '.mpeg'];
 
         // DOM 引用
@@ -772,10 +772,11 @@
         const videoCountEl = document.getElementById('videoCount');
         const refreshBtn = document.getElementById('refreshVideoList');
 
-        // 当前视频列表缓存
+        // 当前监控列表缓存 & 名称映射
         let cachedVideoList = [];
+        window.videoNameToDisplay = {}; // 文件名 -> 显示名称映射
 
-        // 判断是否为视频文件
+        // 判断是否为监控文件
         function isVideoFile(filename) {
             const lower = filename.toLowerCase();
             return VIDEO_EXTS.some(ext => lower.endsWith(ext));
@@ -792,7 +793,7 @@
             if (!Array.isArray(data)) {
                 throw new Error('GitHub API 返回数据格式异常');
             }
-            // 过滤出视频文件
+            // 过滤出监控文件
             const videos = data
                 .filter(item => item.type === 'file' && isVideoFile(item.name))
                 .map(item => item.name)
@@ -800,12 +801,12 @@
             return videos;
         }
 
-        // 加载视频列表并填充下拉菜单
+        // 加载监控列表并填充下拉菜单
         async function loadVideoList() {
             try {
                 // 显示加载状态
                 videoSelect.disabled = true;
-                videoSelect.innerHTML = '<option value="">加载中…</option>';
+                videoSelect.innerHTML = '<option value="">加载监控中…</option>';
                 videoCountEl.textContent = '…';
 
                 const videos = await fetchGitHubFileList();
@@ -816,31 +817,36 @@
                 if (videos.length === 0) {
                     const opt = document.createElement('option');
                     opt.value = '';
-                    opt.textContent = '⚠️ 未找到视频文件';
+                    opt.textContent = '⚠️ 未找到监控文件';
                     videoSelect.appendChild(opt);
                     videoCountEl.textContent = '0';
                     videoSelect.disabled = true;
                     return;
                 }
 
-                // 获取当前选中的视频（用于保持选中状态）
+                // 获取当前选中的监控（用于保持选中状态）
                 const currentVal = videoSelect.value;
 
-                videos.forEach(name => {
+                // 清空旧映射
+                window.videoNameToDisplay = {};
+
+                videos.forEach((name, index) => {
                     const opt = document.createElement('option');
                     opt.value = name;
-                    opt.textContent = name;
+                    const displayName = `Monitoring ${index + 1}`; // 显示为 Monitoring 1,2,3...
+                    window.videoNameToDisplay[name] = displayName;
+                    opt.textContent = displayName;
                     videoSelect.appendChild(opt);
                 });
 
-                videoCountEl.textContent = `${videos.length} 个`;
+                videoCountEl.textContent = `${videos.length} 个监控`;
 
                 // 如果当前选中的值在列表中，保持选中；否则选中第一个
                 if (currentVal && videos.includes(currentVal)) {
                     videoSelect.value = currentVal;
                 } else {
                     videoSelect.value = videos[0];
-                    // 自动加载第一个视频
+                    // 自动加载第一个监控
                     switchVideo(videos[0]);
                 }
 
@@ -848,7 +854,7 @@
                 videoSelect.style.color = '#fff';
 
             } catch (err) {
-                console.error('加载视频列表失败:', err);
+                console.error('加载监控列表失败:', err);
                 videoSelect.innerHTML = '';
                 const opt = document.createElement('option');
                 opt.value = '';
@@ -857,19 +863,21 @@
                 videoCountEl.textContent = '?';
                 videoSelect.disabled = true;
 
-                // 降级：尝试使用默认视频
-                const defaultVideo = 'Crane_working_1.mp4';
-                // 如果默认视频不存在，尝试硬编码备用列表
+                // 降级：尝试使用默认监控
                 const fallbackList = ['Crane_working_1.mp4', 'Crane_working_2.mp4'];
                 let found = false;
+                window.videoNameToDisplay = {};
                 for (const name of fallbackList) {
                     try {
                         const testResp = await fetch(`./${name}`, { method: 'HEAD' });
                         if (testResp.ok) {
-                            // 这个视频存在，添加到下拉
                             const opt2 = document.createElement('option');
                             opt2.value = name;
-                            opt2.textContent = name;
+                            let display = name;
+                            if (name === 'Crane_working_1.mp4') display = 'Monitoring 1';
+                            else if (name === 'Crane_working_2.mp4') display = 'Monitoring 2';
+                            window.videoNameToDisplay[name] = display;
+                            opt2.textContent = display;
                             videoSelect.appendChild(opt2);
                             if (!found) {
                                 videoSelect.value = name;
@@ -887,14 +895,18 @@
             }
         }
 
-        // 切换视频
+        // 切换监控
         function switchVideo(filename) {
             if (!filename) return;
+            const displayName = window.videoNameToDisplay[filename] || filename; // 获取显示名
+
             // 更新 video src
             const currentSrc = videoEl.src;
             const newSrc = `./${filename}`;
-            // 如果已经是同一个视频，不重复加载
             if (currentSrc.endsWith(filename) || currentSrc === newSrc) {
+                // 如果已经相同，只更新提示
+                document.getElementById('pickTip').innerHTML =
+                    `🎬 当前: ${displayName}  |  ✏️ 点击「选取」按钮，再点击视频获取坐标`;
                 return;
             }
             videoEl.src = newSrc;
@@ -904,11 +916,12 @@
                 // 静默处理自动播放被阻止
                 console.log('自动播放被阻止，用户点击播放即可');
             });
-            // 更新 pick-tip 提示
-            document.getElementById('pickTip').innerHTML = `🎬 当前: ${filename}  |  ✏️ 点击「选取」按钮，再点击视频获取坐标`;
+            // 更新 pick-tip 提示（使用显示名）
+            document.getElementById('pickTip').innerHTML =
+                `🎬 当前: ${displayName}  |  ✏️ 点击「选取」按钮，再点击视频获取坐标`;
         }
 
-        // 刷新视频列表
+        // 刷新监控列表
         async function refreshVideoList() {
             refreshBtn.style.transform = 'rotate(360deg)';
             await loadVideoList();
@@ -917,7 +930,7 @@
             }, 400);
         }
 
-        // 视频选择 change 事件
+        // 监控选择 change 事件
         videoSelect.addEventListener('change', function() {
             const selected = this.value;
             if (selected) {
@@ -928,22 +941,22 @@
         // 刷新按钮事件
         refreshBtn.addEventListener('click', refreshVideoList);
 
-        // 页面加载时获取视频列表
+        // 页面加载时获取监控列表
         window.addEventListener('DOMContentLoaded', () => {
             loadVideoList();
         });
 
-        // 当视频加载失败时，尝试用列表中的其他视频
+        // 当监控加载失败时，尝试用列表中的其他监控
         videoEl.addEventListener('error', function() {
             const currentSrc = this.src;
             const currentName = currentSrc.split('/').pop();
-            // 如果当前视频在列表中，尝试切换到下一个
+            // 如果当前监控在列表中，尝试切换到下一个
             const idx = cachedVideoList.indexOf(currentName);
             if (idx !== -1 && cachedVideoList.length > 1) {
                 const nextIdx = (idx + 1) % cachedVideoList.length;
                 const nextName = cachedVideoList[nextIdx];
                 if (nextName !== currentName) {
-                    console.warn(`视频 ${currentName} 加载失败，自动切换到 ${nextName}`);
+                    console.warn(`监控 ${currentName} 加载失败，自动切换到 ${nextName}`);
                     videoSelect.value = nextName;
                     switchVideo(nextName);
                 }
@@ -2371,7 +2384,7 @@
             document.getElementById('pickTip').innerHTML = '✅ 坐标已选取';
             setTimeout(() => {
                 if (!activePickMode) document.getElementById('pickTip').innerHTML =
-                '✏️ 点击「选取」按钮，再点击视频获取坐标';
+                    '✏️ 点击「选取」按钮，再点击视频获取坐标';
             }, 1500);
         }
         video.addEventListener('click', onVideoClick);
