@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js">
     </script>
     <style>
-        /* 全局重置与字体 */
+        /* ===== 原有样式（保持不变） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -217,7 +217,169 @@
             margin-left: 10px;
         }
 
-        /* 三列卡片横向布局 */
+        /* ===== 新增：时间点分析功能区 ===== */
+        .boom-analysis {
+            background: #f1f5f9;
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border: 1px solid #dbe1ea;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .boom-analysis .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .boom-analysis .analysis-header h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            margin: 0;
+            border-left: 3px solid #f59e0b;
+            padding-left: 8px;
+        }
+        .boom-analysis .analysis-header button {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            transition: transform 0.15s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        .boom-analysis .analysis-header button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+        }
+        .boom-analysis .analysis-header button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .boom-analysis .analysis-header .status-text {
+            font-size: 0.8rem;
+            color: #475569;
+            font-family: 'Times New Roman', sans-serif;
+        }
+        .boom-analysis .progress-wrap {
+            margin-top: 10px;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .boom-analysis .progress-wrap .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .boom-analysis .result-times {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+            font-family: 'Times New Roman', monospace;
+            color: #0f172a;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            min-height: 30px;
+        }
+        .boom-analysis .result-times .time-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .boom-analysis .result-times .time-item .label {
+            font-weight: 600;
+            color: #334155;
+        }
+        .boom-analysis .result-times .time-item .value {
+            color: #0f172a;
+            background: #f1f5f9;
+            padding: 0 6px;
+            border-radius: 4px;
+        }
+        .boom-analysis .result-times .time-item .marker-color {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        /* ===== 视频自定义进度条标记（覆盖在视频底部） ===== */
+        .custom-progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            pointer-events: none;
+            z-index: 15;
+            /* 保留视频控件交互，避免遮挡 */;
+        }
+        .custom-progress-container .progress-track {
+            position: absolute;
+            bottom: 6px;
+            left: 10px;
+            right: 10px;
+            height: 4px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .custom-progress-container .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+            transition: width 0.1s;
+        }
+        .custom-progress-container .markers {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 24px;
+            pointer-events: none;
+        }
+        .custom-progress-container .marker {
+            position: absolute;
+            width: 3px;
+            height: 18px;
+            background: #facc15;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            top: 0;
+            transition: left 0.1s;
+            box-shadow: 0 0 6px rgba(250,204,21,0.6);
+        }
+        .custom-progress-container .marker.lift {
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34,197,94,0.6);
+        }
+        .custom-progress-container .marker.place {
+            background: #ef4444;
+            box-shadow: 0 0 6px rgba(239,68,68,0.6);
+        }
+
+        /* ===== 三列卡片等原有样式 ===== */
         .horizontal-cards {
             display: flex;
             flex-wrap: nowrap;
@@ -535,6 +697,7 @@
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
+        /* 响应式 */
         @media (max-width: 900px) {
             .horizontal-cards {
                 overflow-x: auto;
@@ -580,8 +743,16 @@
                 top: 56px;
                 right: 12px;
             }
+            .boom-analysis .analysis-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .boom-analysis .analysis-header button {
+                width: 100%;
+                justify-content: center;
+            }
         }
-
         @media (max-width: 600px) {
             .video-control-bar {
                 top: 8px;
@@ -639,12 +810,39 @@
             </video>
             <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
             <div class="video-deco">● LIVE</div>
+
+            <!-- ===== 新增：自定义进度条及标记容器 ===== -->
+            <div class="custom-progress-container" id="customProgressContainer">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="markers" id="markersContainer">
+                    <!-- 标记将动态添加 -->
+                </div>
+            </div>
         </div>
 
         <!-- 右侧面板 -->
         <div class="right-panel">
             <div class="calib-area">
                 <h3>📐 相机标定 &amp; 3×4 投影矩阵</h3>
+
+                <!-- ===== 新增：塔吊运行时间点分析功能区 ===== -->
+                <div class="boom-analysis" id="boomAnalysis">
+                    <div class="analysis-header">
+                        <h4>⏱️ 塔吊运行时间点分析</h4>
+                        <button id="analyzeBtn">🔍 分析吊塔运行时间点</button>
+                        <span class="status-text" id="analysisStatus">就绪</span>
+                    </div>
+                    <div class="progress-wrap">
+                        <div class="progress-bar" id="analysisProgress" style="width:0%;"></div>
+                    </div>
+                    <div class="result-times" id="resultTimes">
+                        <span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>
+                    </div>
+                </div>
+
+                <!-- 原有标定卡片区域 -->
                 <div class="horizontal-cards">
 
                     <!-- 卡片1: 塔吊底座参数 -->
@@ -705,13 +903,11 @@
             </div>
             <div class="draw-area">
                 <div class="risk-cards">
-
                     <!-- 模块1：参数 -->
                     <div class="risk-card">
                         <h4>👷 工人与塔吊运动参数</h4>
                         <div id="riskParamInfo" class="risk-info">请先点击上方“计算相机矩阵”。</div>
                     </div>
-
                     <!-- 模块2：简单3D示意 -->
                     <div class="risk-card">
                         <h4>🏗️ 3D 坐标示意</h4>
@@ -724,7 +920,6 @@
                             </span>
                         </div>
                     </div>
-
                     <!-- 模块3：俯视危险区域 -->
                     <div class="risk-card">
                         <h4>📍 俯视风险区域</h4>
@@ -748,11 +943,12 @@
         </div>
     </div>
 
+    <!-- ================================================================ -->
+    <!-- JavaScript 部分（原有 + 新增） -->
     <script>
         // ================================================================
-        // 0. 监控列表管理
+        // 0. 监控列表管理（原有，但修改了默认视频选择为 Crane_working_2）
         // ================================================================
-
         const REPO_OWNER = 'LAILI-civil';
         const REPO_NAME = 'Crane_safety';
         const BRANCH = 'main';
@@ -825,8 +1021,11 @@
                 if (currentVal && videos.includes(currentVal)) {
                     videoSelect.value = currentVal;
                 } else {
-                    videoSelect.value = videos[1];
-                    switchVideo(videos[1]);
+                    // 优先选择 Crane_working_2.mp4
+                    const preferred = 'Crane_working_2.mp4';
+                    const defaultVideo = videos.includes(preferred) ? preferred : videos[0];
+                    videoSelect.value = defaultVideo;
+                    switchVideo(defaultVideo);
                 }
 
                 videoSelect.disabled = false;
@@ -842,7 +1041,7 @@
                 videoCountEl.textContent = '?';
                 videoSelect.disabled = true;
 
-                const fallbackList = ['Crane_working_1.mp4', 'Crane_working_2.mp4'];
+                const fallbackList = ['Crane_working_2.mp4', 'Crane_working_1.mp4'];
                 let found = false;
                 window.videoNameToDisplay = {};
                 for (const name of fallbackList) {
@@ -925,7 +1124,7 @@
         });
 
         // ================================================================
-        // 1. 基础数学工具
+        // 1. 基础数学工具（原有，保持不变）
         // ================================================================
 
         function leastSquares(A, b) {
@@ -1066,7 +1265,7 @@
         }
 
         // ================================================================
-        // 2. 塔吊底座鲁棒补全逻辑
+        // 2. 塔吊底座鲁棒补全逻辑（原有）
         // ================================================================
 
         const BASE_LABELS = ["B1", "B2", "B3", "B4"];
@@ -1239,7 +1438,7 @@
         }
 
         // ================================================================
-        // 3. 其他核心函数
+        // 3. 其他核心函数（原有）
         // ================================================================
 
         function estimateP3(H0, verticalPoints) {
@@ -1315,7 +1514,7 @@
         }
 
         // ================================================================
-        // 4. Risk Demo 绘图逻辑
+        // 4. Risk Demo 绘图逻辑（原有，完整保留）
         // ================================================================
 
         function getH0FromP(P) {
@@ -1525,7 +1724,6 @@
             };
         }
 
-        // 3D 绘图（省略细节，保留原实现）
         function drawRisk3D(demo) {
             const canvas = document.getElementById("risk3DCanvas");
             if (!canvas) return;
@@ -1533,7 +1731,6 @@
             const { ctx, width, height } = fitCanvas(canvas);
             ctx.clearRect(0, 0, width, height);
 
-            // 基础点位
             const O = [0, 0, 0];
             const A = [demo.liftGround[0], demo.liftGround[1], 0];
             const B = [demo.dropGround[0], demo.dropGround[1], 0];
@@ -1559,7 +1756,6 @@
                 boomHeight
             ];
 
-            // 吊钩轨迹
             const hookTrackTop = [];
             const hookTrackGround = [];
             const hookSteps = 60;
@@ -1587,7 +1783,6 @@
                 });
             }
 
-            // 计算范围
             const allPoints = [
                 O, towerTop, boomStartEnd, boomFinalEnd, P0, P1, A, B,
                 ...hookTrackTop, ...hookTrackGround,
@@ -1694,7 +1889,6 @@
                 ctx.restore();
             }
 
-            // 绘制背景、网格、塔身、塔臂、吊钩轨迹、worker轨迹等
             ctx.fillStyle = "#f8fafc";
             ctx.fillRect(0, 0, width, height);
 
@@ -1754,7 +1948,6 @@
             point(O, "#111827", 3);
         }
 
-        // 俯视图辅助函数
         function drawArrowLineOnTop(ctx, map, p, q, color = "#16a34a", lw = 4) {
             const a = map(p);
             const b = map(q);
@@ -1919,7 +2112,6 @@
             ctx.fillStyle = "#f8fafc";
             ctx.fillRect(0, 0, width, height);
 
-            // 全扇形
             ctx.beginPath();
             let center = map(O);
             ctx.moveTo(center[0], center[1]);
@@ -1931,7 +2123,6 @@
             ctx.fillStyle = "rgba(249,115,22,0.12)";
             ctx.fill();
 
-            // 当前进度扇形
             ctx.beginPath();
             center = map(O);
             ctx.moveTo(center[0], center[1]);
@@ -1943,7 +2134,6 @@
             ctx.fillStyle = "rgba(249,115,22,0.32)";
             ctx.fill();
 
-            // 吊物轨迹（背景）
             ctx.beginPath();
             for (let i = 0; i < loadTrackPoints.length; i++) {
                 const q = map(loadTrackPoints[i]);
@@ -1959,7 +2149,6 @@
             ctx.lineJoin = "round";
             ctx.stroke();
 
-            // 当前吊物轨迹
             ctx.beginPath();
             for (let i = 0; i < currentLoadTrackPoints.length; i++) {
                 const q = map(currentLoadTrackPoints[i]);
@@ -1972,13 +2161,11 @@
             ctx.lineJoin = "round";
             ctx.stroke();
 
-            // 角度标注
             const angleArrowR = boomLength * 0.99;
             const angleTextR = boomLength * 0.48;
             drawAngleMarkOnTop(ctx, map, O, angleArrowR, startAng, sigma, Delta * progress,
                 `${sweep.DeltaDeg.toFixed(1)}°`, angleTextR, Delta);
 
-            // 工人轨迹
             drawArrowLineOnTop(ctx, map, P0, P1, "rgba(22,163,74,0.28)", 2);
             if (progress > 0.02) {
                 drawArrowLineOnTop(ctx, map, P0, workerNow, "#16a34a", 2);
@@ -2028,7 +2215,7 @@
         }
 
         // ================================================================
-        // 5. 主计算流程
+        // 5. 主计算流程（原有）
         // ================================================================
         function calibrateCamera() {
             try {
@@ -2124,7 +2311,7 @@
         }
 
         // ================================================================
-        // 6. 视频交互选取
+        // 6. 视频交互选取（原有）
         // ================================================================
         let activePickMode = null,
             pickCallback = null;
@@ -2229,6 +2416,206 @@
                 if (window.lastPmat) renderMatrix(window.lastPmat);
             });
         });
+
+        // ================================================================
+        // 7. 新增：塔吊运行时间点分析功能
+        // ================================================================
+
+        // 分析按钮及UI元素
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const analysisProgress = document.getElementById('analysisProgress');
+        const resultTimesDiv = document.getElementById('resultTimes');
+        const progressFill = document.getElementById('progressFill');
+        const markersContainer = document.getElementById('markersContainer');
+
+        // 时间点标记颜色
+        const MARKER_COLORS = {
+            boom_start: '#facc15',
+            boom_end: '#f97316',
+            lift: '#22c55e',
+            place: '#ef4444'
+        };
+
+        // 存储当前分析结果
+        let currentBoomTimes = null;
+
+        // 视频时间更新时更新进度条和标记
+        function updateVideoProgress() {
+            if (!videoEl.duration) return;
+            const ratio = videoEl.currentTime / videoEl.duration;
+            progressFill.style.width = (ratio * 100) + '%';
+
+            // 更新标记位置
+            if (currentBoomTimes) {
+                const markers = markersContainer.querySelectorAll('.marker');
+                markers.forEach(marker => {
+                    const time = parseFloat(marker.dataset.time);
+                    if (time !== undefined && videoEl.duration > 0) {
+                        const pos = (time / videoEl.duration) * 100;
+                        marker.style.left = pos + '%';
+                    }
+                });
+            }
+        }
+
+        // 清除旧标记
+        function clearMarkers() {
+            markersContainer.innerHTML = '';
+        }
+
+        // 创建时间标记
+        function createMarker(time, label, className = '') {
+            const marker = document.createElement('div');
+            marker.className = `marker ${className}`;
+            marker.dataset.time = time;
+            marker.title = `${label}: ${time.toFixed(3)}s`;
+            // 位置在视频加载后通过 updateVideoProgress 设置
+            return marker;
+        }
+
+        // 更新结果展示区
+        function displayResults(times) {
+            if (!times) {
+                resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
+                return;
+            }
+            const items = [
+                { key: 'boom_start', label: '吊臂开始转动', cls: '' },
+                { key: 'boom_end', label: '吊臂结束转动', cls: '' },
+                { key: 'lift', label: '起吊候选', cls: 'lift' },
+                { key: 'place', label: '落吊候选', cls: 'place' }
+            ];
+            let html = '';
+            for (const item of items) {
+                const val = times[item.key];
+                if (val !== null && val !== undefined) {
+                    const color = MARKER_COLORS[item.key] || '#94a3b8';
+                    html += `<span class="time-item">
+                                <span class="marker-color" style="background:${color};"></span>
+                                <span class="label">${item.label}:</span>
+                                <span class="value">${val.toFixed(3)}s (${formatTime(val)})</span>
+                            </span>`;
+                } else {
+                    html += `<span class="time-item" style="color:#94a3b8;">
+                                <span class="label">${item.label}:</span>
+                                <span class="value">未检测到</span>
+                            </span>`;
+                }
+            }
+            resultTimesDiv.innerHTML = html;
+
+            // 创建视频进度条标记
+            clearMarkers();
+            const markerMap = [
+                { key: 'boom_start', cls: '', label: '开始' },
+                { key: 'boom_end', cls: '', label: '结束' },
+                { key: 'lift', cls: 'lift', label: '起吊' },
+                { key: 'place', cls: 'place', label: '落吊' }
+            ];
+            for (const m of markerMap) {
+                const val = times[m.key];
+                if (val !== null && val !== undefined) {
+                    const marker = createMarker(val, m.label, m.cls);
+                    markersContainer.appendChild(marker);
+                }
+            }
+            // 强制更新位置
+            updateVideoProgress();
+        }
+
+        // 格式化时间 (mm:ss.s)
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = (sec % 60);
+            return `${m.toString().padStart(2,'0')}:${s.toFixed(3).padStart(6,'0')}`;
+        }
+
+        // 模拟 Python 分析的异步调用（实际需通过后端或 Pyodide 实现）
+        // 这里为演示，使用预置结果（您可替换为实际后端API调用）
+        async function performAnalysis(videoFile) {
+            // 模拟分析耗时，进度更新
+            return new Promise((resolve) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 8;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        // 模拟返回结果（时间点）
+                        // 实际应调用后端API，传入视频文件名，返回json
+                        // 这里使用固定示例数据
+                        const result = {
+                            boom_start: 29.000,
+                            boom_end: 61.133,
+                            lift: 26.000,
+                            place: 62.633
+                        };
+                        resolve(result);
+                    }
+                    analysisProgress.style.width = progress + '%';
+                }, 200);
+            });
+        }
+
+        // 点击分析按钮
+        analyzeBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+
+            // 获取当前视频文件名
+            const currentSrc = videoEl.src;
+            const videoName = currentSrc.split('/').pop().split('?')[0];
+            if (!videoName) {
+                analysisStatus.textContent = '❌ 未加载视频';
+                return;
+            }
+
+            // 禁用按钮，显示进度
+            this.disabled = true;
+            analysisStatus.textContent = '⏳ 分析中...';
+            analysisProgress.style.width = '0%';
+            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">分析中，请稍候...</span>';
+            clearMarkers();
+
+            try {
+                // 调用分析函数（实际应替换为后端API请求）
+                const times = await performAnalysis(videoName);
+                currentBoomTimes = times;
+                displayResults(times);
+                analysisStatus.textContent = '✅ 分析完成';
+                // 更新进度条到100%
+                analysisProgress.style.width = '100%';
+            } catch (err) {
+                analysisStatus.textContent = '❌ 分析失败: ' + err.message;
+                resultTimesDiv.innerHTML = `<span style="color:#dc2626;">分析失败: ${err.message}</span>`;
+            } finally {
+                this.disabled = false;
+            }
+        });
+
+        // 视频播放时更新进度
+        videoEl.addEventListener('timeupdate', updateVideoProgress);
+        videoEl.addEventListener('loadedmetadata', () => {
+            // 视频加载完成后，重新调整标记位置
+            updateVideoProgress();
+        });
+
+        // 视频切换时清空旧标记
+        videoEl.addEventListener('loadeddata', () => {
+            currentBoomTimes = null;
+            clearMarkers();
+            progressFill.style.width = '0%';
+            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
+        });
+
+        // 窗口大小变化时重新调整标记位置（间接通过 updateVideoProgress）
+        window.addEventListener('resize', updateVideoProgress);
+
+        // 初始化进度条
+        updateVideoProgress();
+
+        console.log('✅ 塔吊时间点分析功能已加载');
     </script>
 </body>
 </html>
+        
