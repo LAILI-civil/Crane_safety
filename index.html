@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js">
     </script>
     <style>
-        /* ===== 样式保持不变 ===== */
+        /* ===== 全局样式 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -195,6 +195,8 @@
             border-radius: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
             border: 1px solid #e9edf4;
+            display: flex;
+            flex-direction: column;
         }
         .calib-area h3 {
             font-size: 1.2rem;
@@ -208,6 +210,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
         .calib-area h3::after {
             content: "";
@@ -225,6 +228,7 @@
             margin-bottom: 20px;
             border: 1px solid #dbe1ea;
             box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            flex-shrink: 0;
         }
         .boom-analysis .analysis-header {
             display: flex;
@@ -378,22 +382,48 @@
             box-shadow: 0 0 6px rgba(239,68,68,0.6);
         }
 
-        /* ===== 三列卡片 ===== */
-        .horizontal-cards {
-            display: flex;
-            flex-wrap: nowrap;
+        /* ===== 2行×3列 网格布局 (subplot 2,3) ===== */
+        .param-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
             gap: 16px;
             margin-bottom: 20px;
+            flex: 1 0 auto;
+            min-height: 280px;
         }
+
+        /* 列1: 塔吊底座参数 (跨2行) */
+        .card-base {
+            grid-row: 1 / 3;
+            grid-column: 1 / 2;
+        }
+        /* 列2: 塔身垂直参考点 (跨2行) */
+        .card-vertical {
+            grid-row: 1 / 3;
+            grid-column: 2 / 3;
+        }
+        /* 列3-行1: 小车关键点 */
+        .card-trolley {
+            grid-row: 1 / 2;
+            grid-column: 3 / 4;
+        }
+        /* 列3-行2: 工人关键点 */
+        .card-worker {
+            grid-row: 2 / 3;
+            grid-column: 3 / 4;
+        }
+
         .param-card {
-            flex: 1;
-            min-width: 0;
             background: #f9fbfd;
             border-radius: 18px;
             padding: 14px 16px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
             transition: box-shadow 0.2s, border-color 0.2s;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         .param-card:hover {
             border-color: #b9c8e0;
@@ -408,6 +438,7 @@
             padding-left: 8px;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             color: #1e293b;
+            flex-shrink: 0;
         }
 
         .param-card label {
@@ -467,6 +498,7 @@
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             white-space: nowrap;
             transition: background 0.15s, transform 0.1s;
+            flex-shrink: 0;
         }
         button.pick-btn:hover {
             background: #d9e6ff;
@@ -527,6 +559,7 @@
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
             transition: transform 0.15s, box-shadow 0.2s;
+            flex-shrink: 0;
         }
         button.calc-btn:hover {
             transform: translateY(-1px);
@@ -545,6 +578,7 @@
             margin-top: 12px;
             position: relative;
             box-shadow: none;
+            flex-shrink: 0;
         }
 
         .matrix-output strong {
@@ -645,6 +679,7 @@
             padding-left: 8px;
             color: #1e293b;
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            flex-shrink: 0;
         }
 
         .risk-info {
@@ -655,6 +690,7 @@
             white-space: pre-wrap;
             word-break: break-word;
             font-family: 'Times New Roman', monospace;
+            flex: 1;
         }
 
         .risk-canvas-wrap {
@@ -679,6 +715,7 @@
             margin-top: 6px;
             line-height: 1.4;
             font-family: 'Times New Roman', sans-serif;
+            flex-shrink: 0;
         }
 
         .legend-item {
@@ -698,15 +735,15 @@
 
         /* 响应式 */
         @media (max-width: 900px) {
-            .horizontal-cards {
-                overflow-x: auto;
+            .param-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+                min-height: 200px;
             }
-            .param-card {
-                min-width: 260px;
-            }
-            .coord-small input {
-                width: 50px;
-            }
+            .card-base { grid-row: 1 / 2; grid-column: 1 / 2; }
+            .card-vertical { grid-row: 1 / 2; grid-column: 2 / 3; }
+            .card-trolley { grid-row: 2 / 3; grid-column: 1 / 2; }
+            .card-worker { grid-row: 3 / 4; grid-column: 1 / 2; }
             .video-control-bar {
                 top: 10px;
                 padding: 3px 10px 3px 14px;
@@ -753,6 +790,14 @@
             }
         }
         @media (max-width: 600px) {
+            .param-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            .card-base { grid-row: 1 / 2; grid-column: 1 / 2; }
+            .card-vertical { grid-row: 2 / 3; grid-column: 1 / 2; }
+            .card-trolley { grid-row: 3 / 4; grid-column: 1 / 2; }
+            .card-worker { grid-row: 4 / 5; grid-column: 1 / 2; }
             .video-control-bar {
                 top: 8px;
                 padding: 2px 8px 2px 10px;
@@ -814,9 +859,7 @@
                 <div class="progress-track">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="markers" id="markersContainer">
-                    <!-- 标记动态添加 -->
-                </div>
+                <div class="markers" id="markersContainer"></div>
             </div>
         </div>
 
@@ -840,11 +883,11 @@
                     </div>
                 </div>
 
-                <!-- 标定卡片区域 -->
-                <div class="horizontal-cards">
+                <!-- ===== 2行×3列网格布局 (subplot 2,3) ===== -->
+                <div class="param-grid">
 
-                    <!-- 卡片1: 塔吊底座参数 -->
-                    <div class="param-card">
+                    <!-- 列1: 塔吊底座参数 (跨2行) -->
+                    <div class="param-card card-base">
                         <h4>🏗️ 塔吊底座参数</h4>
                         <div class="compact-row">
                             <div class="compact-field">
@@ -860,8 +903,8 @@
                         <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
                     </div>
 
-                    <!-- 卡片2: 塔身垂直参考点 -->
-                    <div class="param-card">
+                    <!-- 列2: 塔身垂直参考点 (跨2行) -->
+                    <div class="param-card card-vertical">
                         <h4>📏 塔身垂直参考点 (Z, u, v)</h4>
                         <div id="verticalPointsContainer">
                             <div class="vpoint-row" data-idx="0">
@@ -880,8 +923,8 @@
                         <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                     </div>
 
-                    <!-- 卡片3: 小车关键点 -->
-                    <div class="param-card">
+                    <!-- 列3-行1: 小车关键点 -->
+                    <div class="param-card card-trolley">
                         <h4>🚛 小车关键点</h4>
                         <div class="compact-row">
                             <div class="compact-field">
@@ -899,8 +942,8 @@
                         </div>
                     </div>
 
-                    <!-- 卡片4: 工人关键点 -->
-                    <div class="param-card">
+                    <!-- 列3-行2: 工人关键点 -->
+                    <div class="param-card card-worker">
                         <h4>👷 工人关键点</h4>
                         <div class="compact-row">
                             <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="937.800"><input id="workerStartV" value="468.940"></div></div>
@@ -911,7 +954,9 @@
                             <button class="pick-btn" data-target="workerEnd">选取</button>
                         </div>
                     </div>
+
                 </div>
+                <!-- ===== 网格结束 ===== -->
 
                 <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (3×4 投影矩阵)</button>
 
@@ -923,14 +968,13 @@
                     <div id="calibStatus"></div>
                 </div>
             </div>
+
             <div class="draw-area">
                 <div class="risk-cards">
-                    <!-- 模块1：参数 -->
                     <div class="risk-card">
                         <h4>👷 工人与塔吊运动参数</h4>
                         <div id="riskParamInfo" class="risk-info">请先点击上方“计算相机矩阵”。</div>
                     </div>
-                    <!-- 模块2：简单3D示意 -->
                     <div class="risk-card">
                         <h4>🏗️ 3D 坐标示意</h4>
                         <div class="risk-canvas-wrap">
@@ -942,7 +986,6 @@
                             </span>
                         </div>
                     </div>
-                    <!-- 模块3：俯视危险区域 -->
                     <div class="risk-card">
                         <h4>📍 俯视风险区域</h4>
                         <div class="risk-canvas-wrap">
@@ -966,7 +1009,7 @@
     </div>
 
     <!-- ================================================================ -->
-    <!-- JavaScript 部分（移除所有 console.log） -->
+    <!-- JavaScript 部分 -->
     <script>
         // ================================================================
         // 0. 监控列表管理
@@ -2445,7 +2488,7 @@
         }
 
         // ================================================================
-        // 7. 塔吊运行时间点分析（保留）
+        // 7. 塔吊运行时间点分析
         // ================================================================
 
         const analyzeBtn = document.getElementById('analyzeBtn');
