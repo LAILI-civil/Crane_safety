@@ -190,10 +190,9 @@
                         <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value="1177.450"><input id="cv" value="1466.757"></div></div><button class="pick-btn" data-target="c">选取</button></div>
                     </div>
 
-                    <!-- 列2: 塔吊几何参数 (原垂直参考点，增加塔臂长度) -->
+                    <!-- 列2: 塔吊几何参数 -->
                     <div class="param-card card-vertical">
                         <h4>📐 塔吊几何参数</h4>
-                        <!-- 垂直参考点保持不变 -->
                         <div id="verticalPointsContainer">
                             <div class="vpoint-row" data-idx="0">
                                 <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="17.926"></div>
@@ -209,7 +208,6 @@
                             </div>
                         </div>
                         <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
-                        <!-- 新增塔臂长度 -->
                         <div class="compact-row" style="margin-top:8px;">
                             <div class="compact-field">
                                 <label>塔臂长度 (米)</label>
@@ -221,7 +219,6 @@
                     <!-- 列3-行1: 小车关键点 -->
                     <div class="param-card card-trolley">
                         <h4>🚛 小车关键点</h4>
-                        <!-- 小车高度和旋转半径并排 -->
                         <div class="compact-row">
                             <div class="compact-field">
                                 <label>小车高度 (米)</label>
@@ -246,11 +243,11 @@
                     <div class="param-card card-worker">
                         <h4>👷 工人关键点</h4>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="937.848"><input id="workerStartV" value="468.898"></div></div>
+                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="2306.862"><input id="workerStartV" value="1332.973"></div></div>
                             <button class="pick-btn" data-target="workerStart">选取</button>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>结束工人 (u,v)</label><div class="coord-small"><input id="workerEndU" value="1000.017"><input id="workerEndV" value="326.934"></div></div>
+                            <div class="compact-field"><label>结束工人 (u,v)</label><div class="coord-small"><input id="workerEndU" value="2051.339"><input id="workerEndV" value="1275.203"></div></div>
                             <button class="pick-btn" data-target="workerEnd">选取</button>
                         </div>
                     </div>
@@ -436,7 +433,7 @@
         });
 
         // ================================================================
-        // 1. 基础数学工具（与之前相同）
+        // 1. 基础数学工具
         // ================================================================
         function leastSquares(A, b) {
             const rows = A.length,
@@ -569,7 +566,7 @@
         }
 
         // ================================================================
-        // 2. 塔吊底座鲁棒补全逻辑（与之前相同）
+        // 2. 塔吊底座鲁棒补全逻辑
         // ================================================================
         const BASE_LABELS = ["B1", "B2", "B3", "B4"];
         const OPPOSITE_CORNER = { "B1": "B3", "B2": "B4", "B3": "B1", "B4": "B2" };
@@ -780,7 +777,7 @@
         }
 
         // ================================================================
-        // 4. 风险计算与绘图（使用新参数）
+        // 4. 风险计算与绘图
         // ================================================================
         function getH0FromP(P) {
             return [
@@ -920,7 +917,7 @@
                 `Risk2 最小距离: ${demo.risk2MinDistance.toFixed(3)} m`;
         }
 
-        // ===== 绘图函数（与之前相同，略） =====
+        // ===== 绘图函数（风险图） =====
         function fitCanvas(canvas) {
             const rect = canvas.getBoundingClientRect();
             let w = rect.width,
@@ -1363,7 +1360,7 @@
         function updateRiskDrawArea(Pmat) {
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 17.926;
             const boomLength = parseFloat(document.getElementById('boomLength').value) || 50;
-            const loadRadius = parseFloat(document.getElementById('trolleyRadius').value) || 2.0; // 从新ID读取
+            const loadRadius = parseFloat(document.getElementById('trolleyRadius').value) || 2.0;
             const liftPixel = [
                 parseFloat(document.getElementById('trolleyStartU').value) || 0,
                 parseFloat(document.getElementById('trolleyStartV').value) || 0
@@ -1493,7 +1490,7 @@
         }
 
         // ================================================================
-        // 6. 视频交互选取（与之前相同）
+        // 6. 视频交互选取
         // ================================================================
         let activePickMode = null,
             pickCallback = null;
@@ -1581,7 +1578,7 @@
         }
 
         // ================================================================
-        // 7. 视频坐标标记绘制
+        // 7. 视频坐标标记绘制（已缩小尺寸）
         // ================================================================
         const markerCanvas = document.getElementById('markerCanvas');
         const markerCtx = markerCanvas.getContext('2d');
@@ -1638,22 +1635,25 @@
                 const [x, y] = map(u, v);
                 markerCtx.save();
                 markerCtx.strokeStyle = p.color;
-                markerCtx.lineWidth = 2;
-                const size = 8;
+                markerCtx.lineWidth = 1.5;
+                // 十字线尺寸缩小为 5
+                const size = 5;
                 markerCtx.beginPath();
                 markerCtx.moveTo(x - size, y);
                 markerCtx.lineTo(x + size, y);
                 markerCtx.moveTo(x, y - size);
                 markerCtx.lineTo(x, y + size);
                 markerCtx.stroke();
+                // 圆半径缩小为 4
                 markerCtx.beginPath();
-                markerCtx.arc(x, y, 6, 0, 2 * Math.PI);
+                markerCtx.arc(x, y, 4, 0, 2 * Math.PI);
                 markerCtx.stroke();
+                // 标签字体缩小
                 markerCtx.fillStyle = p.color;
-                markerCtx.font = '12px Times New Roman';
+                markerCtx.font = '10px Times New Roman';
                 markerCtx.textAlign = 'left';
                 markerCtx.textBaseline = 'bottom';
-                markerCtx.fillText(p.label, x + 10, y - 4);
+                markerCtx.fillText(p.label, x + 8, y - 4);
                 markerCtx.restore();
             });
         }
