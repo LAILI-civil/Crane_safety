@@ -50,14 +50,13 @@
             cursor: crosshair;
             background: #000;
         }
-        /* 覆盖层 Canvas 用于绘制标记 */
         #markerCanvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;  /* 允许鼠标穿透到视频 */
+            pointer-events: none;
             z-index: 10;
         }
         .video-deco {
@@ -830,7 +829,6 @@
                 <source src="./Crane_working_1.mp4" type="video/mp4">
                 浏览器不支持视频播放。
             </video>
-            <!-- 标记绘制 Canvas -->
             <canvas id="markerCanvas"></canvas>
 
             <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
@@ -884,14 +882,14 @@
                         <div id="verticalPointsContainer">
                             <div class="vpoint-row" data-idx="0">
                                 <div class="field"><label>Z1 (m)</label><input class="vz" type="number" value="17.926"></div>
-                                <div class="field"><label>u</label><input class="vu" type="number" value="727.273"></div>
-                                <div class="field"><label>v</label><input class="vv" type="number" value="222.222"></div>
+                                <div class="field"><label>u</label><input class="vu" type="number" value="1121.235"></div>
+                                <div class="field"><label>v</label><input class="vv" type="number" value="764.392"></div>
                                 <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                             </div>
                             <div class="vpoint-row" data-idx="1">
                                 <div class="field"><label>Z2 (m)</label><input class="vz" type="number" value="24.326"></div>
-                                <div class="field"><label>u</label><input class="vu" type="number" value="816.327"></div>
-                                <div class="field"><label>v</label><input class="vv" type="number" value="20.408"></div>
+                                <div class="field"><label>u</label><input class="vu" type="number" value="1116.125"></div>
+                                <div class="field"><label>v</label><input class="vv" type="number" value="499.865"></div>
                                 <button class="pick-btn pick-vertical" data-idx="1">选取</button>
                             </div>
                         </div>
@@ -908,12 +906,16 @@
                             </div>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="1108.903"><input id="trolleyStartV" value="267.321"></div></div>
+                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="2444.844"><input id="trolleyStartV" value="703.581"></div></div>
                             <button class="pick-btn" data-target="trolleyStart">选取</button>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="1074.234"><input id="trolleyEndV" value="166.026"></div></div>
+                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="1668.054"><input id="trolleyEndV" value="685.338"></div></div>
                             <button class="pick-btn" data-target="trolleyEnd">选取</button>
+                        </div>
+                        <div class="compact-row">
+                            <div class="compact-field"><label>塔臂长度 (米)</label><input id="boomLength" type="number" value="50"></div>
+                            <div class="compact-field"><label>吊物危险半径 (米)</label><input id="loadRadius" type="number" value="2.0" step="0.1"></div>
                         </div>
                     </div>
 
@@ -969,7 +971,7 @@
 
     <script>
         // ================================================================
-        // 0. 监控列表管理（与原始代码相同，保留）
+        // 0. 监控列表管理（与之前相同，略）
         // ================================================================
         const REPO_OWNER = 'LAILI-civil';
         const REPO_NAME = 'Crane_safety';
@@ -1083,7 +1085,6 @@
             videoEl.play().catch(() => {});
             document.getElementById('pickTip').innerHTML =
                 `🎬 当前: ${displayName}  |  ✏️ 点击「选取」按钮，再点击视频获取坐标`;
-            // 视频切换后延迟重绘标记
             setTimeout(drawMarkers, 500);
         }
         async function refreshVideoList() {
@@ -1245,7 +1246,7 @@
         }
 
         // ================================================================
-        // 2. 塔吊底座鲁棒补全逻辑
+        // 2. 塔吊底座鲁棒补全逻辑（与之前相同，略）
         // ================================================================
         const BASE_LABELS = ["B1", "B2", "B3", "B4"];
         const OPPOSITE_CORNER = { "B1": "B3", "B2": "B4", "B3": "B1", "B4": "B2" };
@@ -1456,7 +1457,7 @@
         }
 
         // ================================================================
-        // 4. 风险计算与绘图（与之前相同，略作保留）
+        // 4. 风险计算与绘图（使用用户输入的塔臂长度和危险半径）
         // ================================================================
         function getH0FromP(P) {
             return [
@@ -1537,15 +1538,14 @@
                 rho: d.rho, deltaDeg: d.deltaDeg };
         }
 
-        function buildRiskDemoFromInputs(P, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight) {
+        function buildRiskDemoFromInputs(P, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight,
+            boomLength, loadRadius) {
             const H0 = getH0FromP(P);
             const p3 = [P[0][2], P[1][2], P[2][2]];
             const liftGround = imageToXYAtHeight(H0, p3, liftPixel, trolleyHeight);
             const dropGround = imageToXYAtHeight(H0, p3, dropPixel, trolleyHeight);
             const workerStartGround = imageToGroundFromP(P, workerStartPixel);
             const workerEndGround = imageToGroundFromP(P, workerEndPixel);
-            const boomLength = 50.0;
-            const loadRadius = 2.0;
             const direction = "ccw";
             const numSamples = 200;
             const sweep = computeSweepParamsJS(liftGround, dropGround, direction);
@@ -1590,7 +1590,7 @@
                 `落吊点地面: (${demo.dropGround[0].toFixed(3)}, ${demo.dropGround[1].toFixed(3)}) m<br>` +
                 `塔吊旋转方向: ${demo.direction === "ccw" ? "逆时针 ccw" : "顺时针 cw"}<br>` +
                 `扫过角度: ${demo.sweep.DeltaDeg.toFixed(3)}°<br>` +
-                `大臂长度: ${demo.boomLength.toFixed(3)} m<br>` +
+                `塔臂长度: ${demo.boomLength.toFixed(3)} m<br>` +
                 `吊物危险半径: ${demo.loadRadius.toFixed(3)} m<br>` +
                 `Risk1 大臂扫过: ${demo.risk1Danger ? "危险" : "安全"}，采样点 ${demo.risk1Count}<br>` +
                 `Risk2 吊物外扩: ${demo.risk2Danger ? "危险" : "安全"}，采样点 ${demo.risk2Count}<br>` +
@@ -2039,6 +2039,8 @@
         let riskTopAnimId = null;
         function updateRiskDrawArea(Pmat) {
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 17.926;
+            const boomLength = parseFloat(document.getElementById('boomLength').value) || 50;
+            const loadRadius = parseFloat(document.getElementById('loadRadius').value) || 2.0;
             const liftPixel = [
                 parseFloat(document.getElementById('trolleyStartU').value) || 0,
                 parseFloat(document.getElementById('trolleyStartV').value) || 0
@@ -2059,7 +2061,8 @@
                 document.getElementById('riskParamInfo').innerHTML = '请确保输入有效的小车和工人像素坐标。';
                 return;
             }
-            const demo = buildRiskDemoFromInputs(Pmat, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight);
+            const demo = buildRiskDemoFromInputs(Pmat, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight,
+                boomLength, loadRadius);
             updateRiskParamPanel(demo);
             drawRisk3D(demo);
             if (riskTopAnimId !== null) {
@@ -2101,7 +2104,7 @@
             [4.9993, -14.9979, -20.0000, 419.9999],
             [0.0020, 0.0030, -0.0010, 1.0000]
         ];
-        let currentP = null;  // 初始不自动绘制风险图
+        let currentP = null;
 
         function calibrateCamera() {
             try {
@@ -2153,7 +2156,7 @@
                 ];
                 currentP = Pmat;
                 renderMatrix(Pmat);
-                updateRiskDrawArea(Pmat);  // 计算成功后绘制风险图
+                updateRiskDrawArea(Pmat);
                 let statusHtml = `<div class="success-info">✅ 标定成功`;
                 if (infoMsg) { statusHtml += `<br>📌 ${infoMsg}`; }
                 statusHtml += `</div>`;
@@ -2197,7 +2200,6 @@
             video.style.cursor = "default";
             activePickMode = null;
             document.getElementById('pickTip').innerHTML = '✅ 坐标已选取';
-            // 选取后更新标记
             setTimeout(drawMarkers, 100);
             setTimeout(() => {
                 if (!activePickMode) document.getElementById('pickTip').innerHTML =
@@ -2222,7 +2224,7 @@
                         enterPickMode(m.id, (mode, u, v) => {
                             document.getElementById(m.uId).value = u.toFixed(3);
                             document.getElementById(m.vId).value = v.toFixed(3);
-                            drawMarkers();  // 更新标记
+                            drawMarkers();
                             if (currentP) { updateRiskDrawArea(currentP); }
                         });
                     });
@@ -2256,14 +2258,13 @@
         }
 
         // ================================================================
-        // 7. 视频坐标标记绘制功能
+        // 7. 视频坐标标记绘制
         // ================================================================
         const markerCanvas = document.getElementById('markerCanvas');
         const markerCtx = markerCanvas.getContext('2d');
 
         function drawMarkers() {
             if (!videoEl.videoWidth) {
-                // 视频未加载，延迟重试
                 setTimeout(drawMarkers, 200);
                 return;
             }
@@ -2271,12 +2272,10 @@
             markerCanvas.width = rect.width;
             markerCanvas.height = rect.height;
             markerCtx.clearRect(0, 0, markerCanvas.width, markerCanvas.height);
-            // 映射函数：原始像素坐标 -> 显示区域坐标
             const scaleX = rect.width / videoEl.videoWidth;
             const scaleY = rect.height / videoEl.videoHeight;
             const map = (u, v) => [u * scaleX, v * scaleY];
 
-            // 定义要绘制的点列表
             const points = [
                 { id: 'b1', label: 'B1', color: '#ff4444' },
                 { id: 'b2', label: 'B2', color: '#ff4444' },
@@ -2288,22 +2287,18 @@
                 { id: 'workerStart', label: '工人起', color: '#ffaa44' },
                 { id: 'workerEnd', label: '工人终', color: '#ffaa44' }
             ];
-
-            // 垂直参考点动态获取
             const vrows = document.querySelectorAll('.vpoint-row');
             vrows.forEach((row, idx) => {
                 const u = parseFloat(row.querySelector('.vu').value);
                 const v = parseFloat(row.querySelector('.vv').value);
                 if (!isNaN(u) && !isNaN(v)) {
                     points.push({ id: `v${idx}`, label: `V${idx+1}`, color: '#ff66ff' });
-                    // 存储坐标到额外属性
                     const last = points[points.length - 1];
                     last.u = u;
                     last.v = v;
                 }
             });
 
-            // 绘制每个点
             points.forEach(p => {
                 let u, v;
                 if (p.u !== undefined && p.v !== undefined) {
@@ -2318,7 +2313,6 @@
                     if (isNaN(u) || isNaN(v)) return;
                 }
                 const [x, y] = map(u, v);
-                // 绘制十字
                 markerCtx.save();
                 markerCtx.strokeStyle = p.color;
                 markerCtx.lineWidth = 2;
@@ -2329,11 +2323,9 @@
                 markerCtx.moveTo(x, y - size);
                 markerCtx.lineTo(x, y + size);
                 markerCtx.stroke();
-                // 绘制外圈
                 markerCtx.beginPath();
                 markerCtx.arc(x, y, 6, 0, 2 * Math.PI);
                 markerCtx.stroke();
-                // 标注标签
                 markerCtx.fillStyle = p.color;
                 markerCtx.font = '12px Times New Roman';
                 markerCtx.textAlign = 'left';
@@ -2343,7 +2335,6 @@
             });
         }
 
-        // 监听输入框变化自动重绘标记
         function bindInputChange() {
             const inputs = document.querySelectorAll('input');
             inputs.forEach(input => {
@@ -2488,7 +2479,7 @@
             clearMarkers();
             progressFill.style.width = '0%';
             resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
-            drawMarkers(); // 视频加载后绘制标记
+            drawMarkers();
         });
         window.addEventListener('resize', () => {
             updateVideoProgress();
@@ -2513,13 +2504,10 @@
             });
             observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
 
-            // 绑定输入变化重绘标记
             bindInputChange();
 
-            // 显示默认矩阵但不绘制风险图
             renderMatrix(defaultP);
             currentP = null;
-            // 初始绘制标记（视频加载后会自动绘制）
             setTimeout(drawMarkers, 1000);
         });
     </script>
