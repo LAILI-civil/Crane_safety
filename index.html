@@ -170,6 +170,18 @@
                     <!-- 列1: 塔吊底座参数 (跨2行) -->
                     <div class="param-card card-base">
                         <h4>🏗️ 塔吊底座参数</h4>
+
+                        <div style="font-size:0.72rem; color:#64748b; line-height:1.5; margin-bottom:8px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:8px 10px;">
+                            <b>底座角点标记规则：</b><br>
+                            请按固定物理位置填写，不能随意调换 B1/B2/B3/B4 标签。<br>
+                            俯视图定义如下：<br>
+                            <span style="font-family:'Times New Roman', monospace;">
+                                &nbsp;&nbsp;&nbsp;&nbsp;B2 —— B1<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;B3 —— B4
+                            </span><br>
+                            若只选 3 个角点，程序将按近似平行四边形自动补全第 4 个角点。
+                        </div>
                         <div class="compact-row">
                             <div class="compact-field">
                                 <label>中心到底座角点距离 (米)</label>
