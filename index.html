@@ -2072,7 +2072,7 @@
             [4.9993, -14.9979, -20.0000, 419.9999],
             [0.0020, 0.0030, -0.0010, 1.0000]
         ];
-        let currentP = defaultP;
+        let currentP = null;
 
         function calibrateCamera() {
             try {
@@ -2378,9 +2378,8 @@
                 });
             });
             observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
-            renderMatrix(defaultP);
-            currentP = defaultP;
-            updateRiskDrawArea(defaultP);
+            renderMatrix(defaultP); 
+            currentP = null; 
         });
     </script>
 </body>
