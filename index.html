@@ -173,15 +173,15 @@
                         <div class="compact-row">
                             <div class="compact-field">
                                 <label>中心到底座角点距离 (米)</label>
-                                <input type="text" id="baseRadius" value="1.2728" inputmode="decimal">
+                                <input type="text" id="baseRadius" value="1.2728" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
                         <div style="margin: 8px 0 4px 0;"><label style="font-size:0.75rem;">📍 底座图像角点</label></div>
-                        <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="1254.107"><input id="b1v" value="1472.838"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
-                        <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="1218.334"><input id="b2v" value="1436.351"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
-                        <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value=""><input id="b3v" value=""></div></div><button class="pick-btn" data-target="b3">选取</button></div>
-                        <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="1146.787"><input id="b4v" value="1481.959"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
-                        <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value=""><input id="cv" value=""></div></div><button class="pick-btn" data-target="c">选取</button></div>
+                        <div class="compact-row"><div class="compact-field"><label>B1 (u,v)</label><div class="coord-small"><input id="b1u" value="1254.107" autocomplete="off"><input id="b1v" value="1472.838" autocomplete="off"></div></div><button class="pick-btn" data-target="b1">选取</button></div>
+                        <div class="compact-row"><div class="compact-field"><label>B2 (u,v)</label><div class="coord-small"><input id="b2u" value="1218.334" autocomplete="off"><input id="b2v" value="1436.351" autocomplete="off"></div></div><button class="pick-btn" data-target="b2">选取</button></div>
+                        <div class="compact-row"><div class="compact-field"><label>B3 (u,v)</label><div class="coord-small"><input id="b3u" value="" autocomplete="off"><input id="b3v" value="" autocomplete="off"></div></div><button class="pick-btn" data-target="b3">选取</button></div>
+                        <div class="compact-row"><div class="compact-field"><label>B4 (u,v)</label><div class="coord-small"><input id="b4u" value="1146.787" autocomplete="off"><input id="b4v" value="1481.959" autocomplete="off"></div></div><button class="pick-btn" data-target="b4">选取</button></div>
+                        <div class="compact-row"><div class="compact-field"><label>C 中心 (可选)</label><div class="coord-small"><input id="cu" value="" autocomplete="off"><input id="cv" value="" autocomplete="off"></div></div><button class="pick-btn" data-target="c">选取</button></div>
                     </div>
 
                     <!-- 列2: 塔吊几何参数 -->
@@ -189,15 +189,15 @@
                         <h4>📐 塔吊几何参数</h4>
                         <div id="verticalPointsContainer">
                             <div class="vpoint-row" data-idx="0">
-                                <div class="field"><label>Z1 (m)</label><input class="vz" type="text" value="17.926" inputmode="decimal"></div>
-                                <div class="field"><label>u</label><input class="vu" type="text" value="1121.235" inputmode="decimal"></div>
-                                <div class="field"><label>v</label><input class="vv" type="text" value="764.392" inputmode="decimal"></div>
+                                <div class="field"><label>Z1 (m)</label><input class="vz" type="text" value="17.926" inputmode="decimal" autocomplete="off"></div>
+                                <div class="field"><label>u</label><input class="vu" type="text" value="1121.235" inputmode="decimal" autocomplete="off"></div>
+                                <div class="field"><label>v</label><input class="vv" type="text" value="764.392" inputmode="decimal" autocomplete="off"></div>
                                 <button class="pick-btn pick-vertical" data-idx="0">选取</button>
                             </div>
                             <div class="vpoint-row" data-idx="1">
-                                <div class="field"><label>Z2 (m)</label><input class="vz" type="text" value="24.326" inputmode="decimal"></div>
-                                <div class="field"><label>u</label><input class="vu" type="text" value="1116.125" inputmode="decimal"></div>
-                                <div class="field"><label>v</label><input class="vv" type="text" value="499.865" inputmode="decimal"></div>
+                                <div class="field"><label>Z2 (m)</label><input class="vz" type="text" value="24.326" inputmode="decimal" autocomplete="off"></div>
+                                <div class="field"><label>u</label><input class="vu" type="text" value="1116.125" inputmode="decimal" autocomplete="off"></div>
+                                <div class="field"><label>v</label><input class="vv" type="text" value="499.865" inputmode="decimal" autocomplete="off"></div>
                                 <button class="pick-btn pick-vertical" data-idx="1">选取</button>
                             </div>
                         </div>
@@ -205,7 +205,7 @@
                         <div class="compact-row" style="margin-top:8px;">
                             <div class="compact-field">
                                 <label>塔臂长度 (米)</label>
-                                <input type="text" id="boomLength" value="50" inputmode="decimal">
+                                <input type="text" id="boomLength" value="50" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
                     </div>
@@ -216,19 +216,19 @@
                         <div class="compact-row">
                             <div class="compact-field">
                                 <label>小车高度 (米)</label>
-                                <input id="trolleyHeight" type="text" value="17.926" inputmode="decimal">
+                                <input id="trolleyHeight" type="text" value="17.926" inputmode="decimal" autocomplete="off">
                             </div>
                             <div class="compact-field">
                                 <label>小车旋转半径 (米)</label>
-                                <input id="trolleyRadius" type="text" value="2.0" inputmode="decimal">
+                                <input id="trolleyRadius" type="text" value="2.0" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="2444.844"><input id="trolleyStartV" value="703.581"></div></div>
+                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="2444.844" autocomplete="off"><input id="trolleyStartV" value="703.581" autocomplete="off"></div></div>
                             <button class="pick-btn" data-target="trolleyStart">选取</button>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="1668.054"><input id="trolleyEndV" value="685.338"></div></div>
+                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="1668.054" autocomplete="off"><input id="trolleyEndV" value="685.338" autocomplete="off"></div></div>
                             <button class="pick-btn" data-target="trolleyEnd">选取</button>
                         </div>
                     </div>
@@ -237,11 +237,11 @@
                     <div class="param-card card-worker">
                         <h4>👷 工人关键点</h4>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="2306.862"><input id="workerStartV" value="1332.973"></div></div>
+                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="2306.862" autocomplete="off"><input id="workerStartV" value="1332.973" autocomplete="off"></div></div>
                             <button class="pick-btn" data-target="workerStart">选取</button>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>结束工人 (u,v)</label><div class="coord-small"><input id="workerEndU" value="2051.339"><input id="workerEndV" value="1275.203"></div></div>
+                            <div class="compact-field"><label>结束工人 (u,v)</label><div class="coord-small"><input id="workerEndU" value="2051.339" autocomplete="off"><input id="workerEndV" value="1275.203" autocomplete="off"></div></div>
                             <button class="pick-btn" data-target="workerEnd">选取</button>
                         </div>
                     </div>
@@ -1564,9 +1564,9 @@
             newRow.className = 'vpoint-row';
             newRow.setAttribute('data-idx', idx);
             newRow.innerHTML = `
-                    <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="text" value="15.00" inputmode="decimal"></div>
-                    <div class="field"><label>u</label><input class="vu" type="text" value="770.000" inputmode="decimal"></div>
-                    <div class="field"><label>v</label><input class="vv" type="text" value="120.000" inputmode="decimal"></div>
+                    <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="text" value="15.00" inputmode="decimal" autocomplete="off"></div>
+                    <div class="field"><label>u</label><input class="vu" type="text" value="770.000" inputmode="decimal" autocomplete="off"></div>
+                    <div class="field"><label>v</label><input class="vv" type="text" value="120.000" inputmode="decimal" autocomplete="off"></div>
                     <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
                 `;
             container.appendChild(newRow);
