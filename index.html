@@ -219,8 +219,8 @@
                                 <input id="trolleyHeight" type="text" value="17.926" inputmode="decimal" autocomplete="off">
                             </div>
                             <div class="compact-field">
-                                <label>小车旋转半径 (米)</label>
-                                <input id="trolleyRadius" type="text" value="2.0" inputmode="decimal" autocomplete="off">
+                                <label>吊物危险区域半径 (米)</label>
+                                <input id="loadRiskRadius" type="text" value="2.0" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
                         <div class="compact-row">
@@ -905,7 +905,7 @@
                 `塔吊旋转方向: ${demo.direction === "ccw" ? "逆时针 ccw" : "顺时针 cw"}<br>` +
                 `扫过角度: ${demo.sweep.DeltaDeg.toFixed(3)}°<br>` +
                 `塔臂长度: ${demo.boomLength.toFixed(3)} m<br>` +
-                `小车旋转半径: ${demo.loadRadius.toFixed(3)} m<br>` +
+                `吊物危险区域半径: ${demo.loadRadius.toFixed(3)} m<br>` +
                 `Risk1 大臂扫过: ${demo.risk1Danger ? "危险" : "安全"}，采样点 ${demo.risk1Count}<br>` +
                 `Risk2 吊物外扩: ${demo.risk2Danger ? "危险" : "安全"}，采样点 ${demo.risk2Count}<br>` +
                 `Risk2 最小距离: ${demo.risk2MinDistance.toFixed(3)} m`;
@@ -1354,7 +1354,7 @@
         function updateRiskDrawArea(Pmat) {
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 17.926;
             const boomLength = parseFloat(document.getElementById('boomLength').value) || 50;
-            const loadRadius = parseFloat(document.getElementById('trolleyRadius').value) || 2.0;
+            const loadRadius = parseFloat(document.getElementById('loadRiskRadius').value) || 2.0;
             const liftPixel = [
                 parseFloat(document.getElementById('trolleyStartU').value) || 0,
                 parseFloat(document.getElementById('trolleyStartV').value) || 0
