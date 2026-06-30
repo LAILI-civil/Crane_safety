@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -29,8 +28,6 @@
             gap: 0;
             background: #f0f4f8;
         }
-
-        /* ===== 左侧视频区 ===== */
         .left-video {
             flex: 1;
             background: #111827;
@@ -85,8 +82,6 @@
             font-weight: 400;
             letter-spacing: 0.3px;
         }
-
-        /* ===== 监控选择控制栏 ===== */
         .video-control-bar {
             position: absolute;
             top: 16px;
@@ -176,8 +171,6 @@
         .video-control-bar .refresh-btn:active {
             transform: rotate(120deg);
         }
-
-        /* ===== 右侧面板 ===== */
         .right-panel {
             flex: 1;
             display: flex;
@@ -219,8 +212,6 @@
             background: linear-gradient(to right, #d1d9e6, transparent);
             margin-left: 10px;
         }
-
-        /* ===== 时间点分析功能区 ===== */
         .boom-analysis {
             background: #f1f5f9;
             border-radius: 18px;
@@ -326,8 +317,6 @@
             border-radius: 50%;
             margin-right: 4px;
         }
-
-        /* ===== 视频自定义进度条标记 ===== */
         .custom-progress-container {
             position: absolute;
             bottom: 0;
@@ -382,7 +371,7 @@
             box-shadow: 0 0 6px rgba(239,68,68,0.6);
         }
 
-        /* ===== 2行×3列 网格布局 (subplot 2,3) ===== */
+        /* 2行×3列网格布局 */
         .param-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -392,23 +381,18 @@
             flex: 1 0 auto;
             min-height: 280px;
         }
-
-        /* 列1: 塔吊底座参数 (跨2行) */
         .card-base {
             grid-row: 1 / 3;
             grid-column: 1 / 2;
         }
-        /* 列2: 塔身垂直参考点 (跨2行) */
         .card-vertical {
             grid-row: 1 / 3;
             grid-column: 2 / 3;
         }
-        /* 列3-行1: 小车关键点 */
         .card-trolley {
             grid-row: 1 / 2;
             grid-column: 3 / 4;
         }
-        /* 列3-行2: 工人关键点 */
         .card-worker {
             grid-row: 2 / 3;
             grid-column: 3 / 4;
@@ -429,7 +413,6 @@
             border-color: #b9c8e0;
             box-shadow: 0 8px 18px rgba(0, 20, 50, 0.06);
         }
-
         .param-card h4 {
             font-size: 0.95rem;
             font-weight: 600;
@@ -440,7 +423,6 @@
             color: #1e293b;
             flex-shrink: 0;
         }
-
         .param-card label {
             font-size: 0.75rem;
             font-weight: 500;
@@ -449,7 +431,6 @@
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             color: #475569;
         }
-
         .compact-row {
             display: flex;
             flex-wrap: wrap;
@@ -468,7 +449,6 @@
         .coord-small input {
             width: 56px;
         }
-
         input {
             padding: 5px 6px;
             border-radius: 10px;
@@ -484,7 +464,6 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
         }
-
         button.pick-btn {
             background: #eef2ff;
             border: none;
@@ -504,7 +483,6 @@
             background: #d9e6ff;
             transform: scale(0.97);
         }
-
         .vpoint-row {
             display: flex;
             flex-wrap: wrap;
@@ -527,7 +505,6 @@
         .vpoint-row label {
             font-size: 0.7rem;
         }
-
         .add-point-btn {
             background: #eef2ff;
             border: 1px solid #cbd5e1;
@@ -544,7 +521,6 @@
         .add-point-btn:hover {
             background: #d9e6ff;
         }
-
         button.calc-btn {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
@@ -568,8 +544,6 @@
         button.calc-btn:active {
             transform: scale(0.98);
         }
-
-        /* 矩阵输出区域 */
         .matrix-output {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -580,7 +554,6 @@
             box-shadow: none;
             flex-shrink: 0;
         }
-
         .matrix-output strong {
             display: block;
             color: #0f172a;
@@ -608,7 +581,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .error-msg {
             color: #dc2626;
             background: #fee2e2;
@@ -629,7 +601,6 @@
             line-height: 1.6;
             border: 1px solid #a7f3d0;
         }
-
         .draw-area {
             flex: 1;
             background: #ffffff;
@@ -644,7 +615,6 @@
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             min-height: 0;
         }
-
         .risk-cards {
             display: flex;
             gap: 12px;
@@ -652,7 +622,6 @@
             height: 100%;
             min-height: 0;
         }
-
         .risk-card {
             flex: 1;
             min-width: 0;
@@ -670,7 +639,6 @@
             border-color: #b9c8e0;
             box-shadow: 0 8px 18px rgba(0, 20, 50, 0.06);
         }
-
         .risk-card h4 {
             font-size: 0.9rem;
             font-weight: 600;
@@ -681,7 +649,6 @@
             font-family: 'Times New Roman', 'Segoe UI', sans-serif;
             flex-shrink: 0;
         }
-
         .risk-info {
             font-size: 0.7rem;
             line-height: 1.5;
@@ -692,7 +659,6 @@
             font-family: 'Times New Roman', monospace;
             flex: 1;
         }
-
         .risk-canvas-wrap {
             flex: 1;
             min-height: 0;
@@ -702,13 +668,11 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
         }
-
         .risk-canvas {
             width: 100%;
             height: 100%;
             display: block;
         }
-
         .risk-legend {
             font-size: 0.72rem;
             color: #475569;
@@ -717,13 +681,11 @@
             font-family: 'Times New Roman', sans-serif;
             flex-shrink: 0;
         }
-
         .legend-item {
             display: inline-flex;
             align-items: center;
             margin-right: 10px;
         }
-
         .legend-color {
             width: 10px;
             height: 10px;
@@ -732,8 +694,6 @@
             display: inline-block;
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
-
-        /* 响应式 */
         @media (max-width: 900px) {
             .param-grid {
                 grid-template-columns: 1fr 1fr;
@@ -837,55 +797,43 @@
 </head>
 <body>
     <div class="split-layout">
-        <!-- 左侧视频 -->
         <div class="left-video">
             <div class="video-control-bar" id="videoControlBar">
                 <span class="ctrl-label">🎬 监控</span>
-                <select id="videoSelect">
-                    <option value="">加载中…</option>
-                </select>
+                <select id="videoSelect"><option value="">加载中…</option></select>
                 <span class="video-count" id="videoCount"></span>
                 <button class="refresh-btn" id="refreshVideoList" title="刷新监控列表">⟳</button>
             </div>
-
             <video id="mainVideo" controls preload="auto" playsinline crossorigin="anonymous">
                 <source src="./Crane_working_1.mp4" type="video/mp4">
                 浏览器不支持视频播放。
             </video>
             <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
             <div class="video-deco">● LIVE</div>
-
             <div class="custom-progress-container" id="customProgressContainer">
-                <div class="progress-track">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
+                <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
                 <div class="markers" id="markersContainer"></div>
             </div>
         </div>
 
-        <!-- 右侧面板 -->
         <div class="right-panel">
             <div class="calib-area">
                 <h3>📐 相机标定 &amp; 3×4 投影矩阵</h3>
 
-                <!-- 塔吊运行时间点分析功能区 -->
                 <div class="boom-analysis" id="boomAnalysis">
                     <div class="analysis-header">
                         <h4>⏱️ 塔吊运行时间点分析</h4>
                         <button id="analyzeBtn">🔍 分析吊塔运行时间点</button>
                         <span class="status-text" id="analysisStatus">就绪</span>
                     </div>
-                    <div class="progress-wrap">
-                        <div class="progress-bar" id="analysisProgress" style="width:0%;"></div>
-                    </div>
+                    <div class="progress-wrap"><div class="progress-bar" id="analysisProgress" style="width:0%;"></div></div>
                     <div class="result-times" id="resultTimes">
                         <span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>
                     </div>
                 </div>
 
-                <!-- ===== 2行×3列网格布局 (subplot 2,3) ===== -->
+                <!-- 2行×3列网格 -->
                 <div class="param-grid">
-
                     <!-- 列1: 塔吊底座参数 (跨2行) -->
                     <div class="param-card card-base">
                         <h4>🏗️ 塔吊底座参数</h4>
@@ -933,11 +881,11 @@
                             </div>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="1019.599"><input id="trolleyStartV" value="460.777"></div></div>
+                            <div class="compact-field"><label>起始小车 (u,v)</label><div class="coord-small"><input id="trolleyStartU" value="1108.903"><input id="trolleyStartV" value="267.321"></div></div>
                             <button class="pick-btn" data-target="trolleyStart">选取</button>
                         </div>
                         <div class="compact-row">
-                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="985.500"><input id="trolleyEndV" value="357.840"></div></div>
+                            <div class="compact-field"><label>结束小车 (u,v)</label><div class="coord-small"><input id="trolleyEndU" value="1074.234"><input id="trolleyEndV" value="166.026"></div></div>
                             <button class="pick-btn" data-target="trolleyEnd">选取</button>
                         </div>
                     </div>
@@ -946,7 +894,7 @@
                     <div class="param-card card-worker">
                         <h4>👷 工人关键点</h4>
                         <div class="compact-row">
-                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="937.800"><input id="workerStartV" value="468.940"></div></div>
+                            <div class="compact-field"><label>起始工人 (u,v)</label><div class="coord-small"><input id="workerStartU" value="937.848"><input id="workerStartV" value="468.898"></div></div>
                             <button class="pick-btn" data-target="workerStart">选取</button>
                         </div>
                         <div class="compact-row">
@@ -954,9 +902,7 @@
                             <button class="pick-btn" data-target="workerEnd">选取</button>
                         </div>
                     </div>
-
                 </div>
-                <!-- ===== 网格结束 ===== -->
 
                 <button id="calibrateBtn" class="calc-btn">🔧 计算相机矩阵 (3×4 投影矩阵)</button>
 
@@ -977,30 +923,16 @@
                     </div>
                     <div class="risk-card">
                         <h4>🏗️ 3D 坐标示意</h4>
-                        <div class="risk-canvas-wrap">
-                            <canvas id="risk3DCanvas" class="risk-canvas"></canvas>
-                        </div>
-                        <div class="risk-legend">
-                            <span class="legend-item">
-                                <span class="legend-color" style="background:#16a34a;"></span>Worker
-                            </span>
-                        </div>
+                        <div class="risk-canvas-wrap"><canvas id="risk3DCanvas" class="risk-canvas"></canvas></div>
+                        <div class="risk-legend"><span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>Worker</span></div>
                     </div>
                     <div class="risk-card">
                         <h4>📍 俯视风险区域</h4>
-                        <div class="risk-canvas-wrap">
-                            <canvas id="riskTopCanvas" class="risk-canvas"></canvas>
-                        </div>
+                        <div class="risk-canvas-wrap"><canvas id="riskTopCanvas" class="risk-canvas"></canvas></div>
                         <div class="risk-legend">
-                            <span class="legend-item">
-                                <span class="legend-color" style="background:#16a34a;"></span>Worker
-                            </span>
-                            <span class="legend-item">
-                                <span class="legend-color" style="background:rgba(249,115,22,0.4);"></span>大臂扫过区域
-                            </span>
-                            <span class="legend-item">
-                                <span class="legend-color" style="background:rgba(59,130,246,0.4);"></span>吊物危险区域
-                            </span>
+                            <span class="legend-item"><span class="legend-color" style="background:#16a34a;"></span>Worker</span>
+                            <span class="legend-item"><span class="legend-color" style="background:rgba(249,115,22,0.4);"></span>大臂扫过区域</span>
+                            <span class="legend-item"><span class="legend-color" style="background:rgba(59,130,246,0.4);"></span>吊物危险区域</span>
                         </div>
                     </div>
                 </div>
@@ -1008,23 +940,18 @@
         </div>
     </div>
 
-    <!-- ================================================================ -->
-    <!-- JavaScript 部分 -->
     <script>
         // ================================================================
-        // 0. 监控列表管理
+        // 0. 监控列表管理（与原始代码相同，保留）
         // ================================================================
         const REPO_OWNER = 'LAILI-civil';
         const REPO_NAME = 'Crane_safety';
         const BRANCH = 'main';
-
         const VIDEO_EXTS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.m4v', '.mpg', '.mpeg'];
-
         const videoEl = document.getElementById('mainVideo');
         const videoSelect = document.getElementById('videoSelect');
         const videoCountEl = document.getElementById('videoCount');
         const refreshBtn = document.getElementById('refreshVideoList');
-
         let cachedVideoList = [];
         window.videoNameToDisplay = {};
 
@@ -1032,32 +959,22 @@
             const lower = filename.toLowerCase();
             return VIDEO_EXTS.some(ext => lower.endsWith(ext));
         }
-
         async function fetchGitHubFileList() {
             const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/?ref=${BRANCH}`;
             const resp = await fetch(url);
-            if (!resp.ok) {
-                throw new Error(`GitHub API 请求失败 (HTTP ${resp.status})`);
-            }
+            if (!resp.ok) throw new Error(`GitHub API 请求失败 (HTTP ${resp.status})`);
             const data = await resp.json();
-            if (!Array.isArray(data)) {
-                throw new Error('GitHub API 返回数据格式异常');
-            }
-            return data
-                .filter(item => item.type === 'file' && isVideoFile(item.name))
-                .map(item => item.name)
-                .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            if (!Array.isArray(data)) throw new Error('GitHub API 返回数据格式异常');
+            return data.filter(item => item.type === 'file' && isVideoFile(item.name)).map(item => item.name).sort((a, b) => a
+                .localeCompare(b, undefined, { sensitivity: 'base' }));
         }
-
         async function loadVideoList() {
             try {
                 videoSelect.disabled = true;
                 videoSelect.innerHTML = '<option value="">加载监控中…</option>';
                 videoCountEl.textContent = '…';
-
                 const videos = await fetchGitHubFileList();
                 cachedVideoList = videos;
-
                 videoSelect.innerHTML = '';
                 if (videos.length === 0) {
                     const opt = document.createElement('option');
@@ -1068,10 +985,8 @@
                     videoSelect.disabled = true;
                     return;
                 }
-
                 const currentVal = videoSelect.value;
                 window.videoNameToDisplay = {};
-
                 videos.forEach((name, index) => {
                     const opt = document.createElement('option');
                     opt.value = name;
@@ -1080,9 +995,7 @@
                     opt.textContent = displayName;
                     videoSelect.appendChild(opt);
                 });
-
                 videoCountEl.textContent = `${videos.length} 个监控`;
-
                 if (currentVal && videos.includes(currentVal)) {
                     videoSelect.value = currentVal;
                 } else {
@@ -1091,10 +1004,8 @@
                     videoSelect.value = defaultVideo;
                     switchVideo(defaultVideo);
                 }
-
                 videoSelect.disabled = false;
                 videoSelect.style.color = '#fff';
-
             } catch (err) {
                 console.error('加载监控列表失败:', err);
                 videoSelect.innerHTML = '';
@@ -1104,7 +1015,6 @@
                 videoSelect.appendChild(opt);
                 videoCountEl.textContent = '?';
                 videoSelect.disabled = true;
-
                 const fallbackList = ['Crane_working_2.mp4', 'Crane_working_1.mp4'];
                 let found = false;
                 window.videoNameToDisplay = {};
@@ -1125,19 +1035,15 @@
                                 found = true;
                             }
                         }
-                    } catch (_) { /* ignore */ }
+                    } catch (_) {}
                 }
-                if (!found) {
-                    switchVideo('Crane_working_1.mp4');
-                }
+                if (!found) switchVideo('Crane_working_1.mp4');
                 videoSelect.disabled = false;
             }
         }
-
         function switchVideo(filename) {
             if (!filename) return;
             const displayName = window.videoNameToDisplay[filename] || filename;
-
             const currentSrc = videoEl.src;
             const newSrc = `./${filename}`;
             if (currentSrc.endsWith(filename) || currentSrc === newSrc) {
@@ -1151,28 +1057,17 @@
             document.getElementById('pickTip').innerHTML =
                 `🎬 当前: ${displayName}  |  ✏️ 点击「选取」按钮，再点击视频获取坐标`;
         }
-
         async function refreshVideoList() {
             refreshBtn.style.transform = 'rotate(360deg)';
             await loadVideoList();
-            setTimeout(() => {
-                refreshBtn.style.transform = '';
-            }, 400);
+            setTimeout(() => { refreshBtn.style.transform = ''; }, 400);
         }
-
         videoSelect.addEventListener('change', function() {
             const selected = this.value;
-            if (selected) {
-                switchVideo(selected);
-            }
+            if (selected) switchVideo(selected);
         });
-
         refreshBtn.addEventListener('click', refreshVideoList);
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadVideoList();
-        });
-
+        window.addEventListener('DOMContentLoaded', () => { loadVideoList(); });
         videoEl.addEventListener('error', function() {
             const currentSrc = this.src;
             const currentName = currentSrc.split('/').pop();
@@ -1190,7 +1085,6 @@
         // ================================================================
         // 1. 基础数学工具
         // ================================================================
-
         function leastSquares(A, b) {
             const rows = A.length,
                 cols = A[0].length;
@@ -1221,7 +1115,6 @@
             }
             return x;
         }
-
         function normalizePoints(points) {
             const n = points.length;
             let meanX = 0,
@@ -1247,7 +1140,6 @@
             });
             return { normPoints, T };
         }
-
         function computeHomography(worldPts, imgPts) {
             if (worldPts.length < 4) throw new Error("至少需要4对点");
             const { normPoints: worldNorm, T: Tw } = normalizePoints(worldPts);
@@ -1270,10 +1162,8 @@
             let minVal = Math.abs(eigenValues[0]);
             for (let i = 1; i < eigenValues.length; i++) {
                 const val = Math.abs(eigenValues[i]);
-                if (val < minVal) {
-                    minVal = val;
-                    minIdx = i;
-                }
+                if (val < minVal) { minVal = val;
+                    minIdx = i; }
             }
             const h = eigenVectors.map(row => row[minIdx]);
             const Hn = [
@@ -1304,14 +1194,12 @@
             }
             return H;
         }
-
         function groundToImage(H, X, Y) {
             const p = [X, Y, 1];
             const res = numeric.dot(H, p);
             const inv = 1.0 / res[2];
             return [res[0] * inv, res[1] * inv];
         }
-
         function imageToPlane(H, u, v) {
             const Hinv = numeric.inv(H);
             const p = [u, v, 1];
@@ -1319,7 +1207,6 @@
             const inv = 1.0 / res[2];
             return [res[0] * inv, res[1] * inv];
         }
-
         function splitH0(H0) {
             return [
                 [H0[0][0], H0[1][0], H0[2][0]],
@@ -1331,45 +1218,25 @@
         // ================================================================
         // 2. 塔吊底座鲁棒补全逻辑
         // ================================================================
-
         const BASE_LABELS = ["B1", "B2", "B3", "B4"];
-        const OPPOSITE_CORNER = {
-            "B1": "B3",
-            "B2": "B4",
-            "B3": "B1",
-            "B4": "B2"
-        };
-
+        const OPPOSITE_CORNER = { "B1": "B3", "B2": "B4", "B3": "B1", "B4": "B2" };
         function buildTowerBaseWorldPoints(baseRadius) {
             const a = baseRadius / Math.sqrt(2);
-            return {
-                B1: [a, a],
-                B2: [-a, a],
-                B3: [-a, -a],
-                B4: [a, -a],
-                C: [0, 0]
-            };
+            return { B1: [a, a], B2: [-a, a], B3: [-a, -a], B4: [a, -a], C: [0, 0] };
         }
-
         function countVisibleCorners(imageMarks) {
             const visible = [],
                 missing = [];
             for (let label of BASE_LABELS) {
-                if (imageMarks[label] !== null && imageMarks[label] !== undefined) {
-                    visible.push(label);
-                } else {
-                    missing.push(label);
-                }
+                if (imageMarks[label] !== null && imageMarks[label] !== undefined) visible.push(label);
+                else missing.push(label);
             }
             return { visible, missing };
         }
-
         function estimateMissingFromThreeCorners(imageMarks, missingLabel) {
             const pts = {};
             for (let label of BASE_LABELS) {
-                if (imageMarks[label] !== null && imageMarks[label] !== undefined) {
-                    pts[label] = imageMarks[label];
-                }
+                if (imageMarks[label] !== null && imageMarks[label] !== undefined) pts[label] = imageMarks[label];
             }
             if (missingLabel === "B1") {
                 if (pts["B2"] && pts["B3"] && pts["B4"]) {
@@ -1398,7 +1265,6 @@
             }
             return null;
         }
-
         function estimateMissingFromCenter(imageMarks, missingLabel) {
             if (!imageMarks["C"]) return null;
             const opposite = OPPOSITE_CORNER[missingLabel];
@@ -1407,7 +1273,6 @@
             const bOpp = imageMarks[opposite];
             return [2 * C[0] - bOpp[0], 2 * C[1] - bOpp[1]];
         }
-
         function completeBaseImageMarks(imageMarks, useCenterWhenFourCorners = true, blendCenterWeight = 0.7) {
             const completed = {};
             for (let label of [...BASE_LABELS, "C"]) {
@@ -1416,12 +1281,7 @@
             }
             const { visible, missing } = countVisibleCorners(completed);
             const hasCenter = (completed["C"] !== null);
-            let estimatedInfo = {
-                estimatedLabels: [],
-                method: "none",
-                warning: null
-            };
-
+            let estimatedInfo = { estimatedLabels: [], method: "none", warning: null };
             if (visible.length === 4) {
                 if (hasCenter && useCenterWhenFourCorners) {
                     estimatedInfo.method = "four_corners_plus_center";
@@ -1435,16 +1295,13 @@
                 }
                 return { completed, estimatedInfo };
             }
-
             if (visible.length === 3 && missing.length === 1) {
                 const missingLabel = missing[0];
                 const estThree = estimateMissingFromThreeCorners(completed, missingLabel);
                 const estCenter = hasCenter ? estimateMissingFromCenter(completed, missingLabel) : null;
-
-                let result = null;
-                let method = "";
-                let warning = "";
-
+                let result = null,
+                    method = "",
+                    warning = "";
                 if (estThree !== null && estCenter !== null) {
                     const w = Math.max(0, Math.min(1, blendCenterWeight));
                     result = [w * estCenter[0] + (1 - w) * estThree[0],
@@ -1463,17 +1320,14 @@
                 } else {
                     throw new Error("无法补全缺失角点");
                 }
-
                 completed[missingLabel] = result;
                 estimatedInfo.estimatedLabels = [missingLabel];
                 estimatedInfo.method = method;
                 estimatedInfo.warning = warning;
                 return { completed, estimatedInfo };
             }
-
             throw new Error(`当前可见角点数量 ${visible.length}，中心点可见=${hasCenter}，不支持此标定情况`);
         }
-
         function prepareGroundCorrespondences(imageMarks, baseRadius, useCenterWhenFourCorners, blendCenterWeight) {
             const { completed, estimatedInfo } = completeBaseImageMarks(
                 imageMarks, useCenterWhenFourCorners, blendCenterWeight
@@ -1490,7 +1344,6 @@
             }
             return { worldPoints, imagePoints, completed, estimatedInfo };
         }
-
         function calibrateGroundHomography(imageMarks, baseRadius, useCenterWhenFourCorners = true, blendCenterWeight =
             0.7) {
             const { worldPoints, imagePoints, completed, estimatedInfo } = prepareGroundCorrespondences(
@@ -1504,7 +1357,6 @@
         // ================================================================
         // 3. 核心函数
         // ================================================================
-
         function estimateP3(H0, verticalPoints) {
             const [p1, p2, p4] = splitH0(H0);
             const usable = [];
@@ -1533,7 +1385,6 @@
             const sol = leastSquares(A, b);
             return sol.slice(0, 3);
         }
-
         function homographyAtHeight(H0, p3, Z) {
             const [p1, p2, p4] = splitH0(H0);
             const col3 = [
@@ -1553,12 +1404,10 @@
             }
             return HZ;
         }
-
         function imageToXYAtHeight(H0, p3, pt, Z) {
             const HZ = homographyAtHeight(H0, p3, Z);
             return imageToPlane(HZ, pt[0], pt[1]);
         }
-
         function estimateHeight(H0, p3, X, Y, pt) {
             const [p1, p2, p4] = splitH0(H0);
             const x = [pt[0], pt[1], 1];
@@ -1580,7 +1429,6 @@
         // ================================================================
         // 4. 风险计算与绘图
         // ================================================================
-
         function getH0FromP(P) {
             return [
                 [P[0][0], P[0][1], P[0][3]],
@@ -1588,13 +1436,11 @@
                 [P[2][0], P[2][1], P[2][3]]
             ];
         }
-
         function groundToImageFromP(P, X, Y) {
             const Xh = [X, Y, 0, 1];
             const x = numeric.dot(P, Xh);
             return [x[0] / x[2], x[1] / x[2]];
         }
-
         function imageToGroundFromP(P, pixel) {
             const H0 = getH0FromP(P);
             const Hinv = numeric.inv(H0);
@@ -1602,28 +1448,14 @@
             const Xh = numeric.dot(Hinv, x);
             return [Xh[0] / Xh[2], Xh[1] / Xh[2]];
         }
-
-        function cross2JS(a, b) {
-            return a[0] * b[1] - a[1] * b[0];
-        }
-
-        function dot2JS(a, b) {
-            return a[0] * b[0] + a[1] * b[1];
-        }
-
-        function norm2JS(a) {
-            return Math.hypot(a[0], a[1]);
-        }
-
-        function signedAngleJS(a, b) {
-            return Math.atan2(cross2JS(a, b), dot2JS(a, b));
-        }
-
+        function cross2JS(a, b) { return a[0] * b[1] - a[1] * b[0]; }
+        function dot2JS(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+        function norm2JS(a) { return Math.hypot(a[0], a[1]); }
+        function signedAngleJS(a, b) { return Math.atan2(cross2JS(a, b), dot2JS(a, b)); }
         function wrap2PiJS(theta) {
             const twoPi = 2 * Math.PI;
             return ((theta % twoPi) + twoPi) % twoPi;
         }
-
         function computeSweepParamsJS(A, B, direction) {
             const rA = norm2JS(A);
             const rB = norm2JS(B);
@@ -1632,12 +1464,8 @@
             const sigma = direction === "ccw" ? 1.0 : -1.0;
             const alphaAB = signedAngleJS(aHat, bHat);
             const Delta = wrap2PiJS(sigma * alphaAB);
-            return {
-                A, B, rA, rB, aHat, bHat, sigma, Delta,
-                DeltaDeg: Delta * 180 / Math.PI
-            };
+            return { A, B, rA, rB, aHat, bHat, sigma, Delta, DeltaDeg: Delta * 180 / Math.PI };
         }
-
         function pointProgressJS(P, sweep) {
             const rho = norm2JS(P);
             if (rho < 1e-12) {
@@ -1648,14 +1476,12 @@
             const delta = wrap2PiJS(sweep.sigma * alphaAP);
             return { rho, delta, deltaDeg: delta * 180 / Math.PI, hasDirection: true };
         }
-
         function checkRisk1PointJS(P, sweep, boomLength) {
             const progress = pointProgressJS(P, sweep);
             const inRadius = progress.rho <= boomLength + 1e-9;
             const inAngle = !progress.hasDirection || progress.delta <= sweep.Delta + 1e-9;
             return { inside: inRadius && inAngle, rho: progress.rho, deltaDeg: progress.deltaDeg, inRadius, inAngle };
         }
-
         function pointToArcDistanceJS(P, sweep) {
             const A = sweep.A,
                 B = sweep.B;
@@ -1676,7 +1502,6 @@
             }
             return { distance: dB, closestPart: "end_cap", rho, deltaDeg: progress.deltaDeg };
         }
-
         function checkRisk2PointJS(P, sweep, loadRadius) {
             const d = pointToArcDistanceJS(P, sweep);
             return { inside: d.distance <= loadRadius + 1e-12, distance: d.distance, closestPart: d.closestPart,
@@ -1686,17 +1511,14 @@
         function buildRiskDemoFromInputs(P, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight) {
             const H0 = getH0FromP(P);
             const p3 = [P[0][2], P[1][2], P[2][2]];
-
             const liftGround = imageToXYAtHeight(H0, p3, liftPixel, trolleyHeight);
             const dropGround = imageToXYAtHeight(H0, p3, dropPixel, trolleyHeight);
             const workerStartGround = imageToGroundFromP(P, workerStartPixel);
             const workerEndGround = imageToGroundFromP(P, workerEndPixel);
-
             const boomLength = 50.0;
             const loadRadius = 2.0;
             const direction = "ccw";
             const numSamples = 200;
-
             const sweep = computeSweepParamsJS(liftGround, dropGround, direction);
             let risk1Danger = false,
                 risk2Danger = false;
@@ -1716,7 +1538,6 @@
                     risk2Count++; }
                 if (r2.distance < risk2MinDistance) risk2MinDistance = r2.distance;
             }
-
             return {
                 P,
                 liftGround, dropGround,
@@ -1747,8 +1568,7 @@
                 `Risk2 最小距离: ${demo.risk2MinDistance.toFixed(3)} m`;
         }
 
-        // ===== 绘制函数 =====
-
+        // ===== 绘图函数（与原始相同） =====
         function fitCanvas(canvas) {
             const rect = canvas.getBoundingClientRect();
             let w = rect.width,
@@ -1759,10 +1579,8 @@
                     const parentRect = parent.getBoundingClientRect();
                     w = parentRect.width || 300;
                     h = parentRect.height || 200;
-                } else {
-                    w = 300;
-                    h = 200;
-                }
+                } else { w = 300;
+                    h = 200; }
             }
             const dpr = window.devicePixelRatio || 1;
             canvas.width = Math.max(1, Math.floor(w * dpr));
@@ -1771,7 +1589,6 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             return { ctx, width: w, height: h };
         }
-
         function makeWorldMapper(points, width, height, padding = 28) {
             let minX = Infinity,
                 maxX = -Infinity,
@@ -1792,66 +1609,50 @@
                 return [width / 2 + (p[0] - cx) * scale, height / 2 - (p[1] - cy) * scale];
             };
         }
-
         function drawRisk3D(demo) {
             const canvas = document.getElementById("risk3DCanvas");
             if (!canvas) return;
-
             const { ctx, width, height } = fitCanvas(canvas);
             ctx.clearRect(0, 0, width, height);
-
             const O = [0, 0, 0];
-            const A = demo.liftGround;
-            const B = demo.dropGround;
-            const P0 = demo.workerStartGround;
-            const P1 = demo.workerEndGround;
-            const boomHeight = 10;
-            const towerHeight = 12;
-            const towerTop = [0, 0, towerHeight];
+            const A = [demo.liftGround[0], demo.liftGround[1], 0];
+            const B = [demo.dropGround[0], demo.dropGround[1], 0];
+            const P0 = [demo.workerStartGround[0], demo.workerStartGround[1], 0];
+            const P1 = [demo.workerEndGround[0], demo.workerEndGround[1], 0];
+            const boomHeight = 10,
+                towerHeight = 12,
+                towerTop = [0, 0, towerHeight];
             const sweep = demo.sweep;
-            const startAng = Math.atan2(A[1], A[0]);
-            const sigma = sweep.sigma;
-            const Delta = sweep.Delta;
+            const startAng = Math.atan2(demo.liftGround[1], demo.liftGround[0]);
+            const sigma = sweep.sigma,
+                Delta = sweep.Delta;
             const midR = 0.5 * (sweep.rA + sweep.rB);
             const boomDisplayLen = Math.min(14, Math.max(10, midR + 3));
-            const boomStartEnd = [
-                boomDisplayLen * Math.cos(startAng),
-                boomDisplayLen * Math.sin(startAng),
-                boomHeight
-            ];
-            const boomFinalEnd = [
-                boomDisplayLen * Math.cos(startAng + sigma * Delta),
-                boomDisplayLen * Math.sin(startAng + sigma * Delta),
-                boomHeight
-            ];
-
-            const hookTrackTop = [];
-            const hookTrackGround = [];
+            const boomStartEnd = [boomDisplayLen * Math.cos(startAng), boomDisplayLen * Math.sin(startAng), boomHeight];
+            const boomFinalEnd = [boomDisplayLen * Math.cos(startAng + sigma * Delta), boomDisplayLen * Math.sin(startAng +
+                sigma * Delta), boomHeight];
+            const hookTrackTop = [],
+                hookTrackGround = [];
             const hookSteps = 60;
             for (let i = 0; i <= hookSteps; i++) {
                 const t = i / hookSteps;
                 const ang = startAng + sigma * Delta * t;
-                const x = midR * Math.cos(ang);
-                const y = midR * Math.sin(ang);
+                const x = midR * Math.cos(ang),
+                    y = midR * Math.sin(ang);
                 hookTrackTop.push([x, y, boomHeight]);
                 hookTrackGround.push([x, y, 0]);
             }
-            const hookStartTop = hookTrackTop[0];
-            const hookStartGround = hookTrackGround[0];
-
+            const hookStartTop = hookTrackTop[0],
+                hookStartGround = hookTrackGround[0];
             const hookDropLines = [];
             const hookDropCount = 5;
             for (let i = 0; i < hookDropCount; i++) {
                 const t = hookDropCount === 1 ? 0 : i / (hookDropCount - 1);
                 const ang = startAng + sigma * Delta * t;
-                const x = midR * Math.cos(ang);
-                const y = midR * Math.sin(ang);
-                hookDropLines.push({
-                    top: [x, y, boomHeight],
-                    bottom: [x, y, 0]
-                });
+                const x = midR * Math.cos(ang),
+                    y = midR * Math.sin(ang);
+                hookDropLines.push({ top: [x, y, boomHeight], bottom: [x, y, 0] });
             }
-
             const allPoints = [
                 O, towerTop, boomStartEnd, boomFinalEnd, P0, P1, A, B,
                 ...hookTrackTop, ...hookTrackGround,
@@ -1878,26 +1679,24 @@
             maxY += pad;
             minZ = Math.min(0, minZ);
             maxZ += pad;
-            const spanX = maxX - minX || 1;
-            const spanY = maxY - minY || 1;
-            const spanZ = maxZ - minZ || 1;
-            const projY = 0.55;
-            const projZ = 0.48;
+            const spanX = maxX - minX || 1,
+                spanY = maxY - minY || 1,
+                spanZ = maxZ - minZ || 1;
+            const projY = 0.55,
+                projZ = 0.48;
             const scale = Math.min(width / (spanX + projY * spanY), height / (projZ * spanY + spanZ)) * 0.86;
-            const cx = 0.5 * (minX + maxX);
-            const cy = 0.5 * (minY + maxY);
-            const cz = 0.5 * (minZ + maxZ);
-
+            const cx = 0.5 * (minX + maxX),
+                cy = 0.5 * (minY + maxY),
+                cz = 0.5 * (minZ + maxZ);
             function project3D(p) {
-                const x = p[0] - cx;
-                const y = p[1] - cy;
-                const z = p[2] - cz;
+                const x = p[0] - cx,
+                    y = p[1] - cy,
+                    z = p[2] - cz;
                 return [width / 2 + scale * (x - projY * y), height / 2 - scale * (projZ * y + z)];
             }
-
             function line(p, q, color, lw = 2, dash = null) {
-                const a = project3D(p);
-                const b = project3D(q);
+                const a = project3D(p),
+                    b = project3D(q);
                 ctx.save();
                 if (dash) ctx.setLineDash(dash);
                 else ctx.setLineDash([]);
@@ -1910,7 +1709,6 @@
                 ctx.stroke();
                 ctx.restore();
             }
-
             function polyline(points, color, lw = 1.5, dash = null) {
                 if (!points || points.length < 2) return;
                 ctx.save();
@@ -1930,20 +1728,16 @@
                 ctx.stroke();
                 ctx.restore();
             }
-
             function point(p, color, r = 4, stroke = true) {
                 const a = project3D(p);
                 ctx.beginPath();
                 ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
                 ctx.fill();
-                if (stroke) {
-                    ctx.strokeStyle = "white";
+                if (stroke) { ctx.strokeStyle = "white";
                     ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
+                    ctx.stroke(); }
             }
-
             function textCenter(p, txt, color = "#334155", offsetY = -10) {
                 const a = project3D(p);
                 ctx.save();
@@ -1957,10 +1751,8 @@
                 ctx.fillText(txt, a[0], a[1] + offsetY);
                 ctx.restore();
             }
-
             ctx.fillStyle = "#f8fafc";
             ctx.fillRect(0, 0, width, height);
-
             const gridMin = -4,
                 gridMax = 16,
                 gridStep = 4;
@@ -1968,7 +1760,6 @@
                 line([g, gridMin, 0], [g, gridMax, 0], "rgba(148,163,184,0.25)", 1);
                 line([gridMin, g, 0], [gridMax, g, 0], "rgba(148,163,184,0.25)", 1);
             }
-
             line(O, towerTop, "#111827", 4);
             const towerHalf = 0.35;
             const towerBaseCorners = [
@@ -1990,18 +1781,16 @@
                 line(towerTopCorners[i], towerTopCorners[j], "#111827", 1.5);
             }
             for (let k = 0; k < 4; k++) {
-                const z0 = (towerHeight / 4) * k;
-                const z1 = (towerHeight / 4) * (k + 1);
+                const z0 = (towerHeight / 4) * k,
+                    z1 = (towerHeight / 4) * (k + 1);
                 line([-towerHalf, -towerHalf, z0], [towerHalf, towerHalf, z1], "rgba(17,24,39,0.75)", 1);
                 line([towerHalf, -towerHalf, z0], [-towerHalf, towerHalf, z1], "rgba(17,24,39,0.75)", 1);
             }
             textCenter([0, 0, towerHeight + 0.5], "Tower", "#111827", -2);
-
             line([0, 0, boomHeight], boomStartEnd, "#facc15", 4);
             line([0, 0, boomHeight], boomFinalEnd, "#f59e0b", 4);
             line([0, 0, boomHeight + 0.25], [boomStartEnd[0], boomStartEnd[1], boomStartEnd[2] + 0.25], "rgba(250,204,21,0.65)", 1.5);
             line([0, 0, boomHeight + 0.25], [boomFinalEnd[0], boomFinalEnd[1], boomFinalEnd[2] + 0.25], "rgba(245,158,11,0.65)", 1.5);
-
             hookDropLines.forEach((h, idx) => {
                 const isMiddle = idx === Math.floor(hookDropLines.length / 2);
                 line(h.top, h.bottom, isMiddle ? "rgba(37,99,235,0.55)" : "rgba(37,99,235,0.32)", isMiddle ? 1.3 : 1.0, [4, 5]);
@@ -2010,18 +1799,16 @@
             polyline(hookTrackGround, "rgba(37,99,235,0.45)", 1.3);
             point(hookStartTop, "#2563eb", 3.5);
             point(hookStartGround, "rgba(37,99,235,0.55)", 2.5, false);
-
             line(P0, P1, "#16a34a", 1.6);
             point(P0, "#86efac", 2.8);
             point(P1, "#16a34a", 3.5);
             point(O, "#111827", 3);
         }
-
         function drawArrowLineOnTop(ctx, map, p, q, color = "#16a34a", lw = 4) {
-            const a = map(p);
-            const b = map(q);
-            const dx = b[0] - a[0];
-            const dy = b[1] - a[1];
+            const a = map(p),
+                b = map(q);
+            const dx = b[0] - a[0],
+                dy = b[1] - a[1];
             const len = Math.hypot(dx, dy);
             if (len < 1e-6) return;
             const ux = dx / len,
@@ -2043,7 +1830,6 @@
             ctx.fillStyle = color;
             ctx.fill();
         }
-
         function drawPolylineArrowOnTop(ctx, map, points, color = "#f97316", lw = 3) {
             if (!points || points.length < 2) return;
             ctx.beginPath();
@@ -2058,11 +1844,10 @@
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
             ctx.stroke();
-
             const p1 = map(points[points.length - 2]);
             const p2 = map(points[points.length - 1]);
-            const dx = p2[0] - p1[0];
-            const dy = p2[1] - p1[1];
+            const dx = p2[0] - p1[0],
+                dy = p2[1] - p1[1];
             const len = Math.hypot(dx, dy);
             if (len < 1e-6) return;
             const ux = dx / len,
@@ -2077,7 +1862,6 @@
             ctx.fillStyle = color;
             ctx.fill();
         }
-
         function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, arcDelta, text, labelRadius = null, labelDelta = null) {
             const steps = 40;
             const arcPts = [];
@@ -2105,33 +1889,26 @@
             ctx.fillText(text, lp[0], lp[1]);
             ctx.restore();
         }
-
         function drawRiskTopView(demo, progress = 1) {
             const canvas = document.getElementById("riskTopCanvas");
             if (!canvas) return;
-
             const { ctx, width, height } = fitCanvas(canvas);
             ctx.clearRect(0, 0, width, height);
             progress = Math.max(0, Math.min(1, progress));
-
             const O = [0, 0];
-            const A = demo.liftGround;
-            const B = demo.dropGround;
-            const P0 = demo.workerStartGround;
-            const P1 = demo.workerEndGround;
-            const boomLength = demo.boomLength;
-            const loadRadius = demo.loadRadius;
+            const A = demo.liftGround,
+                B = demo.dropGround;
+            const P0 = demo.workerStartGround,
+                P1 = demo.workerEndGround;
+            const boomLength = demo.boomLength,
+                loadRadius = demo.loadRadius;
             const sweep = demo.sweep;
             const steps = 80;
             const startAng = Math.atan2(A[1], A[0]);
-            const sigma = sweep.sigma;
-            const Delta = sweep.Delta;
+            const sigma = sweep.sigma,
+                Delta = sweep.Delta;
             const midR = 0.5 * (sweep.rA + sweep.rB);
-            const workerNow = [
-                P0[0] + progress * (P1[0] - P0[0]),
-                P0[1] + progress * (P1[1] - P0[1])
-            ];
-
+            const workerNow = [P0[0] + progress * (P1[0] - P0[0]), P0[1] + progress * (P1[1] - P0[1])];
             const fanPoints = [];
             for (let i = 0; i <= steps; i++) {
                 const t = i / steps;
@@ -2145,7 +1922,6 @@
                 const ang = startAng + sigma * Delta * t;
                 currentFanPoints.push([boomLength * Math.cos(ang), boomLength * Math.sin(ang)]);
             }
-
             const loadTrackPoints = [];
             for (let i = 0; i <= steps; i++) {
                 const t = i / steps;
@@ -2158,29 +1934,23 @@
                 const ang = startAng + sigma * Delta * t;
                 currentLoadTrackPoints.push([midR * Math.cos(ang), midR * Math.sin(ang)]);
             }
-
             const allPoints = [
                 O, P0, P1, workerNow, [-2, -2], [14, 14],
                 ...fanPoints, ...loadTrackPoints
             ];
             const map = makeWorldMapper(allPoints, width, height, 24);
-
             function drawPoint(p, color, r = 2, stroke = true) {
                 const a = map(p);
                 ctx.beginPath();
                 ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
                 ctx.fill();
-                if (stroke) {
-                    ctx.strokeStyle = "white";
+                if (stroke) { ctx.strokeStyle = "white";
                     ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
+                    ctx.stroke(); }
             }
-
             ctx.fillStyle = "#f8fafc";
             ctx.fillRect(0, 0, width, height);
-
             ctx.beginPath();
             let center = map(O);
             ctx.moveTo(center[0], center[1]);
@@ -2191,7 +1961,6 @@
             ctx.closePath();
             ctx.fillStyle = "rgba(249,115,22,0.12)";
             ctx.fill();
-
             ctx.beginPath();
             center = map(O);
             ctx.moveTo(center[0], center[1]);
@@ -2202,22 +1971,20 @@
             ctx.closePath();
             ctx.fillStyle = "rgba(249,115,22,0.32)";
             ctx.fill();
-
             ctx.beginPath();
             for (let i = 0; i < loadTrackPoints.length; i++) {
                 const q = map(loadTrackPoints[i]);
                 if (i === 0) ctx.moveTo(q[0], q[1]);
                 else ctx.lineTo(q[0], q[1]);
             }
-            const pRef1 = map([0, 0]);
-            const pRef2 = map([loadRadius, 0]);
+            const pRef1 = map([0, 0]),
+                pRef2 = map([loadRadius, 0]);
             const pixelLoadRadius = Math.abs(pRef2[0] - pRef1[0]);
             ctx.strokeStyle = "rgba(59,130,246,0.20)";
             ctx.lineWidth = Math.max(5, 2 * pixelLoadRadius);
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
             ctx.stroke();
-
             ctx.beginPath();
             for (let i = 0; i < currentLoadTrackPoints.length; i++) {
                 const q = map(currentLoadTrackPoints[i]);
@@ -2229,12 +1996,10 @@
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
             ctx.stroke();
-
             const angleArrowR = boomLength * 0.99;
             const angleTextR = boomLength * 0.48;
             drawAngleMarkOnTop(ctx, map, O, angleArrowR, startAng, sigma, Delta * progress,
                 `${sweep.DeltaDeg.toFixed(1)}°`, angleTextR, Delta);
-
             drawArrowLineOnTop(ctx, map, P0, P1, "rgba(22,163,74,0.28)", 2);
             if (progress > 0.02) {
                 drawArrowLineOnTop(ctx, map, P0, workerNow, "#16a34a", 2);
@@ -2243,7 +2008,6 @@
         }
 
         let riskTopAnimId = null;
-
         function updateRiskDrawArea(Pmat) {
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 10;
             const liftPixel = [
@@ -2262,30 +2026,24 @@
                 parseFloat(document.getElementById('workerEndU').value) || 0,
                 parseFloat(document.getElementById('workerEndV').value) || 0
             ];
-
             if (liftPixel[0] === 0 && liftPixel[1] === 0) {
                 document.getElementById('riskParamInfo').innerHTML = '请确保输入有效的小车和工人像素坐标。';
                 return;
             }
-
             const demo = buildRiskDemoFromInputs(Pmat, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight);
             updateRiskParamPanel(demo);
             drawRisk3D(demo);
-
             if (riskTopAnimId !== null) {
                 cancelAnimationFrame(riskTopAnimId);
                 riskTopAnimId = null;
             }
-
             const duration = 5000;
             let startTime = null;
             function animateRiskTop(timestamp) {
                 if (startTime === null) startTime = timestamp;
                 let progress = (timestamp - startTime) / duration;
-                if (progress > 1) {
-                    startTime = timestamp;
-                    progress = 0;
-                }
+                if (progress > 1) { startTime = timestamp;
+                    progress = 0; }
                 drawRiskTopView(demo, progress);
                 riskTopAnimId = requestAnimationFrame(animateRiskTop);
             }
@@ -2309,13 +2067,11 @@
         // ================================================================
         // 5. 主计算流程
         // ================================================================
-
         const defaultP = [
             [39.9991, 10.0031, 8.0001, 639.9998],
             [4.9993, -14.9979, -20.0000, 419.9999],
             [0.0020, 0.0030, -0.0010, 1.0000]
         ];
-
         let currentP = defaultP;
 
         function calibrateCamera() {
@@ -2323,10 +2079,8 @@
                 document.getElementById('calibStatus').innerHTML = '';
                 const grid = document.getElementById('matrixGrid');
                 if (grid) grid.innerHTML = '<div style="grid-column:span 4; text-align:center; color:#94a3b8; padding:8px;">计算中...</div>';
-
                 const baseRadius = parseFloat(document.getElementById('baseRadius').value);
                 if (isNaN(baseRadius) || baseRadius <= 0) throw new Error("底座距离必须为正数");
-
                 const imageMarks = {
                     B1: [parseFloat(document.getElementById('b1u').value), parseFloat(document.getElementById('b1v').value)],
                     B2: [parseFloat(document.getElementById('b2u').value), parseFloat(document.getElementById('b2v').value)],
@@ -2336,27 +2090,22 @@
                 };
                 const cu = document.getElementById('cu').value,
                     cv = document.getElementById('cv').value;
-                if (cu && cv) {
-                    imageMarks.C = [parseFloat(cu), parseFloat(cv)];
-                }
+                if (cu && cv) { imageMarks.C = [parseFloat(cu), parseFloat(cv)]; }
                 for (let key of ['B1', 'B2', 'B3', 'B4', 'C']) {
                     if (imageMarks[key] !== null && (isNaN(imageMarks[key][0]) || isNaN(imageMarks[key][1]))) {
                         imageMarks[key] = null;
                     }
                 }
-
-                const useCenter = true;
-                const blendWeight = 0.7;
+                const useCenter = true,
+                    blendWeight = 0.7;
                 const { H0, completed, estimatedInfo } = calibrateGroundHomography(
                     imageMarks, baseRadius, useCenter, blendWeight
                 );
-
                 let infoMsg = "";
                 if (estimatedInfo.estimatedLabels.length > 0) {
                     infoMsg = `⚠️ 底座点补全: ${estimatedInfo.estimatedLabels.join(', ')} (方法: ${estimatedInfo.method})`;
                     if (estimatedInfo.warning) infoMsg += ` ${estimatedInfo.warning}`;
                 }
-
                 const vrows = document.querySelectorAll('.vpoint-row');
                 let verticalPts = [];
                 vrows.forEach(row => {
@@ -2366,27 +2115,20 @@
                     if (!isNaN(Z) && !isNaN(u) && !isNaN(v)) verticalPts.push([Z, u, v]);
                 });
                 if (verticalPts.length < 2) throw new Error("至少需要2个垂直参考点");
-
                 const p3 = estimateP3(H0, verticalPts);
-
                 const [p1, p2, p4] = splitH0(H0);
                 const Pmat = [
                     [p1[0], p2[0], p3[0], p4[0]],
                     [p1[1], p2[1], p3[1], p4[1]],
                     [p1[2], p2[2], p3[2], p4[2]]
                 ];
-
                 currentP = Pmat;
                 renderMatrix(Pmat);
                 updateRiskDrawArea(Pmat);
-
                 let statusHtml = `<div class="success-info">✅ 标定成功`;
-                if (infoMsg) {
-                    statusHtml += `<br>📌 ${infoMsg}`;
-                }
+                if (infoMsg) { statusHtml += `<br>📌 ${infoMsg}`; }
                 statusHtml += `</div>`;
                 document.getElementById('calibStatus').innerHTML = statusHtml;
-
             } catch (err) {
                 document.getElementById('calibStatus').innerHTML =
                     `<div class="error-msg">❌ 标定失败: ${err.message}</div>`;
@@ -2412,7 +2154,6 @@
             v = Math.min(Math.max(0, v), video.videoHeight);
             return { u, v };
         }
-
         function enterPickMode(targetId, callback) {
             if (activePickMode) video.style.cursor = "default";
             activePickMode = targetId;
@@ -2420,7 +2161,6 @@
             document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}`;
             pickCallback = callback;
         }
-
         function onVideoClick(event) {
             if (!activePickMode) return;
             const { u, v } = getVideoOriginalCoordinates(event);
@@ -2434,7 +2174,6 @@
             }, 1500);
         }
         video.addEventListener('click', onVideoClick);
-
         function bindPickButtons() {
             const mappings = [
                 { id: 'b1', uId: 'b1u', vId: 'b1v' }, { id: 'b2', uId: 'b2u', vId: 'b2v' },
@@ -2452,15 +2191,12 @@
                         enterPickMode(m.id, (mode, u, v) => {
                             document.getElementById(m.uId).value = u.toFixed(3);
                             document.getElementById(m.vId).value = v.toFixed(3);
-                            if (currentP) {
-                                updateRiskDrawArea(currentP);
-                            }
+                            if (currentP) { updateRiskDrawArea(currentP); }
                         });
                     });
                 }
             });
         }
-
         function handleVerticalPick(e) {
             const btn = e.currentTarget;
             const row = btn.closest('.vpoint-row');
@@ -2470,7 +2206,6 @@
                 row.querySelector('.vv').value = v.toFixed(3);
             });
         }
-
         function addVerticalPoint() {
             const container = document.getElementById('verticalPointsContainer');
             const idx = container.children.length;
@@ -2488,23 +2223,20 @@
         }
 
         // ================================================================
-        // 7. 塔吊运行时间点分析
+        // 7. 塔吊运行时间点分析（保留）
         // ================================================================
-
         const analyzeBtn = document.getElementById('analyzeBtn');
         const analysisStatus = document.getElementById('analysisStatus');
         const analysisProgress = document.getElementById('analysisProgress');
         const resultTimesDiv = document.getElementById('resultTimes');
         const progressFill = document.getElementById('progressFill');
         const markersContainer = document.getElementById('markersContainer');
-
         const MARKER_COLORS = {
             boom_start: '#facc15',
             boom_end: '#f97316',
             lift: '#22c55e',
             place: '#ef4444'
         };
-
         let currentBoomTimes = null;
 
         function updateVideoProgress() {
@@ -2522,11 +2254,7 @@
                 });
             }
         }
-
-        function clearMarkers() {
-            markersContainer.innerHTML = '';
-        }
-
+        function clearMarkers() { markersContainer.innerHTML = ''; }
         function createMarker(time, label, className = '') {
             const marker = document.createElement('div');
             marker.className = `marker ${className}`;
@@ -2534,7 +2262,6 @@
             marker.title = `${label}: ${time.toFixed(3)}s`;
             return marker;
         }
-
         function displayResults(times) {
             if (!times) {
                 resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
@@ -2564,7 +2291,6 @@
                 }
             }
             resultTimesDiv.innerHTML = html;
-
             clearMarkers();
             const markerMap = [
                 { key: 'boom_start', cls: '', label: '开始' },
@@ -2581,13 +2307,11 @@
             }
             updateVideoProgress();
         }
-
         function formatTime(sec) {
             const m = Math.floor(sec / 60);
             const s = (sec % 60);
             return `${m.toString().padStart(2,'0')}:${s.toFixed(3).padStart(6,'0')}`;
         }
-
         async function performAnalysis(videoFile) {
             return new Promise((resolve) => {
                 let progress = 0;
@@ -2596,19 +2320,13 @@
                     if (progress >= 100) {
                         progress = 100;
                         clearInterval(interval);
-                        const result = {
-                            boom_start: 29.000,
-                            boom_end: 61.133,
-                            lift: 26.000,
-                            place: 62.633
-                        };
+                        const result = { boom_start: 29.000, boom_end: 61.133, lift: 26.000, place: 62.633 };
                         resolve(result);
                     }
                     analysisProgress.style.width = progress + '%';
                 }, 200);
             });
         }
-
         analyzeBtn.addEventListener('click', async function() {
             if (this.disabled) return;
             const currentSrc = videoEl.src;
@@ -2622,7 +2340,6 @@
             analysisProgress.style.width = '0%';
             resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">分析中，请稍候...</span>';
             clearMarkers();
-
             try {
                 const times = await performAnalysis(videoName);
                 currentBoomTimes = times;
@@ -2632,11 +2349,8 @@
             } catch (err) {
                 analysisStatus.textContent = '❌ 分析失败: ' + err.message;
                 resultTimesDiv.innerHTML = `<span style="color:#dc2626;">分析失败: ${err.message}</span>`;
-            } finally {
-                this.disabled = false;
-            }
+            } finally { this.disabled = false; }
         });
-
         videoEl.addEventListener('timeupdate', updateVideoProgress);
         videoEl.addEventListener('loadedmetadata', updateVideoProgress);
         videoEl.addEventListener('loadeddata', () => {
@@ -2650,14 +2364,12 @@
         // ================================================================
         // 8. 初始化
         // ================================================================
-
         window.addEventListener('DOMContentLoaded', () => {
             bindPickButtons();
             document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
             document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
             video.muted = true;
             video.play().catch(() => {});
-
             document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
             const observer = new MutationObserver(() => {
                 document.querySelectorAll('.pick-vertical').forEach(btn => {
@@ -2666,7 +2378,6 @@
                 });
             });
             observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
-
             renderMatrix(defaultP);
             currentP = defaultP;
             updateRiskDrawArea(defaultP);
