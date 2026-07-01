@@ -8,120 +8,946 @@
     </script>
     <style>
         /* ===== 全局样式（与之前完全相同） ===== */
-        * { margin:0; padding:0; box-sizing:border-box; }
-        html, body { width:100%; height:100%; overflow:hidden; font-family:'Times New Roman','Segoe UI','Roboto',system-ui,sans-serif; background:#f0f4f8; }
-        .split-layout { display:flex; width:100%; height:100%; flex-direction:row; gap:0; background:#f0f4f8; }
-        .left-video { flex:1; background:#111827; display:flex; align-items:center; justify-content:center; position:relative; margin:12px 0 12px 12px; border-radius:24px; box-shadow:0 12px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06); overflow:hidden; border:2px solid #2a3a5a; }
-        .left-video video { width:100%; height:100%; object-fit:contain; cursor:crosshair; background:#000; }
-        #markerCanvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
-        .video-deco { position:absolute; top:16px; right:20px; color:rgba(255,255,255,0.5); font-size:12px; letter-spacing:2px; font-family:'Times New Roman',monospace; background:rgba(0,0,0,0.4); padding:4px 14px; border-radius:30px; backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.08); pointer-events:none; user-select:none; font-weight:300; }
-        .pick-tip { position:absolute; top:16px; left:20px; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); color:#fcd34d; font-size:13px; padding:6px 16px; border-radius:30px; pointer-events:none; font-family:'Times New Roman',monospace; border-left:3px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-weight:400; letter-spacing:0.3px; }
-        .video-control-bar { position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.55); backdrop-filter:blur(12px); padding:4px 14px 4px 18px; border-radius:40px; border:1px solid rgba(255,255,255,0.10); box-shadow:0 4px 20px rgba(0,0,0,0.4); pointer-events:auto; }
-        .video-control-bar .ctrl-label { color:rgba(255,255,255,0.7); font-size:0.75rem; font-family:'Times New Roman',sans-serif; letter-spacing:0.5px; font-weight:400; white-space:nowrap; }
-        .video-control-bar select { background:rgba(255,255,255,0.10); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:30px; padding:4px 28px 4px 16px; font-size:0.8rem; font-family:'Times New Roman','Segoe UI',sans-serif; cursor:pointer; outline:none; min-width:100px; max-width:200px; height:30px; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.5)'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:border-color 0.2s, background 0.2s; }
-        .video-control-bar select:hover { border-color:rgba(255,255,255,0.3); background-color:rgba(255,255,255,0.15); }
-        .video-control-bar select:focus { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,0.3); }
-        .video-control-bar select option { background:#1a2a3a; color:#e8edf4; font-family:'Times New Roman',sans-serif; padding:4px 8px; }
-        .video-control-bar .video-count { color:rgba(255,255,255,0.35); font-size:0.65rem; font-family:'Times New Roman',monospace; padding-left:4px; white-space:nowrap; }
-        .video-control-bar .refresh-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5); cursor:pointer; font-size:0.8rem; transition:background 0.2s, transform 0.15s; padding:0; line-height:1; }
-        .video-control-bar .refresh-btn:hover { background:rgba(255,255,255,0.15); transform:rotate(60deg); }
-        .video-control-bar .refresh-btn:active { transform:rotate(120deg); }
-        .right-panel { flex:1; display:flex; flex-direction:column; background:#f0f4f8; padding:12px 12px 12px 6px; overflow:hidden; gap:8px; }
-        .calib-area { flex:1; overflow-y:auto; padding:16px 20px; background:#ffffff; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02); border:1px solid #e9edf4; display:flex; flex-direction:column; }
-        .calib-area h3 { font-size:1.2rem; font-weight:600; margin-bottom:20px; border-left:4px solid #3b82f6; padding-left:12px; font-family:'Times New Roman','Segoe UI',sans-serif; color:#0b1e33; letter-spacing:0.5px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
-        .calib-area h3::after { content:""; flex:1; height:1px; background:linear-gradient(to right, #d1d9e6, transparent); margin-left:10px; }
-        .boom-analysis { background:#f1f5f9; border-radius:18px; padding:14px 18px; margin-bottom:20px; border:1px solid #dbe1ea; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0; }
-        .boom-analysis .analysis-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-        .boom-analysis .analysis-header h4 { font-size:1rem; font-weight:600; color:#0f172a; font-family:'Times New Roman','Segoe UI',sans-serif; margin:0; border-left:3px solid #f59e0b; padding-left:8px; }
-        .boom-analysis .analysis-header button { background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; border-radius:30px; padding:6px 20px; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:'Times New Roman','Segoe UI',sans-serif; box-shadow:0 2px 8px rgba(245,158,11,0.3); transition:transform 0.15s, box-shadow 0.2s; white-space:nowrap; }
-        .boom-analysis .analysis-header button:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(245,158,11,0.4); }
-        .boom-analysis .analysis-header button:disabled { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
-        .boom-analysis .analysis-header .status-text { font-size:0.8rem; color:#475569; font-family:'Times New Roman',sans-serif; }
-        .boom-analysis .progress-wrap { margin-top:10px; width:100%; height:6px; background:#e2e8f0; border-radius:10px; overflow:hidden; position:relative; }
-        .boom-analysis .progress-wrap .progress-bar { height:100%; width:0%; background:linear-gradient(90deg, #f59e0b, #d97706); border-radius:10px; transition:width 0.3s ease; }
-        .boom-analysis .result-times { display:flex; flex-wrap:wrap; gap:10px 20px; margin-top:10px; font-size:0.78rem; font-family:'Times New Roman',monospace; color:#0f172a; background:white; padding:8px 12px; border-radius:12px; border:1px solid #e2e8f0; min-height:30px; }
-        .boom-analysis .result-times .time-item { display:flex; align-items:center; gap:4px; }
-        .boom-analysis .result-times .time-item .label { font-weight:600; color:#334155; }
-        .boom-analysis .result-times .time-item .value { color:#0f172a; background:#f1f5f9; padding:0 6px; border-radius:4px; }
-        .boom-analysis .result-times .time-item .marker-color { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
-        .custom-progress-container { position:absolute; bottom:0; left:0; right:0; height:28px; pointer-events:none; z-index:15; }
-        .custom-progress-container .progress-track { position:absolute; bottom:6px; left:10px; right:10px; height:4px; background:rgba(255,255,255,0.25); border-radius:4px; pointer-events:none; }
-        .custom-progress-container .progress-fill { height:100%; width:0%; background:rgba(255,255,255,0.5); border-radius:4px; transition:width 0.1s; }
-        .custom-progress-container .markers { position:absolute; top:-10px; left:0; right:0; height:24px; pointer-events:none; }
-        .custom-progress-container .marker { position:absolute; width:3px; height:18px; background:#facc15; border-radius:2px; transform:translateX(-50%); top:0; transition:left 0.1s; box-shadow:0 0 6px rgba(250,204,21,0.6); }
-        .custom-progress-container .marker.lift { background:#22c55e; box-shadow:0 0 6px rgba(34,197,94,0.6); }
-        .custom-progress-container .marker.place { background:#ef4444; box-shadow:0 0 6px rgba(239,68,68,0.6); }
-        .param-grid { display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:16px; margin-bottom:20px; flex:1 0 auto; min-height:280px; }
-        .card-base { grid-row:1 / 3; grid-column:1 / 2; }
-        .card-vertical { grid-row:1 / 3; grid-column:2 / 3; }
-        .card-trolley { grid-row:1 / 2; grid-column:3 / 4; }
-        .card-worker { grid-row:2 / 3; grid-column:3 / 4; }
-        .param-card { background:#f9fbfd; border-radius:18px; padding:14px 16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02); transition:box-shadow 0.2s, border-color 0.2s; overflow-y:auto; display:flex; flex-direction:column; }
-        .param-card:hover { border-color:#b9c8e0; box-shadow:0 8px 18px rgba(0,20,50,0.06); }
-        .param-card h4 { font-size:0.95rem; font-weight:600; margin-bottom:12px; border-left:3px solid #3b82f6; padding-left:8px; font-family:'Times New Roman','Segoe UI',sans-serif; color:#1e293b; flex-shrink:0; }
-        .param-card label { font-size:0.75rem; font-weight:500; display:block; margin-bottom:2px; font-family:'Times New Roman','Segoe UI',sans-serif; color:#475569; }
-        .compact-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px; margin-bottom:8px; }
-        .compact-field { flex:1; min-width:70px; }
-        .coord-small { display:flex; gap:4px; }
-        .coord-small input { width:56px; }
-        input { padding:5px 6px; border-radius:10px; border:1px solid #d0d7e2; font-size:0.8rem; width:100%; font-family:'Times New Roman',monospace; background:white; transition:border-color 0.15s, box-shadow 0.15s; }
-        input:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.12); }
-        button.pick-btn { background:#eef2ff; border:none; border-radius:10px; padding:5px 12px; font-size:0.7rem; font-weight:500; color:#2563eb; cursor:pointer; height:30px; font-family:'Times New Roman','Segoe UI',sans-serif; white-space:nowrap; transition:background 0.15s, transform 0.1s; flex-shrink:0; }
-        button.pick-btn:hover { background:#d9e6ff; transform:scale(0.97); }
-        .vpoint-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; margin-bottom:8px; background:#ffffffcc; padding:6px; border-radius:12px; border:1px solid #edf2f7; }
-        .vpoint-row .field { flex:1; min-width:48px; }
-        .vpoint-row input { padding:4px 6px; font-size:0.75rem; }
-        .vpoint-row label { font-size:0.7rem; }
-        .add-point-btn { background:#eef2ff; border:1px solid #cbd5e1; border-radius:20px; padding:5px 10px; font-size:0.7rem; cursor:pointer; margin-top:6px; width:100%; text-align:center; font-family:'Times New Roman','Segoe UI',sans-serif; transition:background 0.15s; }
-        .add-point-btn:hover { background:#d9e6ff; }
-        button.calc-btn { background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; border:none; border-radius:30px; padding:12px 20px; font-weight:600; font-size:1rem; width:100%; margin:10px 0 14px 0; cursor:pointer; font-family:'Times New Roman','Segoe UI',sans-serif; box-shadow:0 4px 14px rgba(37,99,235,0.25); transition:transform 0.15s, box-shadow 0.2s; flex-shrink:0; }
-        button.calc-btn:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(37,99,235,0.35); }
-        button.calc-btn:active { transform:scale(0.98); }
-        .matrix-output { background:#f8fafc; border:1px solid #e2e8f0; border-radius:18px; padding:12px 14px; margin-top:12px; position:relative; box-shadow:none; flex-shrink:0; }
-        .matrix-output strong { display:block; color:#0f172a; font-size:0.85rem; margin-bottom:6px; }
-        .matrix-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; background:#f8fafc; padding:2px; }
-        .matrix-grid .cell { background:white; border-radius:4px; padding:4px 2px; text-align:center; font-family:'Times New Roman',monospace; font-size:0.75rem; color:#0f172a; border:1px solid #e9edf4; box-shadow:0 1px 2px rgba(0,0,0,0.02); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .error-msg { color:#dc2626; background:#fee2e2; padding:10px 14px; border-radius:14px; font-size:0.8rem; margin:8px 0; font-family:'Times New Roman',sans-serif; border:1px solid #fecaca; }
-        .success-info { color:#065f46; background:#d1fae5; padding:10px 14px; border-radius:14px; font-size:0.8rem; font-family:'Times New Roman',sans-serif; line-height:1.6; border:1px solid #a7f3d0; }
-        .draw-area { flex:1; background:#ffffff; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02); border:1px solid #e9edf4; display:flex; flex-direction:column; padding:14px 18px; gap:12px; overflow:hidden; font-family:'Times New Roman','Segoe UI',sans-serif; min-height:0; }
-        .risk-cards { display:flex; gap:12px; width:100%; height:100%; min-height:0; }
-        .risk-card { flex:1; min-width:0; background:#f9fbfd; border:1px solid #e2e8f0; border-radius:18px; padding:12px 14px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.02); transition:border-color 0.2s, box-shadow 0.2s; }
-        .risk-card:hover { border-color:#b9c8e0; box-shadow:0 8px 18px rgba(0,20,50,0.06); }
-        .risk-card h4 { font-size:0.9rem; font-weight:600; margin-bottom:8px; border-left:3px solid #f97316; padding-left:8px; color:#1e293b; font-family:'Times New Roman','Segoe UI',sans-serif; flex-shrink:0; }
-        .risk-info { font-size:0.7rem; line-height:1.5; color:#334155; overflow-y:auto; white-space:pre-wrap; word-break:break-word; font-family:'Times New Roman',monospace; flex:1; }
-        .risk-canvas-wrap { flex:1; min-height:0; position:relative; border-radius:14px; overflow:hidden; background:#f8fafc; border:1px solid #e2e8f0; }
-        .risk-canvas { width:100%; height:100%; display:block; }
-        .risk-legend { font-size:0.72rem; color:#475569; margin-top:6px; line-height:1.4; font-family:'Times New Roman',sans-serif; flex-shrink:0; }
-        .legend-item { display:inline-flex; align-items:center; margin-right:10px; }
-        .legend-color { width:10px; height:10px; border-radius:3px; margin-right:5px; display:inline-block; border:1px solid rgba(0,0,0,0.05); }
-        @media (max-width:900px) {
-            .param-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto; min-height:200px; }
-            .card-base { grid-row:1 / 2; grid-column:1 / 2; }
-            .card-vertical { grid-row:1 / 2; grid-column:2 / 3; }
-            .card-trolley { grid-row:2 / 3; grid-column:1 / 2; }
-            .card-worker { grid-row:3 / 4; grid-column:1 / 2; }
-            .video-control-bar { top:10px; padding:3px 10px 3px 14px; gap:4px; }
-            .video-control-bar select { min-width:70px; max-width:120px; font-size:0.7rem; height:26px; padding-right:24px; }
-            .video-control-bar .ctrl-label { font-size:0.65rem; }
-            .video-control-bar .video-count { display:none; }
-            .video-control-bar .refresh-btn { width:22px; height:22px; font-size:0.65rem; }
-            .pick-tip { font-size:10px; padding:4px 10px; top:56px; left:12px; }
-            .video-deco { font-size:10px; padding:3px 10px; top:56px; right:12px; }
-            .boom-analysis .analysis-header { flex-direction:column; align-items:stretch; gap:6px; }
-            .boom-analysis .analysis-header button { width:100%; justify-content:center; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        @media (max-width:600px) {
-            .param-grid { grid-template-columns:1fr; grid-template-rows:auto auto auto auto; }
-            .card-base { grid-row:1 / 2; grid-column:1 / 2; }
-            .card-vertical { grid-row:2 / 3; grid-column:1 / 2; }
-            .card-trolley { grid-row:3 / 4; grid-column:1 / 2; }
-            .card-worker { grid-row:4 / 5; grid-column:1 / 2; }
-            .video-control-bar { top:8px; padding:2px 8px 2px 10px; border-radius:30px; }
-            .video-control-bar select { min-width:60px; max-width:90px; font-size:0.6rem; height:22px; padding-right:20px; padding-left:10px; }
-            .video-control-bar .ctrl-label { font-size:0.55rem; }
-            .video-control-bar .refresh-btn { width:18px; height:18px; font-size:0.55rem; }
-            .pick-tip { font-size:8px; padding:3px 8px; top:44px; left:8px; border-left-width:2px; }
-            .video-deco { font-size:8px; padding:2px 8px; top:44px; right:8px; }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Times New Roman', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            background: #f0f4f8;
+        }
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: row;
+            gap: 0;
+            background: #f0f4f8;
+        }
+        .left-video {
+            flex: 1;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 12px 0 12px 12px;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            border: 2px solid #2a3a5a;
+        }
+        .left-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+            background: #000;
+        }
+        #markerCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .video-deco {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-family: 'Times New Roman', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 14px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+        }
+        .pick-tip {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            color: #fcd34d;
+            font-size: 13px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            pointer-events: none;
+            font-family: 'Times New Roman', monospace;
+            border-left: 3px solid #f59e0b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            z-index: 20;
+        }
+        .video-control-bar {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px);
+            padding: 4px 14px 4px 18px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+        }
+        .video-control-bar .ctrl-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+            font-family: 'Times New Roman', sans-serif;
+            letter-spacing: 0.5px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+        .video-control-bar select {
+            background: rgba(255, 255, 255, 0.10);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 4px 28px 4px 16px;
+            font-size: 0.8rem;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            cursor: pointer;
+            outline: none;
+            min-width: 100px;
+            max-width: 200px;
+            height: 30px;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.5)'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .video-control-bar select:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .video-control-bar select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .video-control-bar select option {
+            background: #1a2a3a;
+            color: #e8edf4;
+            font-family: 'Times New Roman', sans-serif;
+            padding: 4px 8px;
+        }
+        .video-control-bar .video-count {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.65rem;
+            font-family: 'Times New Roman', monospace;
+            padding-left: 4px;
+            white-space: nowrap;
+        }
+        .video-control-bar .refresh-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s, transform 0.15s;
+            padding: 0;
+            line-height: 1;
+        }
+        .video-control-bar .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: rotate(60deg);
+        }
+        .video-control-bar .refresh-btn:active {
+            transform: rotate(120deg);
+        }
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f0f4f8;
+            padding: 12px 12px 12px 6px;
+            overflow: hidden;
+            gap: 8px;
+        }
+        .calib-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e9edf4;
+            display: flex;
+            flex-direction: column;
+        }
+        .calib-area h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #0b1e33;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .calib-area h3::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+            margin-left: 10px;
+        }
+        .boom-analysis {
+            background: #f1f5f9;
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border: 1px solid #dbe1ea;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            flex-shrink: 0;
+        }
+        .boom-analysis .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .boom-analysis .analysis-header h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            margin: 0;
+            border-left: 3px solid #f59e0b;
+            padding-left: 8px;
+        }
+        .boom-analysis .analysis-header button {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            transition: transform 0.15s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        .boom-analysis .analysis-header button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+        }
+        .boom-analysis .analysis-header button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .boom-analysis .analysis-header .status-text {
+            font-size: 0.8rem;
+            color: #475569;
+            font-family: 'Times New Roman', sans-serif;
+        }
+        .boom-analysis .progress-wrap {
+            margin-top: 10px;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .boom-analysis .progress-wrap .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .boom-analysis .result-times {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+            font-family: 'Times New Roman', monospace;
+            color: #0f172a;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            min-height: 30px;
+        }
+        .boom-analysis .result-times .time-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .boom-analysis .result-times .time-item .label {
+            font-weight: 600;
+            color: #334155;
+        }
+        .boom-analysis .result-times .time-item .value {
+            color: #0f172a;
+            background: #f1f5f9;
+            padding: 0 6px;
+            border-radius: 4px;
+        }
+        .boom-analysis .result-times .time-item .marker-color {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .custom-progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            pointer-events: none;
+            z-index: 15;
+        }
+        .custom-progress-container .progress-track {
+            position: absolute;
+            bottom: 6px;
+            left: 10px;
+            right: 10px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .custom-progress-container .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            transition: width 0.1s;
+        }
+        .custom-progress-container .markers {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 24px;
+            pointer-events: none;
+        }
+        .custom-progress-container .marker {
+            position: absolute;
+            width: 3px;
+            height: 18px;
+            background: #facc15;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            top: 0;
+            transition: left 0.1s;
+            box-shadow: 0 0 6px rgba(250, 204, 21, 0.6);
+        }
+        .custom-progress-container .marker.lift {
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+        }
+        .custom-progress-container .marker.place {
+            background: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+        }
+        .param-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex: 1 0 auto;
+            min-height: 280px;
+        }
+        .card-base {
+            grid-row: 1 / 3;
+            grid-column: 1 / 2;
+        }
+        .card-vertical {
+            grid-row: 1 / 3;
+            grid-column: 2 / 3;
+        }
+        .card-trolley {
+            grid-row: 1 / 2;
+            grid-column: 3 / 4;
+        }
+        .card-worker {
+            grid-row: 2 / 3;
+            grid-column: 3 / 4;
+        }
+        .param-card {
+            background: #f9fbfd;
+            border-radius: 18px;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.2s, border-color 0.2s;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .param-card:hover {
+            border-color: #b9c8e0;
+            box-shadow: 0 8px 18px rgba(0, 20, 50, 0.06);
+        }
+        .param-card h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 8px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #1e293b;
+            flex-shrink: 0;
+        }
+        .param-card label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 2px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            color: #475569;
+        }
+        .compact-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .compact-field {
+            flex: 1;
+            min-width: 70px;
+        }
+        .coord-small {
+            display: flex;
+            gap: 4px;
+        }
+        .coord-small input {
+            width: 56px;
+        }
+        input {
+            padding: 5px 6px;
+            border-radius: 10px;
+            border: 1px solid #d0d7e2;
+            font-size: 0.8rem;
+            width: 100%;
+            font-family: 'Times New Roman', monospace;
+            background: white;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+        button.pick-btn {
+            background: #eef2ff;
+            border: none;
+            border-radius: 10px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            height: 30px;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            white-space: nowrap;
+            transition: background 0.15s, transform 0.1s;
+            flex-shrink: 0;
+        }
+        button.pick-btn:hover {
+            background: #d9e6ff;
+            transform: scale(0.97);
+        }
+        .vpoint-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 8px;
+            background: #ffffffcc;
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+        }
+        .vpoint-row .field {
+            flex: 1;
+            min-width: 48px;
+        }
+        .vpoint-row input {
+            padding: 4px 6px;
+            font-size: 0.75rem;
+        }
+        .vpoint-row label {
+            font-size: 0.7rem;
+        }
+        .add-point-btn {
+            background: #eef2ff;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 6px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            transition: background 0.15s;
+        }
+        .add-point-btn:hover {
+            background: #d9e6ff;
+        }
+        button.calc-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            margin: 10px 0 14px 0;
+            cursor: pointer;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+            transition: transform 0.15s, box-shadow 0.2s;
+            flex-shrink: 0;
+        }
+        button.calc-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.35);
+        }
+        button.calc-btn:active {
+            transform: scale(0.98);
+        }
+        .matrix-output {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            position: relative;
+            box-shadow: none;
+            flex-shrink: 0;
+        }
+        .matrix-output strong {
+            display: block;
+            color: #0f172a;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            background: #f8fafc;
+            padding: 2px;
+        }
+        .matrix-grid .cell {
+            background: white;
+            border-radius: 4px;
+            padding: 4px 2px;
+            text-align: center;
+            font-family: 'Times New Roman', monospace;
+            font-size: 0.75rem;
+            color: #0f172a;
+            border: 1px solid #e9edf4;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .error-msg {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            margin: 8px 0;
+            font-family: 'Times New Roman', sans-serif;
+            border: 1px solid #fecaca;
+        }
+        .success-info {
+            color: #065f46;
+            background: #d1fae5;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-family: 'Times New Roman', sans-serif;
+            line-height: 1.6;
+            border: 1px solid #a7f3d0;
+        }
+        .draw-area {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e9edf4;
+            display: flex;
+            flex-direction: column;
+            padding: 14px 18px;
+            gap: 12px;
+            overflow: hidden;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            min-height: 0;
+        }
+        .risk-cards {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+        .risk-card {
+            flex: 1;
+            min-width: 0;
+            background: #f9fbfd;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .risk-card:hover {
+            border-color: #b9c8e0;
+            box-shadow: 0 8px 18px rgba(0, 20, 50, 0.06);
+        }
+        .risk-card h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border-left: 3px solid #f97316;
+            padding-left: 8px;
+            color: #1e293b;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            flex-shrink: 0;
+        }
+        .risk-info {
+            font-size: 0.7rem;
+            line-height: 1.5;
+            color: #334155;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Times New Roman', monospace;
+            flex: 1;
+        }
+        .risk-canvas-wrap {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .risk-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .risk-legend {
+            font-size: 0.72rem;
+            color: #475569;
+            margin-top: 6px;
+            line-height: 1.4;
+            font-family: 'Times New Roman', sans-serif;
+            flex-shrink: 0;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            margin-right: 5px;
+            display: inline-block;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* ================================================================
+               新增：放大镜样式
+               ================================================================ */
+        #magnifier {
+            position: absolute;
+            display: none;
+            /* 默认隐藏，选取模式时显示 */
+            pointer-events: none;
+            z-index: 30;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.15);
+            background: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            overflow: hidden;
+            user-select: none;
+            transition: opacity 0.12s ease;
+        }
+        #magnifierCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            /* 保持像素感 */;
+        }
+        #magnifierInfo {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.70);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            font-size: 11px;
+            font-family: 'Times New Roman', monospace;
+            padding: 2px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+            pointer-events: none;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+        #magnifierInfo .coord-label {
+            color: #94a3b8;
+            margin-right: 4px;
+        }
+        #magnifierInfo .coord-value {
+            color: #fcd34d;
+            font-weight: 600;
+        }
+        #magnifier .crosshair-h,
+        #magnifier .crosshair-v {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(255, 80, 80, 0.85);
+            mix-blend-mode: difference;
+        }
+        #magnifier .crosshair-h {
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+        #magnifier .crosshair-v {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            transform: translateX(-50%);
+        }
+        #magnifier .crosshair-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 3px;
+            height: 3px;
+            background: #ff3333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 6px rgba(255, 0, 0, 0.7);
+            pointer-events: none;
+        }
+        #magnifier .crosshair-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid rgba(255, 80, 80, 0.60);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(255, 0, 0, 0.15);
+        }
+
+        @media (max-width: 900px) {
+            .param-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+                min-height: 200px;
+            }
+            .card-base {
+                grid-row: 1 / 2;
+                grid-column: 1 / 2;
+            }
+            .card-vertical {
+                grid-row: 1 / 2;
+                grid-column: 2 / 3;
+            }
+            .card-trolley {
+                grid-row: 2 / 3;
+                grid-column: 1 / 2;
+            }
+            .card-worker {
+                grid-row: 3 / 4;
+                grid-column: 1 / 2;
+            }
+            .video-control-bar {
+                top: 10px;
+                padding: 3px 10px 3px 14px;
+                gap: 4px;
+            }
+            .video-control-bar select {
+                min-width: 70px;
+                max-width: 120px;
+                font-size: 0.7rem;
+                height: 26px;
+                padding-right: 24px;
+            }
+            .video-control-bar .ctrl-label {
+                font-size: 0.65rem;
+            }
+            .video-control-bar .video-count {
+                display: none;
+            }
+            .video-control-bar .refresh-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 0.65rem;
+            }
+            .pick-tip {
+                font-size: 10px;
+                padding: 4px 10px;
+                top: 56px;
+                left: 12px;
+            }
+            .video-deco {
+                font-size: 10px;
+                padding: 3px 10px;
+                top: 56px;
+                right: 12px;
+            }
+            .boom-analysis .analysis-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .boom-analysis .analysis-header button {
+                width: 100%;
+                justify-content: center;
+            }
+            /* 放大镜在移动端适当缩小 */
+            #magnifier {
+                width: 140px !important;
+                height: 140px !important;
+            }
+            #magnifierInfo {
+                font-size: 9px;
+                padding: 1px 8px;
+            }
+        }
+        @media (max-width: 600px) {
+            .param-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            .card-base {
+                grid-row: 1 / 2;
+                grid-column: 1 / 2;
+            }
+            .card-vertical {
+                grid-row: 2 / 3;
+                grid-column: 1 / 2;
+            }
+            .card-trolley {
+                grid-row: 3 / 4;
+                grid-column: 1 / 2;
+            }
+            .card-worker {
+                grid-row: 4 / 5;
+                grid-column: 1 / 2;
+            }
+            .video-control-bar {
+                top: 8px;
+                padding: 2px 8px 2px 10px;
+                border-radius: 30px;
+            }
+            .video-control-bar select {
+                min-width: 60px;
+                max-width: 90px;
+                font-size: 0.6rem;
+                height: 22px;
+                padding-right: 20px;
+                padding-left: 10px;
+            }
+            .video-control-bar .ctrl-label {
+                font-size: 0.55rem;
+            }
+            .video-control-bar .refresh-btn {
+                width: 18px;
+                height: 18px;
+                font-size: 0.55rem;
+            }
+            .pick-tip {
+                font-size: 8px;
+                padding: 3px 8px;
+                top: 44px;
+                left: 8px;
+                border-left-width: 2px;
+            }
+            .video-deco {
+                font-size: 8px;
+                padding: 2px 8px;
+                top: 44px;
+                right: 8px;
+            }
+            #magnifier {
+                width: 110px !important;
+                height: 110px !important;
+            }
+            #magnifierInfo {
+                font-size: 8px;
+                padding: 1px 6px;
+                bottom: 4px;
+            }
+            #magnifier .crosshair-ring {
+                width: 12px;
+                height: 12px;
+            }
+            #magnifier .crosshair-dot {
+                width: 2px;
+                height: 2px;
+            }
         }
     </style>
 </head>
@@ -140,6 +966,20 @@
                 浏览器不支持视频播放。
             </video>
             <canvas id="markerCanvas"></canvas>
+
+            <!-- ===== 新增：放大镜 ===== -->
+            <div id="magnifier">
+                <canvas id="magnifierCanvas"></canvas>
+                <div class="crosshair-h"></div>
+                <div class="crosshair-v"></div>
+                <div class="crosshair-dot"></div>
+                <div class="crosshair-ring"></div>
+                <div id="magnifierInfo">
+                    <span class="coord-label">📍</span>
+                    <span class="coord-value" id="magCoordDisplay">(0, 0)</span>
+                </div>
+            </div>
+
             <div class="pick-tip" id="pickTip">✏️ 点击「选取」按钮，再点击视频获取坐标</div>
             <div class="video-deco">● LIVE</div>
             <div class="custom-progress-container" id="customProgressContainer">
@@ -297,7 +1137,7 @@
 
     <script>
         // ================================================================
-        // 0. 监控列表管理（与之前相同，略）
+        // 0. 监控列表管理（与之前相同）
         // ================================================================
         const REPO_OWNER = 'LAILI-civil';
         const REPO_NAME = 'Crane_safety';
@@ -380,7 +1220,7 @@
                             const opt2 = document.createElement('option');
                             opt2.value = name;
                             const display = name === 'Crane_working_1.mp4' ? 'Monitoring 1' :
-                                           name === 'Crane_working_2.mp4' ? 'Monitoring 2' : name;
+                                name === 'Crane_working_2.mp4' ? 'Monitoring 2' : name;
                             window.videoNameToDisplay[name] = display;
                             opt2.textContent = display;
                             videoSelect.appendChild(opt2);
@@ -576,6 +1416,7 @@
         // ================================================================
         const BASE_LABELS = ["B1", "B2", "B3", "B4"];
         const OPPOSITE_CORNER = { "B1": "B3", "B2": "B4", "B3": "B1", "B4": "B2" };
+
         function buildTowerBaseWorldPoints(baseRadius) {
             const a = baseRadius / Math.sqrt(2);
             return { B1: [a, a], B2: [-a, a], B3: [-a, -a], B4: [a, -a], C: [0, 0] };
@@ -805,13 +1646,18 @@
             return [Xh[0] / Xh[2], Xh[1] / Xh[2]];
         }
         function cross2JS(a, b) { return a[0] * b[1] - a[1] * b[0]; }
+
         function dot2JS(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+
         function norm2JS(a) { return Math.hypot(a[0], a[1]); }
+
         function signedAngleJS(a, b) { return Math.atan2(cross2JS(a, b), dot2JS(a, b)); }
+
         function wrap2PiJS(theta) {
             const twoPi = 2 * Math.PI;
             return ((theta % twoPi) + twoPi) % twoPi;
         }
+
         function computeSweepParamsJS(A, B, direction) {
             const rA = norm2JS(A);
             const rB = norm2JS(B);
@@ -822,6 +1668,7 @@
             const Delta = wrap2PiJS(sigma * alphaAB);
             return { A, B, rA, rB, aHat, bHat, sigma, Delta, DeltaDeg: Delta * 180 / Math.PI };
         }
+
         function pointProgressJS(P, sweep) {
             const rho = norm2JS(P);
             if (rho < 1e-12) {
@@ -832,12 +1679,14 @@
             const delta = wrap2PiJS(sweep.sigma * alphaAP);
             return { rho, delta, deltaDeg: delta * 180 / Math.PI, hasDirection: true };
         }
+
         function checkRisk1PointJS(P, sweep, boomLength) {
             const progress = pointProgressJS(P, sweep);
             const inRadius = progress.rho <= boomLength + 1e-9;
             const inAngle = !progress.hasDirection || progress.delta <= sweep.Delta + 1e-9;
             return { inside: inRadius && inAngle, rho: progress.rho, deltaDeg: progress.deltaDeg, inRadius, inAngle };
         }
+
         function pointToArcDistanceJS(P, sweep) {
             const A = sweep.A,
                 B = sweep.B;
@@ -858,6 +1707,7 @@
             }
             return { distance: dB, closestPart: "end_cap", rho, deltaDeg: progress.deltaDeg };
         }
+
         function checkRisk2PointJS(P, sweep, loadRadius) {
             const d = pointToArcDistanceJS(P, sweep);
             return { inside: d.distance <= loadRadius + 1e-12, distance: d.distance, closestPart: d.closestPart,
@@ -944,6 +1794,7 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             return { ctx, width: w, height: h };
         }
+
         function makeWorldMapper(points, width, height, padding = 28) {
             let minX = Infinity,
                 maxX = -Infinity,
@@ -960,10 +1811,13 @@
             const scale = Math.min((width - 2 * padding) / spanX, (height - 2 * padding) / spanY);
             const cx = 0.5 * (minX + maxX);
             const cy = 0.5 * (minY + maxY);
-            return function map(p) {
+
+            function map(p) {
                 return [width / 2 + (p[0] - cx) * scale, height / 2 - (p[1] - cy) * scale];
-            };
+            }
+            return map;
         }
+
         function drawRisk3D(demo) {
             const canvas = document.getElementById("risk3DCanvas");
             if (!canvas) return;
@@ -1043,12 +1897,14 @@
             const cx = 0.5 * (minX + maxX),
                 cy = 0.5 * (minY + maxY),
                 cz = 0.5 * (minZ + maxZ);
+
             function project3D(p) {
                 const x = p[0] - cx,
                     y = p[1] - cy,
                     z = p[2] - cz;
                 return [width / 2 + scale * (x - projY * y), height / 2 - scale * (projZ * y + z)];
             }
+
             function line(p, q, color, lw = 2, dash = null) {
                 const a = project3D(p),
                     b = project3D(q);
@@ -1064,6 +1920,7 @@
                 ctx.stroke();
                 ctx.restore();
             }
+
             function polyline(points, color, lw = 1.5, dash = null) {
                 if (!points || points.length < 2) return;
                 ctx.save();
@@ -1083,6 +1940,7 @@
                 ctx.stroke();
                 ctx.restore();
             }
+
             function point(p, color, r = 4, stroke = true) {
                 const a = project3D(p);
                 ctx.beginPath();
@@ -1093,6 +1951,7 @@
                     ctx.lineWidth = 2;
                     ctx.stroke(); }
             }
+
             function textCenter(p, txt, color = "#334155", offsetY = -10) {
                 const a = project3D(p);
                 ctx.save();
@@ -1159,6 +2018,7 @@
             point(P1, "#16a34a", 3.5);
             point(O, "#111827", 3);
         }
+
         function drawArrowLineOnTop(ctx, map, p, q, color = "#16a34a", lw = 4) {
             const a = map(p),
                 b = map(q);
@@ -1185,6 +2045,7 @@
             ctx.fillStyle = color;
             ctx.fill();
         }
+
         function drawPolylineArrowOnTop(ctx, map, points, color = "#f97316", lw = 3) {
             if (!points || points.length < 2) return;
             ctx.beginPath();
@@ -1217,7 +2078,9 @@
             ctx.fillStyle = color;
             ctx.fill();
         }
-        function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, arcDelta, text, labelRadius = null, labelDelta = null) {
+
+        function drawAngleMarkOnTop(ctx, map, center, radius, startAng, sigma, arcDelta, text, labelRadius = null, labelDelta =
+            null) {
             const steps = 40;
             const arcPts = [];
             if (arcDelta > 1e-4) {
@@ -1244,6 +2107,7 @@
             ctx.fillText(text, lp[0], lp[1]);
             ctx.restore();
         }
+
         function drawRiskTopView(demo, progress = 1) {
             const canvas = document.getElementById("riskTopCanvas");
             if (!canvas) return;
@@ -1294,6 +2158,7 @@
                 ...fanPoints, ...loadTrackPoints
             ];
             const map = makeWorldMapper(allPoints, width, height, 24);
+
             function drawPoint(p, color, r = 2, stroke = true) {
                 const a = map(p);
                 ctx.beginPath();
@@ -1363,6 +2228,7 @@
         }
 
         let riskTopAnimId = null;
+
         function updateRiskDrawArea(Pmat) {
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 17.926;
             const boomLength = parseFloat(document.getElementById('boomLength').value) || 50;
@@ -1397,6 +2263,7 @@
             }
             const duration = 5000;
             let startTime = null;
+
             function animateRiskTop(timestamp) {
                 if (startTime === null) startTime = timestamp;
                 let progress = (timestamp - startTime) / duration;
@@ -1496,354 +2363,210 @@
         }
 
         // ================================================================
-        // 6. 视频交互选取
+        // 6. 视频交互选取 + 放大镜
         // ================================================================
         let activePickMode = null,
             pickCallback = null;
         const video = document.getElementById('mainVideo');
 
+        // ---- 放大镜相关 ----
+        const magnifier = document.getElementById('magnifier');
+        const magCanvas = document.getElementById('magnifierCanvas');
+        const magCtx = magCanvas.getContext('2d');
+        const magCoordDisplay = document.getElementById('magCoordDisplay');
+
+        // 放大镜尺寸（逻辑像素）
+        const MAG_SIZE = 180;
+        const MAG_ZOOM = 4; // 放大倍数
+        const SAMPLE_SIZE = 50; // 在原始图像中的采样尺寸 (像素)
+        // 放大镜显示尺寸 = SAMPLE_SIZE * MAG_ZOOM
+        // 我们固定 MAG_SIZE = 180，所以采样尺寸 = MAG_SIZE / MAG_ZOOM = 45
+        // 但为了精确，使用 SAMPLE_SIZE 计算
+        let magDisplaySize = SAMPLE_SIZE * MAG_ZOOM;
+
+        // 离屏canvas用于捕获视频帧
+        let frameCanvas = document.createElement('canvas');
+        let frameCtx = frameCanvas.getContext('2d');
+        let frameReady = false;
+
+        // 当前鼠标在视频中的原始坐标（归一化到视频尺寸）
+        let currentMagUV = { u: 0, v: 0 };
+        let magVisible = false;
+
+        // 初始化放大镜canvas尺寸
+        function initMagnifier() {
+            const dpr = window.devicePixelRatio || 1;
+            magCanvas.width = magDisplaySize * dpr;
+            magCanvas.height = magDisplaySize * dpr;
+            magCanvas.style.width = magDisplaySize + 'px';
+            magCanvas.style.height = magDisplaySize + 'px';
+            magCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            // 设置放大镜容器尺寸
+            magnifier.style.width = magDisplaySize + 'px';
+            magnifier.style.height = (magDisplaySize + 32) + 'px'; // 留出底部信息栏空间
+        }
+        initMagnifier();
+
+        // 更新离屏canvas以匹配视频尺寸
+        function updateFrameCanvas() {
+            if (!videoEl.videoWidth || !videoEl.videoHeight) return;
+            if (frameCanvas.width !== videoEl.videoWidth || frameCanvas.height !== videoEl.videoHeight) {
+                frameCanvas.width = videoEl.videoWidth;
+                frameCanvas.height = videoEl.videoHeight;
+                frameReady = false;
+            }
+            // 绘制当前视频帧到离屏canvas
+            try {
+                frameCtx.drawImage(videoEl, 0, 0, frameCanvas.width, frameCanvas.height);
+                frameReady = true;
+            } catch (e) {
+                frameReady = false;
+            }
+        }
+
+        // 在动画循环中更新离屏canvas
+        function animationLoop() {
+            if (videoEl.readyState >= 2) {
+                updateFrameCanvas();
+            }
+            requestAnimationFrame(animationLoop);
+        }
+        // 启动动画循环
+        requestAnimationFrame(animationLoop);
+
+        // 更新放大镜内容
+        function updateMagnifier(u, v) {
+            if (!frameReady || !videoEl.videoWidth || !videoEl.videoHeight) {
+                // 尝试直接绘制
+                updateFrameCanvas();
+                if (!frameReady) return;
+            }
+
+            const vw = frameCanvas.width;
+            const vh = frameCanvas.height;
+
+            // 边界裁剪
+            let su = Math.floor(u - SAMPLE_SIZE / 2);
+            let sv = Math.floor(v - SAMPLE_SIZE / 2);
+            let sw = SAMPLE_SIZE;
+            let sh = SAMPLE_SIZE;
+
+            // 处理边界：如果采样区域超出图像边界，用边缘像素填充
+            const padLeft = su < 0 ? -su : 0;
+            const padTop = sv < 0 ? -sv : 0;
+            const padRight = (su + sw) > vw ? (su + sw - vw) : 0;
+            const padBottom = (sv + sh) > vh ? (sv + sh - vh) : 0;
+
+            su = Math.max(0, su);
+            sv = Math.max(0, sv);
+            sw = Math.min(sw, vw - su);
+            sh = Math.min(sh, vh - sv);
+
+            if (sw <= 0 || sh <= 0) return;
+
+            // 清空放大镜canvas
+            const dpr = window.devicePixelRatio || 1;
+            magCtx.clearRect(0, 0, magDisplaySize, magDisplaySize);
+
+            // 从离屏canvas中截取并放大绘制
+            try {
+                // 绘制放大的图像
+                magCtx.drawImage(
+                    frameCanvas,
+                    su, sv, sw, sh,
+                    0, 0, magDisplaySize, magDisplaySize
+                );
+
+                // 如果采样区域不足，用边缘像素填充（通过绘制边缘像素扩展）
+                // 简单处理：如果原始采样尺寸不足，用相邻像素填充
+                // 这里通过绘制边缘像素来扩展
+                if (padLeft > 0 || padRight > 0 || padTop > 0 || padBottom > 0) {
+                    // 重新绘制，使用边缘像素填充
+                    // 更简单的方法：先绘制放大的图像，然后使用边缘像素填充空白区域
+                    // 但这里我们直接重新绘制，使用clip
+                    magCtx.save();
+                    magCtx.beginPath();
+                    magCtx.rect(0, 0, magDisplaySize, magDisplaySize);
+                    magCtx.clip();
+
+                    // 计算实际绘制的起始位置和大小
+                    const drawX = (padLeft / SAMPLE_SIZE) * magDisplaySize;
+                    const drawY = (padTop / SAMPLE_SIZE) * magDisplaySize;
+                    const drawW = (sw / SAMPLE_SIZE) * magDisplaySize;
+                    const drawH = (sh / SAMPLE_SIZE) * magDisplaySize;
+
+                    // 清空并重新绘制
+                    magCtx.clearRect(0, 0, magDisplaySize, magDisplaySize);
+                    magCtx.drawImage(
+                        frameCanvas,
+                        su, sv, sw, sh,
+                        drawX, drawY, drawW, drawH
+                    );
+                    magCtx.restore();
+
+                    // 用边缘像素填充空白
+                    // 左边缘填充
+                    if (padLeft > 0) {
+                        const fillW = (padLeft / SAMPLE_SIZE) * magDisplaySize;
+                        const srcX = su;
+                        const srcY = sv + sh / 2;
+                        const srcW = 1;
+                        const srcH = 1;
+                        for (let x = 0; x < fillW; x += 2) {
+                            magCtx.drawImage(frameCanvas, srcX, srcY, 1, 1, x, 0, 2, magDisplaySize);
+                        }
+                    }
+                    // 右边缘填充
+                    if (padRight > 0) {
+                        const fillW = (padRight / SAMPLE_SIZE) * magDisplaySize;
+                        const srcX = su + sw - 1;
+                        const srcY = sv + sh / 2;
+                        for (let x = magDisplaySize - fillW; x < magDisplaySize; x += 2) {
+                            magCtx.drawImage(frameCanvas, srcX, srcY, 1, 1, x, 0, 2, magDisplaySize);
+                        }
+                    }
+                    // 上边缘填充
+                    if (padTop > 0) {
+                        const fillH = (padTop / SAMPLE_SIZE) * magDisplaySize;
+                        const srcX = su + sw / 2;
+                        const srcY = sv;
+                        for (let y = 0; y < fillH; y += 2) {
+                            magCtx.drawImage(frameCanvas, srcX, srcY, 1, 1, 0, y, magDisplaySize, 2);
+                        }
+                    }
+                    // 下边缘填充
+                    if (padBottom > 0) {
+                        const fillH = (padBottom / SAMPLE_SIZE) * magDisplaySize;
+                        const srcX = su + sw / 2;
+                        const srcY = sv + sh - 1;
+                        for (let y = magDisplaySize - fillH; y < magDisplaySize; y += 2) {
+                            magCtx.drawImage(frameCanvas, srcX, srcY, 1, 1, 0, y, magDisplaySize, 2);
+                        }
+                    }
+                }
+            } catch (e) {
+                // 绘制失败，忽略
+            }
+
+            // 更新坐标显示
+            magCoordDisplay.textContent = `(${u.toFixed(1)}, ${v.toFixed(1)})`;
+            currentMagUV.u = u;
+            currentMagUV.v = v;
+        }
+
+        // 显示/隐藏放大镜
+        function showMagnifier(show) {
+            if (show) {
+                magnifier.style.display = 'block';
+                magVisible = true;
+            } else {
+                magnifier.style.display = 'none';
+                magVisible = false;
+            }
+        }
+
+        // 获取视频原始坐标 (像素)
         function getVideoOriginalCoordinates(event) {
             const rect = video.getBoundingClientRect();
             const scaleX = video.videoWidth / rect.width;
-            const scaleY = video.videoHeight / rect.height;
-            let u = (event.clientX - rect.left) * scaleX;
-            let v = (event.clientY - rect.top) * scaleY;
-            u = Math.min(Math.max(0, u), video.videoWidth);
-            v = Math.min(Math.max(0, v), video.videoHeight);
-            return { u, v };
-        }
-        function enterPickMode(targetId, callback) {
-            if (activePickMode) video.style.cursor = "default";
-            activePickMode = targetId;
-            video.style.cursor = "crosshair";
-            document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}`;
-            pickCallback = callback;
-        }
-        function onVideoClick(event) {
-            if (!activePickMode) return;
-            const { u, v } = getVideoOriginalCoordinates(event);
-            if (pickCallback) pickCallback(activePickMode, u, v);
-            video.style.cursor = "default";
-            activePickMode = null;
-            document.getElementById('pickTip').innerHTML = '✅ 坐标已选取';
-            setTimeout(drawMarkers, 100);
-            setTimeout(() => {
-                if (!activePickMode) document.getElementById('pickTip').innerHTML =
-                    '✏️ 点击「选取」按钮，再点击视频获取坐标';
-            }, 1500);
-        }
-        video.addEventListener('click', onVideoClick);
-        function bindPickButtons() {
-            const mappings = [
-                { id: 'b1', uId: 'b1u', vId: 'b1v' },
-                { id: 'b2', uId: 'b2u', vId: 'b2v' },
-                { id: 'b3', uId: 'b3u', vId: 'b3v' },
-                { id: 'b4', uId: 'b4u', vId: 'b4v' },
-                { id: 'c', uId: 'cu', vId: 'cv' },
-                { id: 'trolleyStart', uId: 'trolleyStartU', vId: 'trolleyStartV' },
-                { id: 'trolleyEnd', uId: 'trolleyEndU', vId: 'trolleyEndV' },
-                { id: 'workerStart', uId: 'workerStartU', vId: 'workerStartV' },
-                { id: 'workerEnd', uId: 'workerEndU', vId: 'workerEndV' }
-            ];
-            mappings.forEach(m => {
-                const btn = document.querySelector(`button.pick-btn[data-target="${m.id}"]`);
-                if (btn) {
-                    btn.addEventListener('click', () => {
-                        enterPickMode(m.id, (mode, u, v) => {
-                            document.getElementById(m.uId).value = u.toFixed(3);
-                            document.getElementById(m.vId).value = v.toFixed(3);
-                            drawMarkers();
-                            if (currentP) { updateRiskDrawArea(currentP); }
-                        });
-                    });
-                }
-            });
-        }
-        function handleVerticalPick(e) {
-            const btn = e.currentTarget;
-            const row = btn.closest('.vpoint-row');
-            const idx = row.getAttribute('data-idx');
-            enterPickMode(`vertical_${idx}`, (mode, u, v) => {
-                row.querySelector('.vu').value = u.toFixed(3);
-                row.querySelector('.vv').value = v.toFixed(3);
-                drawMarkers();
-            });
-        }
-        function addVerticalPoint() {
-            const container = document.getElementById('verticalPointsContainer');
-            const idx = container.children.length;
-            const newRow = document.createElement('div');
-            newRow.className = 'vpoint-row';
-            newRow.setAttribute('data-idx', idx);
-            newRow.innerHTML = `
-                    <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="text" value="15.00" inputmode="decimal" autocomplete="off"></div>
-                    <div class="field"><label>u</label><input class="vu" type="text" value="770.000" inputmode="decimal" autocomplete="off"></div>
-                    <div class="field"><label>v</label><input class="vv" type="text" value="120.000" inputmode="decimal" autocomplete="off"></div>
-                    <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
-                `;
-            container.appendChild(newRow);
-            newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
-        }
-
-        // ================================================================
-        // 7. 视频坐标标记绘制
-        // ================================================================
-        const markerCanvas = document.getElementById('markerCanvas');
-        const markerCtx = markerCanvas.getContext('2d');
-
-        function drawMarkers() {
-            if (!videoEl.videoWidth) {
-                setTimeout(drawMarkers, 200);
-                return;
-            }
-            const rect = videoEl.getBoundingClientRect();
-            markerCanvas.width = rect.width;
-            markerCanvas.height = rect.height;
-            markerCtx.clearRect(0, 0, markerCanvas.width, markerCanvas.height);
-            const scaleX = rect.width / videoEl.videoWidth;
-            const scaleY = rect.height / videoEl.videoHeight;
-            const map = (u, v) => [u * scaleX, v * scaleY];
-
-            const points = [
-                { id: 'b1', label: 'B1', color: '#ff4444', suffix: 'lower' },
-                { id: 'b2', label: 'B2', color: '#ff4444', suffix: 'lower' },
-                { id: 'b3', label: 'B3', color: '#ff4444', suffix: 'lower' },
-                { id: 'b4', label: 'B4', color: '#ff4444', suffix: 'lower' },
-                { id: 'c', label: 'C', color: '#44ff44', suffix: 'lower' },
-                { id: 'trolleyStart', label: '小车起', color: '#44aaff', suffix: 'upper' },
-                { id: 'trolleyEnd', label: '小车终', color: '#44aaff', suffix: 'upper' },
-                { id: 'workerStart', label: '工人起', color: '#ffaa44', suffix: 'upper' },
-                { id: 'workerEnd', label: '工人终', color: '#ffaa44', suffix: 'upper' }
-            ];
-
-            const vrows = document.querySelectorAll('.vpoint-row');
-            vrows.forEach((row, idx) => {
-                const u = parseFloat(row.querySelector('.vu').value);
-                const v = parseFloat(row.querySelector('.vv').value);
-                if (!isNaN(u) && !isNaN(v)) {
-                    points.push({ id: `v${idx}`, label: `V${idx+1}`, color: '#ff66ff', u: u, v: v });
-                }
-            });
-
-            points.forEach(p => {
-                let u, v;
-                if (p.u !== undefined && p.v !== undefined) {
-                    u = p.u;
-                    v = p.v;
-                } else {
-                    let uSuffix, vSuffix;
-                    if (p.suffix === 'lower') {
-                        uSuffix = 'u';
-                        vSuffix = 'v';
-                    } else {
-                        uSuffix = 'U';
-                        vSuffix = 'V';
-                    }
-                    const uInput = document.getElementById(p.id + uSuffix);
-                    const vInput = document.getElementById(p.id + vSuffix);
-                    if (!uInput || !vInput) return;
-                    u = parseFloat(uInput.value);
-                    v = parseFloat(vInput.value);
-                    if (isNaN(u) || isNaN(v)) return;
-                }
-                const [x, y] = map(u, v);
-                markerCtx.save();
-                markerCtx.strokeStyle = p.color;
-                markerCtx.lineWidth = 1.5;
-                const size = 5;
-                markerCtx.beginPath();
-                markerCtx.moveTo(x - size, y);
-                markerCtx.lineTo(x + size, y);
-                markerCtx.moveTo(x, y - size);
-                markerCtx.lineTo(x, y + size);
-                markerCtx.stroke();
-                markerCtx.beginPath();
-                markerCtx.arc(x, y, 4, 0, 2 * Math.PI);
-                markerCtx.stroke();
-                markerCtx.fillStyle = p.color;
-                markerCtx.font = '10px Times New Roman';
-                markerCtx.textAlign = 'left';
-                markerCtx.textBaseline = 'bottom';
-                markerCtx.fillText(p.label, x + 8, y - 4);
-                markerCtx.restore();
-            });
-        }
-
-        function bindInputChange() {
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('change', drawMarkers);
-                input.addEventListener('input', drawMarkers);
-            });
-        }
-
-        // ================================================================
-        // 8. 塔吊运行时间点分析（保留）
-        // ================================================================
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const analysisStatus = document.getElementById('analysisStatus');
-        const analysisProgress = document.getElementById('analysisProgress');
-        const resultTimesDiv = document.getElementById('resultTimes');
-        const progressFill = document.getElementById('progressFill');
-        const markersContainer = document.getElementById('markersContainer');
-        const MARKER_COLORS = {
-            boom_start: '#facc15',
-            boom_end: '#f97316',
-            lift: '#22c55e',
-            place: '#ef4444'
-        };
-        let currentBoomTimes = null;
-
-        function updateVideoProgress() {
-            if (!videoEl.duration) return;
-            const ratio = videoEl.currentTime / videoEl.duration;
-            progressFill.style.width = (ratio * 100) + '%';
-            if (currentBoomTimes) {
-                const markers = markersContainer.querySelectorAll('.marker');
-                markers.forEach(marker => {
-                    const time = parseFloat(marker.dataset.time);
-                    if (time !== undefined && videoEl.duration > 0) {
-                        const pos = (time / videoEl.duration) * 100;
-                        marker.style.left = pos + '%';
-                    }
-                });
-            }
-        }
-        function clearMarkers() { markersContainer.innerHTML = ''; }
-        function createMarker(time, label, className = '') {
-            const marker = document.createElement('div');
-            marker.className = `marker ${className}`;
-            marker.dataset.time = time;
-            marker.title = `${label}: ${time.toFixed(3)}s`;
-            return marker;
-        }
-        function displayResults(times) {
-            if (!times) {
-                resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
-                return;
-            }
-            const items = [
-                { key: 'boom_start', label: '吊臂开始转动', cls: '' },
-                { key: 'boom_end', label: '吊臂结束转动', cls: '' },
-                { key: 'lift', label: '起吊候选', cls: 'lift' },
-                { key: 'place', label: '落吊候选', cls: 'place' }
-            ];
-            let html = '';
-            for (const item of items) {
-                const val = times[item.key];
-                if (val !== null && val !== undefined) {
-                    const color = MARKER_COLORS[item.key] || '#94a3b8';
-                    html += `<span class="time-item">
-                                <span class="marker-color" style="background:${color};"></span>
-                                <span class="label">${item.label}:</span>
-                                <span class="value">${val.toFixed(3)}s (${formatTime(val)})</span>
-                            </span>`;
-                } else {
-                    html += `<span class="time-item" style="color:#94a3b8;">
-                                <span class="label">${item.label}:</span>
-                                <span class="value">未检测到</span>
-                            </span>`;
-                }
-            }
-            resultTimesDiv.innerHTML = html;
-            clearMarkers();
-            const markerMap = [
-                { key: 'boom_start', cls: '', label: '开始' },
-                { key: 'boom_end', cls: '', label: '结束' },
-                { key: 'lift', cls: 'lift', label: '起吊' },
-                { key: 'place', cls: 'place', label: '落吊' }
-            ];
-            for (const m of markerMap) {
-                const val = times[m.key];
-                if (val !== null && val !== undefined) {
-                    const marker = createMarker(val, m.label, m.cls);
-                    markersContainer.appendChild(marker);
-                }
-            }
-            updateVideoProgress();
-        }
-        function formatTime(sec) {
-            const m = Math.floor(sec / 60);
-            const s = (sec % 60);
-            return `${m.toString().padStart(2,'0')}:${s.toFixed(3).padStart(6,'0')}`;
-        }
-        async function performAnalysis(videoFile) {
-            return new Promise((resolve) => {
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 8;
-                    if (progress >= 100) {
-                        progress = 100;
-                        clearInterval(interval);
-                        const result = { boom_start: 29.000, boom_end: 61.133, lift: 26.000, place: 62.633 };
-                        resolve(result);
-                    }
-                    analysisProgress.style.width = progress + '%';
-                }, 200);
-            });
-        }
-        analyzeBtn.addEventListener('click', async function() {
-            if (this.disabled) return;
-            const currentSrc = videoEl.src;
-            const videoName = currentSrc.split('/').pop().split('?')[0];
-            if (!videoName) {
-                analysisStatus.textContent = '❌ 未加载视频';
-                return;
-            }
-            this.disabled = true;
-            analysisStatus.textContent = '⏳ 分析中...';
-            analysisProgress.style.width = '0%';
-            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">分析中，请稍候...</span>';
-            clearMarkers();
-            try {
-                const times = await performAnalysis(videoName);
-                currentBoomTimes = times;
-                displayResults(times);
-                analysisStatus.textContent = '✅ 分析完成';
-                analysisProgress.style.width = '100%';
-            } catch (err) {
-                analysisStatus.textContent = '❌ 分析失败: ' + err.message;
-                resultTimesDiv.innerHTML = `<span style="color:#dc2626;">分析失败: ${err.message}</span>`;
-            } finally { this.disabled = false; }
-        });
-        videoEl.addEventListener('timeupdate', updateVideoProgress);
-        videoEl.addEventListener('loadedmetadata', updateVideoProgress);
-        videoEl.addEventListener('loadeddata', () => {
-            currentBoomTimes = null;
-            clearMarkers();
-            progressFill.style.width = '0%';
-            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
-            drawMarkers();
-        });
-        window.addEventListener('resize', () => {
-            updateVideoProgress();
-            drawMarkers();
-        });
-
-        // ================================================================
-        // 9. 初始化
-        // ================================================================
-        window.addEventListener('DOMContentLoaded', () => {
-            bindPickButtons();
-            document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
-            document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
-            video.muted = true;
-            video.play().catch(() => {});
-            document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
-            const observer = new MutationObserver(() => {
-                document.querySelectorAll('.pick-vertical').forEach(btn => {
-                    btn.removeEventListener('click', handleVerticalPick);
-                    btn.addEventListener('click', handleVerticalPick);
-                });
-            });
-            observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
-
-            bindInputChange();
-
-            renderMatrix(defaultP);
-            currentP = null;
-            setTimeout(drawMarkers, 1000);
-        });
-    </script>
-</body>
-</html>
+            const scaleY =
