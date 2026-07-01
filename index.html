@@ -1713,6 +1713,84 @@
             return { rho, delta, deltaDeg: delta * 180 / Math.PI, hasDirection: true };
         }
 
+        function loadTrackPointAtT(sweep, t) {
+            t = Math.max(0, Math.min(1, t));
+
+            const startAng = Math.atan2(sweep.A[1], sweep.A[0]);
+            const r = sweep.rA + t * (sweep.rB - sweep.rA);
+            const ang = startAng + sweep.sigma * sweep.Delta * t;
+
+            return [
+                r * Math.cos(ang),
+                r * Math.sin(ang)
+            ];
+        }
+
+        function pointToSegmentDistanceJS(P, A, B) {
+            const AB = [B[0] - A[0], B[1] - A[1]];
+            const AP = [P[0] - A[0], P[1] - A[1]];
+
+            const ab2 = dot2JS(AB, AB);
+            if (ab2 < 1e-12) {
+                return {
+                    distance: norm2JS([P[0] - A[0], P[1] - A[1]]),
+                    t: 0
+                };
+            }
+
+            let t = dot2JS(AP, AB) / ab2;
+            t = Math.max(0, Math.min(1, t));
+
+            const closest = [
+                A[0] + t * AB[0],
+                A[1] + t * AB[1]
+            ];
+
+            return {
+                distance: norm2JS([P[0] - closest[0], P[1] - closest[1]]),
+                t
+            };
+        }
+
+        function pointToVariableLoadTrackDistanceJS(P, sweep, steps = 160) {
+            let minDistance = Infinity;
+            let bestGlobalT = 0;
+            let closestPart = "track_middle";
+
+            let prev = loadTrackPointAtT(sweep, 0);
+
+            for (let i = 1; i <= steps; i++) {
+                const t1 = i / steps;
+                const curr = loadTrackPointAtT(sweep, t1);
+
+                const d = pointToSegmentDistanceJS(P, prev, curr);
+
+                if (d.distance < minDistance) {
+                    minDistance = d.distance;
+
+                    const t0 = (i - 1) / steps;
+                    bestGlobalT = t0 + d.t * (t1 - t0);
+
+                    if (bestGlobalT <= 1e-4) {
+                        closestPart = "start_cap";
+                    } else if (bestGlobalT >= 1 - 1e-4) {
+                        closestPart = "end_cap";
+                    } else {
+                        closestPart = "track_middle";
+                    }
+                }
+
+                prev = curr;
+            }
+
+            return {
+                distance: minDistance,
+                closestPart,
+                trackT: bestGlobalT
+            };
+        }
+
+
         function checkRisk1PointJS(P, sweep, boomLength) {
             const progress = pointProgressJS(P, sweep);
             const inRadius = progress.rho <= boomLength + 1e-9;
@@ -1721,24 +1799,17 @@
         }
 
         function pointToArcDistanceJS(P, sweep) {
-            const A = sweep.A,
-                B = sweep.B;
-            const r = 0.5 * (sweep.rA + sweep.rB);
-            const rho = norm2JS(P);
-            if (rho < 1e-12) {
-                return { distance: r, closestPart: "center", rho, deltaDeg: null };
-            }
+            const d = pointToVariableLoadTrackDistanceJS(P, sweep, 160);
+
             const progress = pointProgressJS(P, sweep);
-            const inAngle = progress.delta <= sweep.Delta + 1e-12;
-            if (inAngle) {
-                return { distance: Math.abs(rho - r), closestPart: "arc_middle", rho, deltaDeg: progress.deltaDeg };
-            }
-            const dA = norm2JS([P[0] - A[0], P[1] - A[1]]);
-            const dB = norm2JS([P[0] - B[0], P[1] - B[1]]);
-            if (dA <= dB) {
-                return { distance: dA, closestPart: "start_cap", rho, deltaDeg: progress.deltaDeg };
-            }
-            return { distance: dB, closestPart: "end_cap", rho, deltaDeg: progress.deltaDeg };
+
+            return {
+                distance: d.distance,
+                closestPart: d.closestPart,
+                rho: norm2JS(P),
+                deltaDeg: progress.deltaDeg,
+                trackT: d.trackT
+            };
         }
 
         function checkRisk2PointJS(P, sweep, loadRadius) {
@@ -2159,7 +2230,7 @@
             const startAng = Math.atan2(A[1], A[0]);
             const sigma = sweep.sigma,
                 Delta = sweep.Delta;
-            const midR = 0.5 * (sweep.rA + sweep.rB);
+
             const workerNow = [P0[0] + progress * (P1[0] - P0[0]), P0[1] + progress * (P1[1] - P0[1])];
             const fanPoints = [];
             for (let i = 0; i <= steps; i++) {
@@ -2177,14 +2248,12 @@
             const loadTrackPoints = [];
             for (let i = 0; i <= steps; i++) {
                 const t = i / steps;
-                const ang = startAng + sigma * Delta * t;
-                loadTrackPoints.push([midR * Math.cos(ang), midR * Math.sin(ang)]);
+                loadTrackPoints.push(loadTrackPointAtT(sweep, t));
             }
             const currentLoadTrackPoints = [];
             for (let i = 0; i <= currentSteps; i++) {
                 const t = progress * i / currentSteps;
-                const ang = startAng + sigma * Delta * t;
-                currentLoadTrackPoints.push([midR * Math.cos(ang), midR * Math.sin(ang)]);
+                currentLoadTrackPoints.push(loadTrackPointAtT(sweep, t));
             }
             const allPoints = [
                 O, P0, P1, workerNow, [-2, -2], [14, 14],
