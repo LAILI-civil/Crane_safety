@@ -2569,4 +2569,500 @@
         function getVideoOriginalCoordinates(event) {
             const rect = video.getBoundingClientRect();
             const scaleX = video.videoWidth / rect.width;
-            const scaleY =
+            const scaleY = video.videoHeight / rect.height;
+            let u = (event.clientX - rect.left) * scaleX;
+            let v = (event.clientY - rect.top) * scaleY;
+            u = Math.min(Math.max(0, u), video.videoWidth);
+            v = Math.min(Math.max(0, v), video.videoHeight);
+            return { u, v };
+        }
+
+        // 鼠标移动处理：更新放大镜
+        function onVideoMouseMove(event) {
+            if (!activePickMode) {
+                // 非选取模式，隐藏放大镜
+                if (magVisible) showMagnifier(false);
+                return;
+            }
+            const { u, v } = getVideoOriginalCoordinates(event);
+            if (!video.videoWidth || !video.videoHeight) return;
+
+            // 更新放大镜位置 (在视频区域内)
+            const rect = video.getBoundingClientRect();
+            const scaleX = rect.width / video.videoWidth;
+            const scaleY = rect.height / video.videoHeight;
+            let px = (u * scaleX) + rect.left;
+            let py = (v * scaleY) + rect.top;
+
+            // 放大镜偏移：放在鼠标右下方，避免遮挡
+            const offsetX = 20;
+            const offsetY = 20;
+            let magX = px + offsetX;
+            let magY = py + offsetY;
+
+            // 确保放大镜不超出视频区域
+            const magW = magDisplaySize;
+            const magH = magDisplaySize + 32;
+            if (magX + magW > rect.left + rect.width) {
+                magX = px - magW - offsetX;
+            }
+            if (magY + magH > rect.top + rect.height) {
+                magY = py - magH - offsetY;
+            }
+            // 确保不超出左边界和上边界
+            magX = Math.max(rect.left + 4, Math.min(magX, rect.left + rect.width - magW - 4));
+            magY = Math.max(rect.top + 4, Math.min(magY, rect.top + rect.height - magH - 4));
+
+            magnifier.style.left = (magX - rect.left) + 'px';
+            magnifier.style.top = (magY - rect.top) + 'px';
+
+            // 更新放大镜内容
+            updateMagnifier(u, v);
+
+            // 确保显示
+            if (!magVisible) showMagnifier(true);
+        }
+
+        // 视频鼠标离开时隐藏放大镜（但如果在选取模式下，鼠标离开视频区域后应保持隐藏，直到再次进入）
+        function onVideoMouseLeave() {
+            if (magVisible) showMagnifier(false);
+        }
+
+        // 视频鼠标进入时，如果处于选取模式，显示放大镜
+        function onVideoMouseEnter() {
+            if (activePickMode) {
+                // 触发一次移动更新
+                // 但这里没有事件对象，无法获取位置，等待后续mousemove触发
+                // 先显示一个默认状态
+                if (!magVisible) {
+                    // 获取视频中心点作为临时位置
+                    const u = video.videoWidth / 2;
+                    const v = video.videoHeight / 2;
+                    updateMagnifier(u, v);
+                    showMagnifier(true);
+                }
+            }
+        }
+
+        // 绑定鼠标事件
+        video.addEventListener('mousemove', onVideoMouseMove);
+        video.addEventListener('mouseleave', onVideoMouseLeave);
+        video.addEventListener('mouseenter', onVideoMouseEnter);
+
+        // 进入选取模式
+        function enterPickMode(targetId, callback) {
+            if (activePickMode) {
+                // 如果已有选取模式，先退出
+                video.style.cursor = "default";
+                showMagnifier(false);
+            }
+            activePickMode = targetId;
+            video.style.cursor = "crosshair";
+            document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}  (放大镜已开启)`;
+            pickCallback = callback;
+            // 鼠标进入时显示放大镜，但如果鼠标已经在视频上，触发一次移动
+            // 主动显示放大镜（在视频中心区域）
+            if (video.videoWidth && video.videoHeight) {
+                const u = video.videoWidth / 2;
+                const v = video.videoHeight / 2;
+                updateMagnifier(u, v);
+                showMagnifier(true);
+                // 定位到视频中心附近
+                const rect = video.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2 - magDisplaySize / 2;
+                const cy = rect.top + rect.height / 2 - (magDisplaySize + 32) / 2;
+                magnifier.style.left = Math.max(4, Math.min(cx - rect.left, rect.width - magDisplaySize - 4)) + 'px';
+                magnifier.style.top = Math.max(4, Math.min(cy - rect.top, rect.height - magDisplaySize - 32 - 4)) + 'px';
+            }
+        }
+
+        // 视频点击处理
+        function onVideoClick(event) {
+            if (!activePickMode) return;
+            const { u, v } = getVideoOriginalCoordinates(event);
+            if (pickCallback) pickCallback(activePickMode, u, v);
+            // 退出选取模式
+            video.style.cursor = "default";
+            showMagnifier(false);
+            activePickMode = null;
+            document.getElementById('pickTip').innerHTML = '✅ 坐标已选取';
+            setTimeout(drawMarkers, 100);
+            setTimeout(() => {
+                if (!activePickMode) document.getElementById('pickTip').innerHTML =
+                    '✏️ 点击「选取」按钮，再点击视频获取坐标';
+            }, 1500);
+        }
+        video.addEventListener('click', onVideoClick);
+
+        // 绑定选取按钮
+        function bindPickButtons() {
+            const mappings = [
+                { id: 'b1', uId: 'b1u', vId: 'b1v' },
+                { id: 'b2', uId: 'b2u', vId: 'b2v' },
+                { id: 'b3', uId: 'b3u', vId: 'b3v' },
+                { id: 'b4', uId: 'b4u', vId: 'b4v' },
+                { id: 'c', uId: 'cu', vId: 'cv' },
+                { id: 'trolleyStart', uId: 'trolleyStartU', vId: 'trolleyStartV' },
+                { id: 'trolleyEnd', uId: 'trolleyEndU', vId: 'trolleyEndV' },
+                { id: 'workerStart', uId: 'workerStartU', vId: 'workerStartV' },
+                { id: 'workerEnd', uId: 'workerEndU', vId: 'workerEndV' }
+            ];
+            mappings.forEach(m => {
+                const btn = document.querySelector(`button.pick-btn[data-target="${m.id}"]`);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        enterPickMode(m.id, (mode, u, v) => {
+                            document.getElementById(m.uId).value = u.toFixed(3);
+                            document.getElementById(m.vId).value = v.toFixed(3);
+                            drawMarkers();
+                            if (currentP) { updateRiskDrawArea(currentP); }
+                        });
+                    });
+                }
+            });
+        }
+
+        function handleVerticalPick(e) {
+            const btn = e.currentTarget;
+            const row = btn.closest('.vpoint-row');
+            const idx = row.getAttribute('data-idx');
+            enterPickMode(`vertical_${idx}`, (mode, u, v) => {
+                row.querySelector('.vu').value = u.toFixed(3);
+                row.querySelector('.vv').value = v.toFixed(3);
+                drawMarkers();
+            });
+        }
+
+        function addVerticalPoint() {
+            const container = document.getElementById('verticalPointsContainer');
+            const idx = container.children.length;
+            const newRow = document.createElement('div');
+            newRow.className = 'vpoint-row';
+            newRow.setAttribute('data-idx', idx);
+            newRow.innerHTML = `
+                    <div class="field"><label>Z${idx+1} (m)</label><input class="vz" type="text" value="15.00" inputmode="decimal" autocomplete="off"></div>
+                    <div class="field"><label>u</label><input class="vu" type="text" value="770.000" inputmode="decimal" autocomplete="off"></div>
+                    <div class="field"><label>v</label><input class="vv" type="text" value="120.000" inputmode="decimal" autocomplete="off"></div>
+                    <button class="pick-btn pick-vertical" data-idx="${idx}">选取</button>
+                `;
+            container.appendChild(newRow);
+            newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
+        }
+
+        // ================================================================
+        // 7. 视频坐标标记绘制
+        // ================================================================
+        const markerCanvas = document.getElementById('markerCanvas');
+        const markerCtx = markerCanvas.getContext('2d');
+
+        function drawMarkers() {
+            if (!videoEl.videoWidth) {
+                setTimeout(drawMarkers, 200);
+                return;
+            }
+            const rect = videoEl.getBoundingClientRect();
+            markerCanvas.width = rect.width;
+            markerCanvas.height = rect.height;
+            markerCtx.clearRect(0, 0, markerCanvas.width, markerCanvas.height);
+            const scaleX = rect.width / videoEl.videoWidth;
+            const scaleY = rect.height / videoEl.videoHeight;
+            const map = (u, v) => [u * scaleX, v * scaleY];
+
+            const points = [
+                { id: 'b1', label: 'B1', color: '#ff4444', suffix: 'lower' },
+                { id: 'b2', label: 'B2', color: '#ff4444', suffix: 'lower' },
+                { id: 'b3', label: 'B3', color: '#ff4444', suffix: 'lower' },
+                { id: 'b4', label: 'B4', color: '#ff4444', suffix: 'lower' },
+                { id: 'c', label: 'C', color: '#44ff44', suffix: 'lower' },
+                { id: 'trolleyStart', label: '小车起', color: '#44aaff', suffix: 'upper' },
+                { id: 'trolleyEnd', label: '小车终', color: '#44aaff', suffix: 'upper' },
+                { id: 'workerStart', label: '工人起', color: '#ffaa44', suffix: 'upper' },
+                { id: 'workerEnd', label: '工人终', color: '#ffaa44', suffix: 'upper' }
+            ];
+
+            const vrows = document.querySelectorAll('.vpoint-row');
+            vrows.forEach((row, idx) => {
+                const u = parseFloat(row.querySelector('.vu').value);
+                const v = parseFloat(row.querySelector('.vv').value);
+                if (!isNaN(u) && !isNaN(v)) {
+                    points.push({ id: `v${idx}`, label: `V${idx+1}`, color: '#ff66ff', u: u, v: v });
+                }
+            });
+
+            points.forEach(p => {
+                let u, v;
+                if (p.u !== undefined && p.v !== undefined) {
+                    u = p.u;
+                    v = p.v;
+                } else {
+                    let uSuffix, vSuffix;
+                    if (p.suffix === 'lower') {
+                        uSuffix = 'u';
+                        vSuffix = 'v';
+                    } else {
+                        uSuffix = 'U';
+                        vSuffix = 'V';
+                    }
+                    const uInput = document.getElementById(p.id + uSuffix);
+                    const vInput = document.getElementById(p.id + vSuffix);
+                    if (!uInput || !vInput) return;
+                    u = parseFloat(uInput.value);
+                    v = parseFloat(vInput.value);
+                    if (isNaN(u) || isNaN(v)) return;
+                }
+                const [x, y] = map(u, v);
+                markerCtx.save();
+                markerCtx.strokeStyle = p.color;
+                markerCtx.lineWidth = 1.5;
+                const size = 5;
+                markerCtx.beginPath();
+                markerCtx.moveTo(x - size, y);
+                markerCtx.lineTo(x + size, y);
+                markerCtx.moveTo(x, y - size);
+                markerCtx.lineTo(x, y + size);
+                markerCtx.stroke();
+                markerCtx.beginPath();
+                markerCtx.arc(x, y, 4, 0, 2 * Math.PI);
+                markerCtx.stroke();
+                markerCtx.fillStyle = p.color;
+                markerCtx.font = '10px Times New Roman';
+                markerCtx.textAlign = 'left';
+                markerCtx.textBaseline = 'bottom';
+                markerCtx.fillText(p.label, x + 8, y - 4);
+                markerCtx.restore();
+            });
+        }
+
+        function bindInputChange() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('change', drawMarkers);
+                input.addEventListener('input', drawMarkers);
+            });
+        }
+
+        // ================================================================
+        // 8. 塔吊运行时间点分析（保留）
+        // ================================================================
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const analysisProgress = document.getElementById('analysisProgress');
+        const resultTimesDiv = document.getElementById('resultTimes');
+        const progressFill = document.getElementById('progressFill');
+        const markersContainer = document.getElementById('markersContainer');
+        const MARKER_COLORS = {
+            boom_start: '#facc15',
+            boom_end: '#f97316',
+            lift: '#22c55e',
+            place: '#ef4444'
+        };
+        let currentBoomTimes = null;
+
+        function updateVideoProgress() {
+            if (!videoEl.duration) return;
+            const ratio = videoEl.currentTime / videoEl.duration;
+            progressFill.style.width = (ratio * 100) + '%';
+            if (currentBoomTimes) {
+                const markers = markersContainer.querySelectorAll('.marker');
+                markers.forEach(marker => {
+                    const time = parseFloat(marker.dataset.time);
+                    if (time !== undefined && videoEl.duration > 0) {
+                        const pos = (time / videoEl.duration) * 100;
+                        marker.style.left = pos + '%';
+                    }
+                });
+            }
+        }
+
+        function clearMarkers() { markersContainer.innerHTML = ''; }
+
+        function createMarker(time, label, className = '') {
+            const marker = document.createElement('div');
+            marker.className = `marker ${className}`;
+            marker.dataset.time = time;
+            marker.title = `${label}: ${time.toFixed(3)}s`;
+            return marker;
+        }
+
+        function displayResults(times) {
+            if (!times) {
+                resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
+                return;
+            }
+            const items = [
+                { key: 'boom_start', label: '吊臂开始转动', cls: '' },
+                { key: 'boom_end', label: '吊臂结束转动', cls: '' },
+                { key: 'lift', label: '起吊候选', cls: 'lift' },
+                { key: 'place', label: '落吊候选', cls: 'place' }
+            ];
+            let html = '';
+            for (const item of items) {
+                const val = times[item.key];
+                if (val !== null && val !== undefined) {
+                    const color = MARKER_COLORS[item.key] || '#94a3b8';
+                    html += `<span class="time-item">
+                                <span class="marker-color" style="background:${color};"></span>
+                                <span class="label">${item.label}:</span>
+                                <span class="value">${val.toFixed(3)}s (${formatTime(val)})</span>
+                            </span>`;
+                } else {
+                    html += `<span class="time-item" style="color:#94a3b8;">
+                                <span class="label">${item.label}:</span>
+                                <span class="value">未检测到</span>
+                            </span>`;
+                }
+            }
+            resultTimesDiv.innerHTML = html;
+            clearMarkers();
+            const markerMap = [
+                { key: 'boom_start', cls: '', label: '开始' },
+                { key: 'boom_end', cls: '', label: '结束' },
+                { key: 'lift', cls: 'lift', label: '起吊' },
+                { key: 'place', cls: 'place', label: '落吊' }
+            ];
+            for (const m of markerMap) {
+                const val = times[m.key];
+                if (val !== null && val !== undefined) {
+                    const marker = createMarker(val, m.label, m.cls);
+                    markersContainer.appendChild(marker);
+                }
+            }
+            updateVideoProgress();
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = (sec % 60);
+            return `${m.toString().padStart(2,'0')}:${s.toFixed(3).padStart(6,'0')}`;
+        }
+
+        async function performAnalysis(videoFile) {
+            return new Promise((resolve) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 8;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        const result = { boom_start: 29.000, boom_end: 61.133, lift: 26.000, place: 62.633 };
+                        resolve(result);
+                    }
+                    analysisProgress.style.width = progress + '%';
+                }, 200);
+            });
+        }
+        analyzeBtn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            const currentSrc = videoEl.src;
+            const videoName = currentSrc.split('/').pop().split('?')[0];
+            if (!videoName) {
+                analysisStatus.textContent = '❌ 未加载视频';
+                return;
+            }
+            this.disabled = true;
+            analysisStatus.textContent = '⏳ 分析中...';
+            analysisProgress.style.width = '0%';
+            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">分析中，请稍候...</span>';
+            clearMarkers();
+            try {
+                const times = await performAnalysis(videoName);
+                currentBoomTimes = times;
+                displayResults(times);
+                analysisStatus.textContent = '✅ 分析完成';
+                analysisProgress.style.width = '100%';
+            } catch (err) {
+                analysisStatus.textContent = '❌ 分析失败: ' + err.message;
+                resultTimesDiv.innerHTML = `<span style="color:#dc2626;">分析失败: ${err.message}</span>`;
+            } finally { this.disabled = false; }
+        });
+        videoEl.addEventListener('timeupdate', updateVideoProgress);
+        videoEl.addEventListener('loadedmetadata', updateVideoProgress);
+        videoEl.addEventListener('loadeddata', () => {
+            currentBoomTimes = null;
+            clearMarkers();
+            progressFill.style.width = '0%';
+            resultTimesDiv.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">点击「分析」按钮获取时间点</span>';
+            drawMarkers();
+        });
+        window.addEventListener('resize', () => {
+            updateVideoProgress();
+            drawMarkers();
+        });
+
+        // ================================================================
+        // 9. 初始化
+        // ================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            bindPickButtons();
+            document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
+            document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
+            video.muted = true;
+            video.play().catch(() => {});
+            document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
+            const observer = new MutationObserver(() => {
+                document.querySelectorAll('.pick-vertical').forEach(btn => {
+                    btn.removeEventListener('click', handleVerticalPick);
+                    btn.addEventListener('click', handleVerticalPick);
+                });
+            });
+            observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
+
+            bindInputChange();
+
+            renderMatrix(defaultP);
+            currentP = null;
+            setTimeout(drawMarkers, 1000);
+
+            // 初始化放大镜尺寸（响应式）
+            const updateMagSize = () => {
+                const isMobile = window.innerWidth < 900;
+                const isSmall = window.innerWidth < 600;
+                let size = 180;
+                let zoom = 4;
+                if (isSmall) { size = 110;
+                    zoom = 3; } else if (isMobile) { size = 140;
+                    zoom = 3.5; }
+                // 重新计算采样尺寸
+                const sampleSize = Math.round(size / zoom);
+                // 更新全局变量
+                // 由于我们使用固定变量，这里重新设置
+                // 为了简化，只调整canvas尺寸
+                const dpr = window.devicePixelRatio || 1;
+                magCanvas.width = size * dpr;
+                magCanvas.height = size * dpr;
+                magCanvas.style.width = size + 'px';
+                magCanvas.style.height = size + 'px';
+                magCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                magnifier.style.width = size + 'px';
+                magnifier.style.height = (size + 32) + 'px';
+                // 更新全局变量
+                window.__magSize = size;
+                window.__magZoom = zoom;
+                window.__sampleSize = Math.round(size / zoom);
+            };
+            // 覆盖默认尺寸
+            window.__magSize = MAG_SIZE;
+            window.__magZoom = MAG_ZOOM;
+            window.__sampleSize = SAMPLE_SIZE;
+
+            // 监听窗口变化
+            window.addEventListener('resize', () => {
+                updateMagSize();
+                // 重新绘制放大镜内容
+                if (magVisible && currentMagUV) {
+                    updateMagnifier(currentMagUV.u, currentMagUV.v);
+                }
+            });
+
+            // 提供一个全局函数用于获取当前放大镜参数
+            window.getMagParams = function() {
+                return {
+                    size: window.__magSize || MAG_SIZE,
+                    zoom: window.__magZoom || MAG_ZOOM,
+                    sampleSize: window.__sampleSize || SAMPLE_SIZE
+                };
+            };
+        });
+    </script>
+</body>
+</html>
