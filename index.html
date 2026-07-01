@@ -472,6 +472,24 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
         }
+        .param-card select {
+            padding: 5px 6px;
+            border-radius: 10px;
+            border: 1px solid #d0d7e2;
+            font-size: 0.8rem;
+            width: 100%;
+            font-family: 'Times New Roman', 'Segoe UI', sans-serif;
+            background: white;
+            color: #0f172a;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            height: 30px;
+        }
+
+        .param-card select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
         button.pick-btn {
             background: #eef2ff;
             border: none;
@@ -1060,6 +1078,21 @@
                                 <input type="text" id="boomLength" value="35.1" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
+
+                        <div class="compact-row">
+                            <div class="compact-field">
+                                <label>塔吊旋转方向</label>
+                                <select id="rotationDirection">
+                                    <option value="ccw" selected>逆时针 ccw</option>
+                                    <option value="cw">顺时针 cw</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="font-size:0.70rem; color:#64748b; line-height:1.45; margin-top:2px;">
+                            说明：旋转方向表示塔臂从“起始小车”方向转到“结束小车”方向的实际方向。
+                        </div>
+
                     </div>
 
                     <!-- 列3-行1: 小车关键点 -->
@@ -1715,14 +1748,14 @@
         }
 
         function buildRiskDemoFromInputs(P, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight,
-            boomLength, loadRadius) {
+            boomLength, loadRadius, direction) {
             const H0 = getH0FromP(P);
             const p3 = [P[0][2], P[1][2], P[2][2]];
             const liftGround = imageToXYAtHeight(H0, p3, liftPixel, trolleyHeight);
             const dropGround = imageToXYAtHeight(H0, p3, dropPixel, trolleyHeight);
             const workerStartGround = imageToGroundFromP(P, workerStartPixel);
             const workerEndGround = imageToGroundFromP(P, workerEndPixel);
-            const direction = "ccw";
+            direction = direction === "cw" ? "cw" : "ccw";
             const numSamples = 200;
             const sweep = computeSweepParamsJS(liftGround, dropGround, direction);
             let risk1Danger = false,
@@ -2233,6 +2266,7 @@
             const trolleyHeight = parseFloat(document.getElementById('trolleyHeight').value) || 17.926;
             const boomLength = parseFloat(document.getElementById('boomLength').value) || 50;
             const loadRadius = parseFloat(document.getElementById('loadRiskRadius').value) || 2.0;
+            const direction = document.getElementById('rotationDirection')?.value || "ccw";
             const liftPixel = [
                 parseFloat(document.getElementById('trolleyStartU').value) || 0,
                 parseFloat(document.getElementById('trolleyStartV').value) || 0
@@ -2254,7 +2288,7 @@
                 return;
             }
             const demo = buildRiskDemoFromInputs(Pmat, liftPixel, dropPixel, workerStartPixel, workerEndPixel, trolleyHeight,
-                boomLength, loadRadius);
+                boomLength, loadRadius, direction);
             updateRiskParamPanel(demo);
             drawRisk3D(demo);
             if (riskTopAnimId !== null) {
@@ -2795,11 +2829,26 @@
 
         function bindInputChange() {
             const inputs = document.querySelectorAll('input');
+
             inputs.forEach(input => {
-                input.addEventListener('change', drawMarkers);
-                input.addEventListener('input', drawMarkers);
+                input.addEventListener('change', () => {
+                    drawMarkers();
+                    if (currentP) updateRiskDrawArea(currentP);
+                });
+
+                input.addEventListener('input', () => {
+                    drawMarkers();
+                });
             });
+
+            const rotationSelect = document.getElementById('rotationDirection');
+            if (rotationSelect) {
+                rotationSelect.addEventListener('change', () => {
+                    if (currentP) updateRiskDrawArea(currentP);
+                });
+            }
         }
+
 
         // ================================================================
         // 8. 塔吊运行时间点分析（保留）
