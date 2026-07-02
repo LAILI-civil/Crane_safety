@@ -520,6 +520,31 @@
             border-radius: 12px;
             border: 1px solid #edf2f7;
         }
+        .tip-point-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 6px;
+            margin-bottom: 8px;
+            background: #ecfeff;
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+        }
+
+        .tip-point-row .field {
+            flex: 1;
+            min-width: 48px;
+        }
+
+        .tip-point-row input {
+            padding: 4px 6px;
+            font-size: 0.75rem;
+        }
+
+        .tip-point-row label {
+            font-size: 0.7rem;
+        }
         .vpoint-row .field {
             flex: 1;
             min-width: 48px;
@@ -1074,12 +1099,50 @@
                         <button id="addVerticalPoint" class="add-point-btn">+ 添加参考点</button>
                         <div class="compact-row" style="margin-top:8px;">
                             <div class="compact-field">
-                                <label>塔臂长度 (米)</label>
+                                <label>塔臂长度 / 臂尖半径 r (米)</label>
                                 <input type="text" id="boomLength" value="35.1" inputmode="decimal" autocomplete="off">
                             </div>
                         </div>
 
                         <div class="compact-row">
+                            <div class="compact-field">
+                                <label>塔臂尖高度 H (米)</label>
+                                <input type="text" id="tipHeight" value="21.846" inputmode="decimal" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div style="margin: 8px 0 4px 0;">
+                            <label style="font-size:0.75rem;">📍 塔臂尖参考点，半径固定为塔臂长度</label>
+                        </div>
+
+                        <div id="tipPointsContainer">
+                            <div class="tip-point-row" data-idx="0">
+                                <div class="field">
+                                    <label>Tip1 u</label>
+                                    <input class="tip-u" type="text" value="" inputmode="decimal" autocomplete="off">
+                                </div>
+                                <div class="field">
+                                    <label>v</label>
+                                    <input class="tip-v" type="text" value="" inputmode="decimal" autocomplete="off">
+                                </div>
+                                <button class="pick-btn pick-tip-point" data-idx="0">选取</button>
+                            </div>
+                            <div class="tip-point-row" data-idx="1">
+                                <div class="field">
+                                    <label>Tip2 u</label>
+                                    <input class="tip-u" type="text" value="" inputmode="decimal" autocomplete="off">
+                                </div>
+                                <div class="field">
+                                    <label>v</label>
+                                    <input class="tip-v" type="text" value="" inputmode="decimal" autocomplete="off">
+                                </div>
+                                <button class="pick-btn pick-tip-point" data-idx="1">选取</button>
+                            </div>
+                        </div>
+
+                        <button id="addTipPoint" class="add-point-btn">+ 添加塔臂尖参考点</button>
+
+                        <div class="compact-row" style="margin-top:8px;">
                             <div class="compact-field">
                                 <label>塔吊旋转方向</label>
                                 <select id="rotationDirection">
@@ -1087,10 +1150,6 @@
                                     <option value="cw">顺时针 cw</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div style="font-size:0.70rem; color:#64748b; line-height:1.45; margin-top:2px;">
-                            说明：旋转方向表示塔臂从“起始小车”方向转到“结束小车”方向的实际方向。
                         </div>
 
                     </div>
