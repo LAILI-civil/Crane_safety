@@ -2876,28 +2876,38 @@
 
         // ---- 辅助函数：计算视频内容实际显示区域（考虑 object-fit: contain） ----
         function getVideoDisplayRect() {
-            const rect = video.getBoundingClientRect();
-            const vw = video.videoWidth;
-            const vh = video.videoHeight;
+            const rect = videoEl.getBoundingClientRect();
+            const vw = videoEl.videoWidth;
+            const vh = videoEl.videoHeight;
+
             if (!vw || !vh) {
-                return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+                return {
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                };
             }
-            const containerAspect = rect.width / rect.height;
+
+            const elementAspect = rect.width / rect.height;
             const videoAspect = vw / vh;
+
             let displayWidth, displayHeight, offsetX, offsetY;
-            if (containerAspect > videoAspect) {
-                // 容器更宽，上下黑边
+
+            if (elementAspect > videoAspect) {
+                // 元素更宽，视频按高度铺满，左右有黑边
                 displayHeight = rect.height;
                 displayWidth = rect.height * videoAspect;
                 offsetX = (rect.width - displayWidth) / 2;
                 offsetY = 0;
             } else {
-                // 容器更高，左右黑边
+                // 元素更高，视频按宽度铺满，上下有黑边
                 displayWidth = rect.width;
                 displayHeight = rect.width / videoAspect;
                 offsetX = 0;
                 offsetY = (rect.height - displayHeight) / 2;
             }
+
             return {
                 left: rect.left + offsetX,
                 top: rect.top + offsetY,
@@ -2906,16 +2916,25 @@
             };
         }
 
+
         // ---- 获取鼠标在视频原始坐标 (u, v) ----
         function getVideoOriginalCoordinates(event) {
             const display = getVideoDisplayRect();
-            const scaleX = video.videoWidth / display.width;
-            const scaleY = video.videoHeight / display.height;
-            let u = (event.clientX - display.left) * scaleX;
-            let v = (event.clientY - display.top) * scaleY;
-            u = Math.min(Math.max(0, u), video.videoWidth);
-            v = Math.min(Math.max(0, v), video.videoHeight);
-            return { u, v };
+
+            let x = event.clientX - display.left;
+            let y = event.clientY - display.top;
+
+            // 如果点到黑边区域，强制夹到真实视频内容范围内
+            x = Math.min(Math.max(0, x), display.width);
+            y = Math.min(Math.max(0, y), display.height);
+
+            const u = x * videoEl.videoWidth / display.width;
+            const v = y * videoEl.videoHeight / display.height;
+
+            return {
+                u: Math.min(Math.max(0, u), videoEl.videoWidth),
+                v: Math.min(Math.max(0, v), videoEl.videoHeight)
+            };
         }
 
         // ---- 放大镜相关 ----
@@ -3062,40 +3081,48 @@
                 if (magVisible) showMagnifier(false);
                 return;
             }
-            const { u, v } = getVideoOriginalCoordinates(event);
-            if (!video.videoWidth || !video.videoHeight) return;
 
-            // 更新放大镜位置（基于视频显示区域）
+            if (!videoEl.videoWidth || !videoEl.videoHeight) return;
+
+            const { u, v } = getVideoOriginalCoordinates(event);
+
             const display = getVideoDisplayRect();
-            const scaleX = display.width / video.videoWidth;
-            const scaleY = display.height / video.videoHeight;
-            let px = display.left + u * scaleX;
-            let py = display.top + v * scaleY;
+            const videoRect = videoEl.getBoundingClientRect();
+
+            const scaleX = display.width / videoEl.videoWidth;
+            const scaleY = display.height / videoEl.videoHeight;
+
+            const px = display.left + u * scaleX;
+            const py = display.top + v * scaleY;
 
             const offsetX = 20;
             const offsetY = 20;
-            let magX = px + offsetX;
-            let magY = py + offsetY;
+
+            let magX = px - videoRect.left + offsetX;
+            let magY = py - videoRect.top + offsetY;
 
             const magW = magDisplaySize;
             const magH = magDisplaySize + 32;
-            // 确保放大镜不超出视频元素边界
-            const videoRect = video.getBoundingClientRect();
-            if (magX + magW > videoRect.left + videoRect.width) {
-                magX = px - magW - offsetX;
-            }
-            if (magY + magH > videoRect.top + videoRect.height) {
-                magY = py - magH - offsetY;
-            }
-            magX = Math.max(videoRect.left + 4, Math.min(magX, videoRect.left + videoRect.width - magW - 4));
-            magY = Math.max(videoRect.top + 4, Math.min(magY, videoRect.top + videoRect.height - magH - 4));
 
-            magnifier.style.left = (magX - videoRect.left) + 'px';
-            magnifier.style.top = (magY - videoRect.top) + 'px';
+            if (magX + magW > videoRect.width) {
+                magX = px - videoRect.left - magW - offsetX;
+            }
+
+            if (magY + magH > videoRect.height) {
+                magY = py - videoRect.top - magH - offsetY;
+            }
+
+            magX = Math.max(4, Math.min(magX, videoRect.width - magW - 4));
+            magY = Math.max(4, Math.min(magY, videoRect.height - magH - 4));
+
+            magnifier.style.left = magX + 'px';
+            magnifier.style.top = magY + 'px';
 
             updateMagnifier(u, v);
+
             if (!magVisible) showMagnifier(true);
         }
+
 
         function onVideoMouseLeave() {
             if (magVisible) showMagnifier(false);
@@ -3122,21 +3149,28 @@
             document.getElementById('pickTip').innerHTML = `✏️ 正在选取: ${targetId}  (放大镜已开启)`;
             pickCallback = callback;
             // 预显示放大镜在视频中心
-            if (video.videoWidth && video.videoHeight) {
-                const u = video.videoWidth / 2;
-                const v = video.videoHeight / 2;
+            if (videoEl.videoWidth && videoEl.videoHeight) {
+                const u = videoEl.videoWidth / 2;
+                const v = videoEl.videoHeight / 2;
+
                 updateMagnifier(u, v);
                 showMagnifier(true);
+
                 const display = getVideoDisplayRect();
-                const scaleX = display.width / video.videoWidth;
-                const scaleY = display.height / video.videoHeight;
-                let px = display.left + u * scaleX;
-                let py = display.top + v * scaleY;
-                const videoRect = video.getBoundingClientRect();
-                let magX = px - magDisplaySize / 2;
-                let magY = py - (magDisplaySize + 32) / 2;
+                const videoRect = videoEl.getBoundingClientRect();
+
+                const scaleX = display.width / videoEl.videoWidth;
+                const scaleY = display.height / videoEl.videoHeight;
+
+                const px = display.left + u * scaleX;
+                const py = display.top + v * scaleY;
+
+                let magX = px - videoRect.left - magDisplaySize / 2;
+                let magY = py - videoRect.top - (magDisplaySize + 32) / 2;
+
                 magX = Math.max(4, Math.min(magX, videoRect.width - magDisplaySize - 4));
                 magY = Math.max(4, Math.min(magY, videoRect.height - magDisplaySize - 32 - 4));
+
                 magnifier.style.left = magX + 'px';
                 magnifier.style.top = magY + 'px';
             }
@@ -3257,6 +3291,7 @@
                 `;
             container.appendChild(newRow);
             newRow.querySelector('.pick-vertical').addEventListener('click', handleVerticalPick);
+            bindInputChangeForElement(newRow);
         }
 
         // ================================================================
@@ -3274,9 +3309,20 @@
             markerCanvas.width = rect.width;
             markerCanvas.height = rect.height;
             markerCtx.clearRect(0, 0, markerCanvas.width, markerCanvas.height);
-            const scaleX = rect.width / videoEl.videoWidth;
-            const scaleY = rect.height / videoEl.videoHeight;
-            const map = (u, v) => [u * scaleX, v * scaleY];
+
+            // 真实视频内容区域，考虑 object-fit: contain 后的黑边
+            const display = getVideoDisplayRect();
+
+            const offsetX = display.left - rect.left;
+            const offsetY = display.top - rect.top;
+
+            const scaleX = display.width / videoEl.videoWidth;
+            const scaleY = display.height / videoEl.videoHeight;
+
+            const map = (u, v) => [
+                offsetX + u * scaleX,
+                offsetY + v * scaleY
+            ];
 
             const points = [
                 { id: 'b1', label: 'B1', color: '#ff4444', suffix: 'lower' },
