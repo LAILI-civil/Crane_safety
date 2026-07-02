@@ -3198,6 +3198,51 @@
             });
         }
 
+        function handleTipPick(e) {
+            const btn = e.currentTarget;
+            const row = btn.closest('.tip-point-row');
+            const idx = row.getAttribute('data-idx');
+
+            enterPickMode(`tip_${idx}`, (mode, u, v) => {
+                row.querySelector('.tip-u').value = u.toFixed(3);
+                row.querySelector('.tip-v').value = v.toFixed(3);
+
+                drawMarkers();
+
+                if (currentP) {
+                    updateRiskDrawArea(currentP);
+                }
+            });
+        }
+
+        function addTipPoint() {
+            const container = document.getElementById('tipPointsContainer');
+            const idx = container.children.length;
+
+            const newRow = document.createElement('div');
+            newRow.className = 'tip-point-row';
+            newRow.setAttribute('data-idx', idx);
+
+            newRow.innerHTML = `
+                <div class="field">
+                    <label>Tip${idx + 1} u</label>
+                    <input class="tip-u" type="text" value="" inputmode="decimal" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label>v</label>
+                    <input class="tip-v" type="text" value="" inputmode="decimal" autocomplete="off">
+                </div>
+                <button class="pick-btn pick-tip-point" data-idx="${idx}">选取</button>
+            `;
+
+            container.appendChild(newRow);
+
+            newRow.querySelector('.pick-tip-point').addEventListener('click', handleTipPick);
+
+            bindInputChangeForElement(newRow);
+        }
+
+
         function addVerticalPoint() {
             const container = document.getElementById('verticalPointsContainer');
             const idx = container.children.length;
@@ -3254,6 +3299,22 @@
                 }
             });
 
+            const tipRows = document.querySelectorAll('.tip-point-row');
+            tipRows.forEach((row, idx) => {
+                const u = parseFloat(row.querySelector('.tip-u').value);
+                const v = parseFloat(row.querySelector('.tip-v').value);
+
+                if (!isNaN(u) && !isNaN(v)) {
+                    points.push({
+                        id: `tip${idx}`,
+                        label: `Tip${idx + 1}`,
+                        color: '#22d3ee',
+                        u: u,
+                        v: v
+                    });
+                }
+            });
+
             points.forEach(p => {
                 let u, v;
                 if (p.u !== undefined && p.v !== undefined) {
@@ -3297,6 +3358,25 @@
                 markerCtx.restore();
             });
         }
+
+        function bindInputChangeForElement(root) {
+            const inputs = root.querySelectorAll('input');
+
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    drawMarkers();
+
+                    if (currentP) {
+                        updateRiskDrawArea(currentP);
+                    }
+                });
+
+                input.addEventListener('input', () => {
+                    drawMarkers();
+                });
+            });
+        }
+
 
         function bindInputChange() {
             const inputs = document.querySelectorAll('input');
@@ -3474,11 +3554,21 @@
         // ================================================================
         window.addEventListener('DOMContentLoaded', () => {
             bindPickButtons();
+
             document.getElementById('addVerticalPoint').addEventListener('click', addVerticalPoint);
+
+            const addTipBtn = document.getElementById('addTipPoint');
+            if (addTipBtn) {
+                addTipBtn.addEventListener('click', addTipPoint);
+            }
+
             document.getElementById('calibrateBtn').addEventListener('click', calibrateCamera);
             video.muted = true;
             video.play().catch(() => {});
             document.querySelectorAll('.pick-vertical').forEach(btn => btn.addEventListener('click', handleVerticalPick));
+            document.querySelectorAll('.pick-tip-point').forEach(btn => {
+                btn.addEventListener('click', handleTipPick);
+            });
             const observer = new MutationObserver(() => {
                 document.querySelectorAll('.pick-vertical').forEach(btn => {
                     btn.removeEventListener('click', handleVerticalPick);
@@ -3486,6 +3576,18 @@
                 });
             });
             observer.observe(document.getElementById('verticalPointsContainer'), { childList: true, subtree: true });
+
+            const tipObserver = new MutationObserver(() => {
+                document.querySelectorAll('.pick-tip-point').forEach(btn => {
+                    btn.removeEventListener('click', handleTipPick);
+                    btn.addEventListener('click', handleTipPick);
+                });
+            });
+
+            const tipContainer = document.getElementById('tipPointsContainer');
+            if (tipContainer) {
+                tipObserver.observe(tipContainer, { childList: true, subtree: true });
+            }
 
             bindInputChange();
 
